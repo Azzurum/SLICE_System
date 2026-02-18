@@ -1,0 +1,184 @@
+﻿<UserControl x:Class="SLICE_System.Views.MenuView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:fa="http://schemas.fontawesome.io/icons/"
+             Background="#FDFBF7" FontFamily="Segoe UI">
+
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="BrandOrange" Color="#E67E22"/>
+        <SolidColorBrush x:Key="TextDark" Color="#2C3E50"/>
+        <SolidColorBrush x:Key="TextLight" Color="#95A5A6"/>
+
+        <Style x:Key="MenuCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Width" Value="200"/>
+            <Setter Property="Height" Value="220"/>
+            <Setter Property="Margin" Value="0,0,15,15"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="10" Color="#BDC3C7" ShadowDepth="2" Opacity="0.15"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Column="0" Margin="30">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="0,0,0,20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Menu Registry" FontSize="28" FontWeight="Black" Foreground="{StaticResource TextDark}"/>
+                    <TextBlock Text="Manage products, prices, and availability." FontSize="14" Foreground="{StaticResource TextLight}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Background="White" CornerRadius="20" Height="40" Width="220" Margin="0,0,10,0">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="10" Color="#BDC3C7" ShadowDepth="2" Opacity="0.1"/>
+                        </Border.Effect>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="40"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <fa:ImageAwesome Icon="Search" Height="14" Foreground="{StaticResource TextLight}" HorizontalAlignment="Center"/>
+                            <TextBox x:Name="txtSearch" Grid.Column="1" BorderThickness="0" Background="Transparent" 
+                                     VerticalContentAlignment="Center" FontSize="14" Foreground="{StaticResource TextDark}"
+                                     TextChanged="txtSearch_TextChanged"/>
+                        </Grid>
+                    </Border>
+
+                    <Button Click="AddNew_Click" Background="{StaticResource BrandOrange}" Foreground="White" 
+                            Height="40" Padding="20,0" BorderThickness="0" Cursor="Hand" FontWeight="Bold">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="8"/>
+                            </Style>
+                        </Button.Resources>
+                        <StackPanel Orientation="Horizontal">
+                            <fa:ImageAwesome Icon="Plus" Height="12" Foreground="White" Margin="0,0,8,0"/>
+                            <TextBlock Text="NEW ITEM"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <ItemsControl x:Name="icMenuList">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource MenuCardStyle}" Opacity="{Binding Opacity}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <Button Click="Edit_Click" Tag="{Binding}" Background="Transparent" BorderThickness="0" 
+                                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10" Cursor="Hand">
+                                        <fa:ImageAwesome Icon="Pencil" Height="14" Foreground="{StaticResource TextLight}"/>
+                                    </Button>
+
+                                    <StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <Border Background="#FFF3E0" CornerRadius="15" Padding="10,5" HorizontalAlignment="Center" Margin="0,0,0,10">
+                                            <TextBlock Text="{Binding VirtualCategory}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource BrandOrange}"/>
+                                        </Border>
+
+                                        <fa:ImageAwesome Icon="Cutlery" Height="40" Foreground="{StaticResource TextDark}" Margin="0,0,0,15" Opacity="0.8"/>
+
+                                        <TextBlock Text="{Binding DisplayName}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextDark}" 
+                                                   TextWrapping="Wrap" TextAlignment="Center" Margin="10,0"/>
+                                    </StackPanel>
+
+                                    <Border Grid.Row="1" BorderBrush="#EEE" BorderThickness="0,1,0,0" Padding="15,10">
+                                        <Grid>
+                                            <TextBlock Text="{Binding FormattedPrice}" FontWeight="Black" FontSize="16" Foreground="{StaticResource TextDark}" VerticalAlignment="Center"/>
+
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                <Ellipse Width="8" Height="8" Fill="{Binding StatusColor}" Margin="0,0,5,0"/>
+                                                <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="{Binding StatusColor}" FontWeight="Bold"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+
+        <Border x:Name="pnlEditor" Grid.Column="1" Width="0" Background="White" BorderBrush="#EEE" BorderThickness="1,0,0,0">
+            <Grid Margin="25">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Margin="0,0,0,20">
+                    <TextBlock x:Name="lblEditorTitle" Text="Edit Item" FontSize="20" FontWeight="Black" Foreground="{StaticResource TextDark}"/>
+                    <TextBlock Text="Modify item details." Foreground="{StaticResource TextLight}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1">
+                    <TextBlock Text="CATEGORY" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextLight}" Margin="0,0,0,5"/>
+                    <ComboBox x:Name="cmbCategory" Height="40" Margin="0,0,0,15" Padding="10,8">
+                        <ComboBoxItem Content="Pizza" IsSelected="True"/>
+                        <ComboBoxItem Content="Drinks"/>
+                        <ComboBoxItem Content="Sides"/>
+                        <ComboBoxItem Content="Dessert"/>
+                        <ComboBoxItem Content="General"/>
+                    </ComboBox>
+
+                    <TextBlock Text="PRODUCT NAME" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextLight}" Margin="0,0,0,5"/>
+                    <TextBox x:Name="txtName" Height="40" VerticalContentAlignment="Center" Padding="5" Margin="0,0,0,15"/>
+
+                    <TextBlock Text="BASE PRICE (₱)" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextLight}" Margin="0,0,0,5"/>
+                    <TextBox x:Name="txtPrice" Height="40" VerticalContentAlignment="Center" Padding="5" Margin="0,0,0,15"/>
+
+                    <TextBlock Text="AVAILABILITY" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextLight}" Margin="0,0,0,5"/>
+                    <CheckBox x:Name="chkActive" Content="Available for Sale" FontSize="14" Foreground="{StaticResource TextDark}" Margin="0,5,0,0"/>
+
+                    <Border Background="#FFF8E1" BorderBrush="#FFE082" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,20,0,0">
+                        <StackPanel>
+                            <TextBlock Text="⚠️ Warning" FontWeight="Bold" Foreground="#F39C12" FontSize="11"/>
+                            <TextBlock Text="Changing the price will affect all future transactions." FontSize="10" Foreground="#7F8C8D" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Margin="0,20,0,0">
+                    <Button Content="SAVE CHANGES" Click="Save_Click" Height="45" Background="{StaticResource BrandOrange}" Foreground="White" FontWeight="Bold" BorderThickness="0" Margin="0,0,0,10" Cursor="Hand">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="8"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                    <Button Content="Cancel" Click="CloseEditor_Click" Height="45" Background="Transparent" Foreground="{StaticResource TextLight}" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

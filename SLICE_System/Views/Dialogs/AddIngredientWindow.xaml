@@ -1,0 +1,71 @@
+﻿<Window x:Class="SLICE_System.Views.Dialogs.AddIngredientWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Add Ingredient" Height="480" Width="420"
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize" WindowStyle="None"
+        Background="White" BorderBrush="#27AE60" BorderThickness="1">
+
+    <Grid Margin="25">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+            <TextBlock Text="New Ingredient" FontSize="22" FontWeight="Bold" Foreground="#2C3E50"/>
+            <TextBlock Text="Add a new raw material to the Master Registry." Foreground="#95A5A6" Margin="0,5,0,0"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1">
+            <TextBlock Text="INGREDIENT NAME" FontSize="11" FontWeight="Bold" Foreground="#95A5A6" Margin="0,0,0,5"/>
+            <TextBox x:Name="txtName" Height="40" VerticalContentAlignment="Center" Padding="5" Margin="0,0,0,15"/>
+
+            <TextBlock Text="CATEGORY" FontSize="11" FontWeight="Bold" Foreground="#95A5A6" Margin="0,0,0,5"/>
+            <ComboBox x:Name="cmbCategory" Height="40" Margin="0,0,0,15" Padding="10,8">
+                <ComboBoxItem Content="Dough &amp; Flour" IsSelected="True"/>
+                <ComboBoxItem Content="Cheese &amp; Dairy"/>
+                <ComboBoxItem Content="Meat &amp; Protein"/>
+                <ComboBoxItem Content="Sauce &amp; Spices"/>
+                <ComboBoxItem Content="Vegetables"/>
+                <ComboBoxItem Content="Beverages"/>
+                <ComboBoxItem Content="Packaging"/>
+            </ComboBox>
+
+            <Grid Margin="0,0,0,15">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="15"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="BULK UNIT (Buy)" FontSize="11" FontWeight="Bold" Foreground="#95A5A6" Margin="0,0,0,5"/>
+                    <TextBox x:Name="txtBulk" Height="40" VerticalContentAlignment="Center" Padding="5"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="BASE UNIT (Use)" FontSize="11" FontWeight="Bold" Foreground="#95A5A6" Margin="0,0,0,5"/>
+                    <ComboBox x:Name="cmbBase" Height="40" Padding="10,8">
+                        <ComboBoxItem Content="g" IsSelected="True"/>
+                        <ComboBoxItem Content="ml"/>
+                        <ComboBoxItem Content="pcs"/>
+                    </ComboBox>
+                </StackPanel>
+            </Grid>
+
+            <TextBlock Text="CONVERSION RATIO (How many Base Units in 1 Bulk?)" FontSize="11" FontWeight="Bold" Foreground="#95A5A6" Margin="0,0,0,5"/>
+            <TextBox x:Name="txtRatio" Height="40" VerticalContentAlignment="Center" Padding="5" Text="1000"/>
+            <TextBlock Text="Example: 1 Sack = 25000 g" FontSize="10" Foreground="#BDC3C7" Margin="0,5,0,0"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Content="Cancel" Click="Cancel_Click" Width="100" Height="40" Background="Transparent" BorderThickness="0" Foreground="#95A5A6" Cursor="Hand"/>
+            <Button Content="SAVE ITEM" Click="Save_Click" Width="120" Height="40" Background="#27AE60" Foreground="White" FontWeight="Bold" Cursor="Hand">
+                <Button.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="6"/>
+                    </Style>
+                </Button.Resources>
+            </Button>
+        </StackPanel>
+    </Grid>
+</Window>
