@@ -16,13 +16,15 @@ namespace SLICE_System.Data
             _dbService = new DatabaseService();
         }
 
+        // =========================================================
         // 1. GET MENU
+        // =========================================================
         public List<MenuProduct> GetMenu()
         {
             using (var connection = _dbService.GetConnection())
             {
-                // FIX: Query 'MenuItems' table, not 'MasterInventory'
-                // We default Category to 'General' since MenuItems doesn't have a Category column in your schema
+                // Query 'MenuItems' table. 
+                // We default Category to 'General' since MenuItems doesn't have a Category column in the schema yet.
                 string sql = @"
                     SELECT ProductID, 
                            ProductName, 
@@ -35,7 +37,9 @@ namespace SLICE_System.Data
             }
         }
 
-        // 2. PROCESS SALE (Transaction with Recipe Deduction)
+        // =========================================================
+        // 2. PROCESS SALE (Transaction + P&L Integration)
+        // =========================================================
         public void ProcessSale(int branchId, int productId, int quantitySold, int userId)
         {
             using (var connection = _dbService.GetConnection())
@@ -47,14 +51,23 @@ namespace SLICE_System.Data
                 {
                     try
                     {
-                        // --- STEP 1: CALCULATE INGREDIENTS (Bill of Materials) ---
+                        // --- STEP 1: GET PRODUCT PRICE SNAPSHOT ---
+                        // Crucial for P&L: We must capture the price *at the moment of sale*.
+                        string sqlGetProduct = "SELECT ProductName, BasePrice FROM MenuItems WHERE ProductID = @Id";
+                        var product = connection.QuerySingleOrDefault(sqlGetProduct, new { Id = productId }, transaction);
+
+                        if (product == null) throw new Exception("Product not found or invalid.");
+
+                        decimal unitPrice = product.BasePrice;
+                        decimal totalRevenue = unitPrice * quantitySold;
+                        string productName = product.ProductName;
+
+                        // --- STEP 2: CALCULATE INGREDIENTS (Bill of Materials) ---
                         // Get the recipe that links this Menu Item (ProductID) to Raw Stock (ItemID)
                         string sqlGetRecipe = "SELECT * FROM BillOfMaterials WHERE ProductID = @ProductID";
                         var ingredients = connection.Query<Recipe>(sqlGetRecipe, new { ProductID = productId }, transaction).AsList();
 
-                        // --- STEP 2: DEDUCT STOCK ---
-                        // Only run deduction if there is a recipe. 
-                        // We cannot deduct the ProductID directly because MenuItems and MasterInventory are separate tables.
+                        // --- STEP 3: DEDUCT STOCK ---
                         if (ingredients.Any())
                         {
                             string sqlDeduct = @"
@@ -70,29 +83,46 @@ namespace SLICE_System.Data
                                 {
                                     AmountToDeduct = totalNeeded,
                                     BranchID = branchId,
-                                    ItemID = ing.IngredientID // This is the Raw Material ID from MasterInventory
+                                    // Use the property name from your Recipe.cs model
+                                    ItemID = ing.IngredientID
                                 }, transaction);
                             }
                         }
 
-                        // --- STEP 3: RECORD THE SALE ---
+                        // --- STEP 4: RECORD THE SALE (With Price) ---
+                        // Updated to include UnitPrice so historical reports remain accurate even if menu prices change later.
                         string sqlRecord = @"
-                            INSERT INTO SalesTransactions (BranchID, ProductID, QuantitySold, TransactionDate)
-                            VALUES (@BranchID, @ProductID, @Qty, GETDATE())";
+                            INSERT INTO SalesTransactions (BranchID, ProductID, QuantitySold, UnitPrice, TransactionDate)
+                            VALUES (@BranchID, @ProductID, @Qty, @Price, GETDATE());
+                            SELECT SCOPE_IDENTITY();";
 
-                        connection.Execute(sqlRecord, new
+                        int newSaleId = connection.ExecuteScalar<int>(sqlRecord, new
                         {
                             BranchID = branchId,
                             ProductID = productId,
-                            Qty = quantitySold
+                            Qty = quantitySold,
+                            Price = unitPrice
                         }, transaction);
 
-                        // Save Changes
+                        // --- STEP 5: FINANCIAL LEDGER (The P&L Entry) ---
+                        // This injects the "Income" directly into the central finance table.
+                        string sqlLedger = @"
+                            INSERT INTO FinancialLedger (TransactionDate, BranchID, Type, Category, Amount, Description, ReferenceID)
+                            VALUES (GETDATE(), @BranchID, 'Income', 'Sales', @Amount, @Desc, @RefID)";
+
+                        connection.Execute(sqlLedger, new
+                        {
+                            BranchID = branchId,
+                            Amount = totalRevenue,
+                            Desc = $"Sale: {productName} (x{quantitySold})",
+                            RefID = newSaleId
+                        }, transaction);
+
+                        // Complete the transaction
                         transaction.Commit();
                     }
                     catch
                     {
-                        // Cancel if error
                         transaction.Rollback();
                         throw;
                     }

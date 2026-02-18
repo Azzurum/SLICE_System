@@ -1,25 +1,27 @@
-﻿using System.Windows;
-using System.Collections.Generic;
-using Dapper;
+﻿using System.Collections.Generic;
+using System.Linq; // Important for .ToList()
+using System.Windows;
+using Dapper; // Ensure Dapper is using
 using SLICE_System.Data;
 using SLICE_System.Models;
+using SLICE_System.ViewModels; // To access DispatchItemModel
 
 namespace SLICE_System.Views.Dialogs
 {
     public partial class DispatchDialog : Window
     {
-        // FIX: Added Public Properties to access data from ViewModel
         public int SelectedBranchID { get; private set; }
-        public decimal Quantity { get; private set; }
+        public List<DispatchItemModel> ItemsToDispatch { get; private set; }
 
-        // FIX: Added the specific Constructor that takes 2 arguments
-        public DispatchDialog(string itemName, string unit)
+        // Constructor now accepts a List
+        public DispatchDialog(List<DispatchItemModel> items)
         {
             InitializeComponent();
+            ItemsToDispatch = items;
+            dgItems.ItemsSource = ItemsToDispatch; // Bind the grid
 
-            // Set the text of the TextBlock named 'txtItemName'
-            txtItemName.Text = $"Sending: {itemName} ({unit})";
-
+            // Just show count in title
+            txtItemName.Text = $"Preparing to dispatch {items.Count} item(s)";
             LoadBranches();
         }
 
@@ -28,13 +30,10 @@ namespace SLICE_System.Views.Dialogs
             var db = new DatabaseService();
             using (var conn = db.GetConnection())
             {
-                // Simple query to fill the dropdown
                 var branches = conn.Query<Branch>("SELECT * FROM Branches WHERE BranchName != 'Head Office'").AsList();
-
                 cmbBranches.ItemsSource = branches;
                 cmbBranches.DisplayMemberPath = "BranchName";
                 cmbBranches.SelectedValuePath = "BranchID";
-
                 if (branches.Count > 0) cmbBranches.SelectedIndex = 0;
             }
         }
@@ -43,20 +42,18 @@ namespace SLICE_System.Views.Dialogs
         {
             if (cmbBranches.SelectedValue == null)
             {
-                MessageBox.Show("Please select a branch.");
+                MessageBox.Show("Please select a destination branch.");
                 return;
             }
 
-            if (!decimal.TryParse(txtQty.Text, out decimal qty) || qty <= 0)
+            // Validation: Ensure at least one item has quantity > 0
+            if (!ItemsToDispatch.Any(i => i.Quantity > 0))
             {
-                MessageBox.Show("Please enter a valid quantity.");
+                MessageBox.Show("Please enter a quantity for at least one item.");
                 return;
             }
 
-            // Save values to properties
             SelectedBranchID = (int)cmbBranches.SelectedValue;
-            Quantity = qty;
-
             DialogResult = true;
             Close();
         }

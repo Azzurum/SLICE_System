@@ -66,6 +66,7 @@
             </StackPanel>
 
             <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+
                 <Border Background="White" CornerRadius="20" Height="40" Width="250" Margin="0,0,15,5">
                     <Border.Effect>
                         <DropShadowEffect BlurRadius="10" Color="#BDC3C7" ShadowDepth="2" Opacity="0.1"/>
@@ -106,7 +107,9 @@
                     <fa:ImageAwesome Icon="Refresh" Height="14"/>
                 </Button>
 
-                <Button Command="{Binding DispatchCommand}" Margin="0,0,10,5" Style="{StaticResource ActionButtonStyle}" Background="{StaticResource BrandOrange}">
+                <Button Command="{Binding DispatchCommand}" 
+                        CommandParameter="{Binding SelectedItems, ElementName=GridIngredients}"
+                        Margin="0,0,10,5" Style="{StaticResource ActionButtonStyle}" Background="{StaticResource BrandOrange}">
                     <StackPanel Orientation="Horizontal">
                         <fa:ImageAwesome Icon="Truck" Height="12" Foreground="White" Margin="0,0,8,0"/>
                         <TextBlock Text="DISPATCH"/>
@@ -123,7 +126,10 @@
         </Grid>
 
         <Border Grid.Row="1" Style="{StaticResource CardStyle}">
-            <DataGrid ItemsSource="{Binding Ingredients}" SelectedItem="{Binding SelectedIngredient}"
+            <DataGrid x:Name="GridIngredients"
+                      SelectionMode="Extended"
+                      ItemsSource="{Binding Ingredients}" 
+                      SelectedItem="{Binding SelectedIngredient}"
                       AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                       GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent" BorderThickness="0"
                       RowHeight="50" VerticalScrollBarVisibility="Auto" Margin="10">

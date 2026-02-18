@@ -72,7 +72,7 @@ namespace SLICE_System.Data
                     WHERE (@BranchID IS NULL OR b.BranchID = @BranchID)
                     GROUP BY b.BranchName
                     ORDER BY TotalRevenue DESC";
-                metrics.BranchRanking = connection.Query<BranchPerformance>(sqlBranch, p).AsList();
+                metrics.BranchRanking = connection.Query<SLICE_System.Models.BranchPerformance>(sqlBranch, p).AsList();
 
                 // D. CHART: Stock Health (Snapshot - Branch Filter)
                 string sqlHealth = @"

@@ -1,9 +1,10 @@
 ﻿using Dapper;
 using SLICE_System.Data;
 using SLICE_System.Models;
-using SLICE_System.Views;
 using SLICE_System.Views.Dialogs;
 using System;
+using System.Collections; // Required for IList
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -58,10 +59,10 @@ namespace SLICE_System.ViewModels
 
             RefreshCommand = new RelayCommand(LoadData);
 
-            // RESTORED: Logic to open the Add Window
             AddItemCommand = new RelayCommand(AddItem);
 
-            DispatchCommand = new RelayCommand(DispatchStock, () => SelectedIngredient != null);
+            // UPDATED: DispatchCommand now accepts a parameter (the list of selected items)
+            DispatchCommand = new RelayCommand<IList>(DispatchStock);
 
             LoadData();
         }
@@ -80,10 +81,8 @@ namespace SLICE_System.ViewModels
             }
         }
 
-        // --- RESTORED FEATURE ---
         private void AddItem()
         {
-            // FIX: Use the specific namespace 'Views.Dialogs' to avoid confusion
             var popup = new SLICE_System.Views.Dialogs.AddIngredientWindow();
 
             if (popup.ShowDialog() == true)
@@ -93,35 +92,86 @@ namespace SLICE_System.ViewModels
             }
         }
 
-        private void DispatchStock()
+        // --- UPDATED DISPATCH LOGIC ---
+        private void DispatchStock(IList selectedItems)
         {
-            if (SelectedIngredient == null) return;
+            if (selectedItems == null || selectedItems.Count == 0)
+            {
+                MessageBox.Show("Please select at least one item to dispatch.");
+                return;
+            }
 
-            var dialog = new DispatchDialog(SelectedIngredient.ItemName, SelectedIngredient.BulkUnit);
+            // 1. Prepare the list for the Dialog
+            var dispatchList = new List<DispatchItemModel>();
+            foreach (var item in selectedItems)
+            {
+                if (item is MasterInventory inventoryItem)
+                {
+                    dispatchList.Add(new DispatchItemModel
+                    {
+                        ItemID = inventoryItem.ItemID,
+                        ItemName = inventoryItem.ItemName,
+                        Unit = inventoryItem.BulkUnit,
+                        Quantity = 0 // User must enter this
+                    });
+                }
+            }
+
+            // 2. Open the Multi-Item Dispatch Dialog
+            var dialog = new DispatchDialog(dispatchList);
 
             if (dialog.ShowDialog() == true)
             {
+                // Filter out items with 0 quantity to avoid cluttering the database
+                var itemsToSend = dialog.ItemsToDispatch.Where(x => x.Quantity > 0).ToList();
+
+                if (itemsToSend.Count == 0) return;
+
                 try
                 {
                     using (var conn = _db.GetConnection())
                     {
-                        string sql = @"
-                            INSERT INTO MeshLogistics (FromBranchID, ToBranchID, Status, SenderID, SentDate)
-                            VALUES (1, @TargetBranchID, 'In-Transit', 1, GETDATE());
-                            
-                            DECLARE @NewTransferID INT = SCOPE_IDENTITY();
-
-                            INSERT INTO WaybillDetails (TransferID, ItemID, Quantity)
-                            VALUES (@NewTransferID, @ItemID, @Qty);";
-
-                        conn.Execute(sql, new
+                        conn.Open();
+                        using (var transaction = conn.BeginTransaction())
                         {
-                            TargetBranchID = dialog.SelectedBranchID,
-                            ItemID = SelectedIngredient.ItemID,
-                            Qty = dialog.Quantity
-                        });
+                            try
+                            {
+                                // A. Create the Transfer Header (The "Box")
+                                string sqlHeader = @"
+                                    INSERT INTO MeshLogistics (FromBranchID, ToBranchID, Status, SenderID, SentDate)
+                                    VALUES (1, @TargetBranchID, 'In-Transit', 1, GETDATE());
+                                    SELECT SCOPE_IDENTITY();";
+
+                                int transferId = conn.ExecuteScalar<int>(sqlHeader, new { TargetBranchID = dialog.SelectedBranchID }, transaction);
+
+                                // B. Insert Details (The "Contents")
+                                string sqlDetail = @"
+                                    INSERT INTO WaybillDetails (TransferID, ItemID, Quantity)
+                                    VALUES (@TransferID, @ItemID, @Qty);";
+
+                                foreach (var item in itemsToSend)
+                                {
+                                    conn.Execute(sqlDetail, new
+                                    {
+                                        TransferID = transferId,
+                                        ItemID = item.ItemID,
+                                        Qty = item.Quantity
+                                    }, transaction);
+                                }
+
+                                transaction.Commit();
+                            }
+                            catch
+                            {
+                                transaction.Rollback();
+                                throw;
+                            }
+                        }
                     }
-                    MessageBox.Show($"Successfully dispatched {dialog.Quantity} {SelectedIngredient.BulkUnit} of {SelectedIngredient.ItemName}!", "Success");
+                    MessageBox.Show($"Successfully dispatched {itemsToSend.Count} distinct items to Branch #{dialog.SelectedBranchID}!", "Success");
+
+                    // Optional: Deselect or Refresh
+                    LoadData();
                 }
                 catch (Exception ex)
                 {
@@ -129,5 +179,14 @@ namespace SLICE_System.ViewModels
                 }
             }
         }
+    }
+
+    // --- HELPER CLASS ---
+    public class DispatchItemModel
+    {
+        public int ItemID { get; set; }
+        public string ItemName { get; set; }
+        public string Unit { get; set; }
+        public decimal Quantity { get; set; }
     }
 }
