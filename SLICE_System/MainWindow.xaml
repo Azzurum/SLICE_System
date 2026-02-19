@@ -226,6 +226,13 @@
                                         <fa:FontAwesome Icon="Globe" FontSize="16" Foreground="White"/>
                                     </Button.Tag>
                                 </Button>
+
+                                <Button x:Name="Btn_Finance" Content="Financial Ledger" Style="{StaticResource MenuButtonStyle}" Click="Nav_Finance_Click">
+                                    <Button.Tag>
+                                        <fa:FontAwesome Icon="LineChart" FontSize="16" Foreground="White"/>
+                                    </Button.Tag>
+                                </Button>
+
                                 <Button x:Name="Btn_Users" Content="Users &amp; Roles" Style="{StaticResource MenuButtonStyle}" Click="Nav_Users_Click">
                                     <Button.Tag>
                                         <fa:FontAwesome Icon="Users" FontSize="16" Foreground="White"/>

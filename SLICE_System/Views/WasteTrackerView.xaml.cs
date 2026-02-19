@@ -56,18 +56,17 @@ namespace SLICE_System.Views
                 // 1. Play "Compactor" Animation
                 await PlayCompactorSequence();
 
-                // 2. Save Data
+                // 2. Save Data (UPDATED FOR PHASE 3 FINANCE INTEGRATION)
                 WasteRepository repo = new WasteRepository();
-                var waste = new WasteRecord
-                {
-                    BranchID = _user.BranchID.Value,
-                    ItemID = (int)cmbItems.SelectedValue,
-                    QtyWasted = decimal.Parse(txtQty.Text),
-                    Reason = txtReason.Text,
-                    RecordedBy = _user.UserID
-                };
 
-                repo.RecordWaste(waste);
+                int branchId = _user.BranchID.Value;
+                int itemId = (int)cmbItems.SelectedValue;
+                decimal qty = decimal.Parse(txtQty.Text);
+                string reason = txtReason.Text;
+                int userId = _user.UserID;
+
+                // Pass the individual parameters to trigger the financial loss calculation
+                repo.RecordWaste(branchId, itemId, qty, reason, userId);
 
                 // 3. Reset UI
                 txtQty.Clear();
@@ -97,9 +96,8 @@ namespace SLICE_System.Views
             // 2. Shake Screen (Visual Vibration)
             DoubleAnimation shakeAnim = new DoubleAnimation(0, 5, TimeSpan.FromMilliseconds(50)) { AutoReverse = true, RepeatBehavior = new RepeatBehavior(5) };
 
-            CompactorPlate.BeginAnimation(Canvas.TopProperty, dropAnim); // We use Margin/Translate in Grid, but let's use Margin here
+            CompactorPlate.BeginAnimation(Canvas.TopProperty, dropAnim);
 
-            // Actually, since it's in a Grid, let's animate the Margin.Top
             ThicknessAnimation slamDown = new ThicknessAnimation(new Thickness(0, -800, 0, 0), new Thickness(0, 0, 0, 0), TimeSpan.FromMilliseconds(300));
             slamDown.EasingFunction = new BounceEase { Bounces = 1, Bounciness = 0.5 };
 

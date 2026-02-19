@@ -25,7 +25,6 @@ namespace SLICE_System
             ApplyPermissions();
 
             // 3. Load Default View based on role capabilities
-            // If they can see Dashboard, show it. If not (unlikely), show something else.
             if (AccessControlService.CanAccess(_currentUser.Role, AccessControlService.Module.Dashboard))
                 Nav_Dashboard_Click(null, null);
             else
@@ -39,8 +38,6 @@ namespace SLICE_System
             // 1. DASHBOARD GROUP
             bool canViewDashboard = AccessControlService.CanAccess(r, AccessControlService.Module.Dashboard);
             Toggle(Btn_Dashboard, canViewDashboard);
-
-            // FIX: Hide the "DASHBOARD" text header if the user cannot see the button
             Grp_Dash.Visibility = canViewDashboard ? Visibility.Visible : Visibility.Collapsed;
 
             // 2. OPERATIONS GROUP
@@ -52,7 +49,6 @@ namespace SLICE_System
             Toggle(Btn_Waste, AccessControlService.CanAccess(r, AccessControlService.Module.WasteTracker));
             Toggle(Btn_Recon, AccessControlService.CanAccess(r, AccessControlService.Module.Reconciliation));
 
-            // Optional: Hide Operations Header if ALL buttons are hidden (unlikely, but good practice)
             bool anyOps = Btn_Incoming.Visibility == Visibility.Visible || Btn_MyInventory.Visibility == Visibility.Visible;
             Grp_Ops.Visibility = anyOps ? Visibility.Visible : Visibility.Collapsed;
 
@@ -62,11 +58,15 @@ namespace SLICE_System
             Toggle(Btn_Users, AccessControlService.CanAccess(r, AccessControlService.Module.UserAdmin));
             Toggle(Btn_Audit, AccessControlService.CanAccess(r, AccessControlService.Module.AuditLogs));
 
+            // NEW: Only Super-Admin gets access to the Finance Module
+            Toggle(Btn_Finance, r == "Super-Admin");
+
             // Hide Admin Header if all children are hidden
             bool anyAdmin = Btn_Menu.Visibility == Visibility.Visible ||
                             Btn_Inventory.Visibility == Visibility.Visible ||
                             Btn_Users.Visibility == Visibility.Visible ||
-                            Btn_Audit.Visibility == Visibility.Visible;
+                            Btn_Audit.Visibility == Visibility.Visible ||
+                            Btn_Finance.Visibility == Visibility.Visible;
 
             Grp_Admin.Visibility = anyAdmin ? Visibility.Visible : Visibility.Collapsed;
         }
@@ -125,6 +125,19 @@ namespace SLICE_System
         private void Nav_Inventory_Click(object sender, RoutedEventArgs e) => LoadView("Global Master Inventory", new Views.InventoryView());
         private void Nav_Users_Click(object sender, RoutedEventArgs e) => LoadView("User Administration", new Views.UsersView());
         private void Nav_Audit_Click(object sender, RoutedEventArgs e) => LoadView("System Audit Logs", new Views.AuditLogView());
+
+        // NEW: Load the Finance Module
+        private void Nav_Finance_Click(object sender, RoutedEventArgs e)
+        {
+            txtPageTitle.Text = "Financial Performance";
+
+            // Set up the FinanceView with its ViewModel
+            var view = new Views.FinanceView();
+            var viewModel = new FinanceViewModel();
+            view.DataContext = viewModel;
+
+            MainContentArea.Child = view;
+        }
 
         // HELPERS
         private void LoadView(string title, UIElement view)

@@ -10,6 +10,7 @@ namespace SLICE_System.ViewModels
         private readonly FinanceRepository _repo;
         private decimal _revenue;
         private decimal _expenses;
+        private decimal _wasteCost;
 
         public decimal TotalRevenue
         {
@@ -21,6 +22,12 @@ namespace SLICE_System.ViewModels
         {
             get => _expenses;
             set => SetProperty(ref _expenses, value);
+        }
+
+        public decimal TotalWasteCost
+        {
+            get => _wasteCost;
+            set => SetProperty(ref _wasteCost, value);
         }
 
         public decimal NetProfit => TotalRevenue - TotalExpenses;
@@ -38,8 +45,11 @@ namespace SLICE_System.ViewModels
         {
             // 1. Get Totals (Current Month Default)
             var metrics = _repo.GetPnLMetrics(new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1), DateTime.Now);
+
             TotalRevenue = metrics.TotalRevenue;
             TotalExpenses = metrics.TotalExpenses;
+            TotalWasteCost = metrics.TotalWasteCost;
+
             OnPropertyChanged(nameof(NetProfit));
 
             // 2. Get List

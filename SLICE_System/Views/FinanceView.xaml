@@ -1,9 +1,12 @@
 ﻿<UserControl x:Class="SLICE_System.Views.FinanceView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:fa="http://schemas.fontawesome.io/icons/"
              Background="#FDFBF7">
+
     <Grid Margin="20">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -14,7 +17,7 @@
             <TextBlock Text="Consolidated Financial Performance" FontSize="14" Foreground="#7F8C8D"/>
         </StackPanel>
 
-        <Grid Grid.Row="1" Margin="0,0,0,30">
+        <Grid Grid.Row="1" Margin="0,0,0,20">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
@@ -43,7 +46,17 @@
             </Border>
         </Grid>
 
-        <DataGrid Grid.Row="2" ItemsSource="{Binding RecentTransactions}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+        <Border Grid.Row="2" Background="#FDEDEC" BorderBrush="#E74C3C" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,0,0,20">
+            <StackPanel Orientation="Horizontal">
+                <fa:ImageAwesome Icon="ExclamationTriangle" Height="20" Foreground="#C0392B" Margin="0,0,15,0"/>
+                <StackPanel>
+                    <TextBlock Text="COST OF WASTE &amp; SPOILAGE (Included in Expenses)" Foreground="#C0392B" FontWeight="Bold" FontSize="12"/>
+                    <TextBlock Text="{Binding TotalWasteCost, StringFormat=- ₱ {0:N2}}" Foreground="#C0392B" FontSize="18" FontWeight="SemiBold"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <DataGrid Grid.Row="3" ItemsSource="{Binding RecentTransactions}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                   HeadersVisibility="Column" GridLinesVisibility="Horizontal" Background="White" BorderBrush="#EEE" RowHeight="40">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Date" Binding="{Binding TransactionDate, StringFormat='MMM dd, yyyy'}" Width="120"/>

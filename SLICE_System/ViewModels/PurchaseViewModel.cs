@@ -16,11 +16,9 @@ namespace SLICE_System.ViewModels
         // --- Header Data ---
         public string SupplierName { get; set; }
         public DateTime PurchaseDate { get; set; } = DateTime.Now;
-        public ObservableCollection<Branch> Branches { get; set; }
-        public Branch SelectedBranch { get; set; }
 
         // --- Line Items ---
-        public ObservableCollection<MasterInventory> AllIngredients { get; set; } // For Dropdown
+        public ObservableCollection<MasterInventory> AllIngredients { get; set; }
         public ObservableCollection<PurchaseDetail> CartItems { get; set; }
 
         // --- Computed Totals ---
@@ -37,31 +35,18 @@ namespace SLICE_System.ViewModels
             _inventoryRepo = new InventoryRepository();
 
             CartItems = new ObservableCollection<PurchaseDetail>();
-            LoadData();
+            AllIngredients = new ObservableCollection<MasterInventory>(_inventoryRepo.GetAllIngredients());
 
             AddRowCommand = new RelayCommand(AddRow);
             RemoveRowCommand = new RelayCommand<PurchaseDetail>(RemoveRow);
             SaveCommand = new RelayCommand(SavePurchase);
 
-            // Start with one empty row
-            AddRow();
-        }
-
-        private void LoadData()
-        {
-            Branches = new ObservableCollection<Branch>(_inventoryRepo.GetAllBranches());
-            // Default to Head Office or first branch
-            SelectedBranch = Branches.FirstOrDefault();
-
-            AllIngredients = new ObservableCollection<MasterInventory>(_inventoryRepo.GetAllIngredients());
+            AddRow(); // Start with one empty row
         }
 
         private void AddRow()
         {
             var newItem = new PurchaseDetail { Quantity = 1, UnitPrice = 0 };
-            // Hook up property change to update GrandTotal when user types
-            // Note: In a full MVVM framework like PRISM, this is automatic. 
-            // Here we rely on the DataGrid committing edits.
             CartItems.Add(newItem);
             OnPropertyChanged(nameof(GrandTotal));
         }
@@ -75,22 +60,12 @@ namespace SLICE_System.ViewModels
             }
         }
 
-        public void RecalculateTotal()
-        {
-            OnPropertyChanged(nameof(GrandTotal));
-        }
-
         private void SavePurchase()
         {
-            // 1. Validation
+            // 1. Validation (Branch validation removed)
             if (string.IsNullOrWhiteSpace(SupplierName))
             {
                 MessageBox.Show("Please enter a Supplier Name.");
-                return;
-            }
-            if (SelectedBranch == null)
-            {
-                MessageBox.Show("Please select a target Branch.");
                 return;
             }
             if (!CartItems.Any(x => x.ItemID > 0 && x.Quantity > 0))
@@ -106,21 +81,19 @@ namespace SLICE_System.ViewModels
                 {
                     Supplier = SupplierName,
                     TotalAmount = GrandTotal,
-                    BranchID = SelectedBranch.BranchID,
+                    BranchID = 1, // STRICT ENFORCEMENT: All purchases go to Head Office (Branch 1)
                     PurchaseDate = PurchaseDate,
-                    PurchasedBy = 1 // TODO: Replace with CurrentUser.UserID
+                    PurchasedBy = 1 // TODO: Bind to CurrentUser
                 };
 
-                // 3. Filter Valid Rows
                 var validDetails = CartItems.Where(x => x.ItemID > 0 && x.Quantity > 0).ToList();
 
-                // 4. Commit via Repository
+                // 3. Commit via Repository
                 _procurementRepo.ProcessPurchase(header, validDetails);
 
-                MessageBox.Show("Purchase Recorded Successfully!\nInventory Updated & Expense Logged.", "Success");
+                MessageBox.Show("Purchase Recorded Successfully!\nStock added to Head Office and Expense Logged.", "Success");
 
-                // Close Window (Handled by View Code-Behind usually, or messaging)
-                // For simplicity, we just clear the form here
+                // Clear UI
                 CartItems.Clear();
                 SupplierName = "";
                 OnPropertyChanged(nameof(SupplierName));

@@ -7,6 +7,8 @@
     <UserControl.Resources>
         <SolidColorBrush x:Key="BrandGreen" Color="#27AE60"/>
         <SolidColorBrush x:Key="BrandOrange" Color="#E67E22"/>
+        <SolidColorBrush x:Key="BrandBlue" Color="#34495E"/>
+        <SolidColorBrush x:Key="BrandRed" Color="#E74C3C"/>
         <SolidColorBrush x:Key="TextDark" Color="#2C3E50"/>
         <SolidColorBrush x:Key="TextLight" Color="#95A5A6"/>
 
@@ -15,7 +17,7 @@
             <Setter Property="CornerRadius" Value="16"/>
             <Setter Property="Effect">
                 <Setter.Value>
-                    <DropShadowEffect BlurRadius="15" Color="#BDC3C7" ShadowDepth="3" Opacity="0.2"/>
+                    <DropShadowEffect BlurRadius="20" Color="#BDC3C7" ShadowDepth="4" Opacity="0.15"/>
                 </Setter.Value>
             </Setter>
         </Style>
@@ -23,8 +25,9 @@
         <Style x:Key="ActionButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="{StaticResource BrandGreen}"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="15,0"/>
+            <Setter Property="Height" Value="40"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
@@ -35,11 +38,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bdr" Property="Opacity" Value="0.9"/>
+                                <Setter TargetName="bdr" Property="Opacity" Value="0.85"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="bdr" Property="Background" Value="#BDC3C7"/>
-                                <Setter Property="Foreground" Value="#7F8C8D"/>
+                                <Setter TargetName="bdr" Property="Background" Value="#E0E0E0"/>
+                                <Setter Property="Foreground" Value="#A6ACAF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -62,28 +65,28 @@
 
             <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
                 <TextBlock Text="Master Inventory" FontSize="28" FontWeight="Black" Foreground="{StaticResource TextDark}"/>
-                <TextBlock Text="Global definitions for raw ingredients." FontSize="14" Foreground="{StaticResource TextLight}"/>
+                <TextBlock Text="Global definitions and consolidated stock levels." FontSize="14" Foreground="{StaticResource TextLight}" Margin="0,2,0,0"/>
             </StackPanel>
 
             <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
 
-                <Border Background="White" CornerRadius="20" Height="40" Width="250" Margin="0,0,15,5">
+                <Border Background="White" CornerRadius="20" Height="40" Width="260" Margin="0,0,15,5">
                     <Border.Effect>
-                        <DropShadowEffect BlurRadius="10" Color="#BDC3C7" ShadowDepth="2" Opacity="0.1"/>
+                        <DropShadowEffect BlurRadius="8" Color="#BDC3C7" ShadowDepth="1" Opacity="0.2"/>
                     </Border.Effect>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="40"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <fa:ImageAwesome Icon="Search" Height="14" Foreground="{StaticResource TextLight}" HorizontalAlignment="Center"/>
+                        <fa:ImageAwesome Icon="Search" Height="13" Foreground="{StaticResource TextLight}" HorizontalAlignment="Center"/>
 
                         <TextBox x:Name="txtSearch" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
                                  Grid.Column="1" BorderThickness="0" Background="Transparent" 
-                                 VerticalContentAlignment="Center" FontSize="14" Foreground="{StaticResource TextDark}" Margin="0,0,10,0"/>
+                                 VerticalContentAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextDark}" Margin="0,0,15,0"/>
 
-                        <TextBlock Grid.Column="1" Text="Search items..." Foreground="#D0D3D4" 
-                                   VerticalAlignment="Center" IsHitTestVisible="False">
+                        <TextBlock Grid.Column="1" Text="Search items..." Foreground="#BDC3C7" FontWeight="Medium"
+                                   VerticalAlignment="Center" IsHitTestVisible="False" Margin="2,0,0,0">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Visibility" Value="Collapsed"/>
@@ -98,12 +101,10 @@
                     </Grid>
                 </Border>
 
-                <Button Command="{Binding RefreshCommand}" Background="White" Width="40" Height="40" Margin="0,0,10,5" ToolTip="Refresh">
-                    <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource ActionButtonStyle}">
-                            <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
-                        </Style>
-                    </Button.Style>
+                <Button Command="{Binding RefreshCommand}" Background="White" Width="40" Margin="0,0,10,5" ToolTip="Refresh Data" Style="{StaticResource ActionButtonStyle}">
+                    <Button.Foreground>
+                        <SolidColorBrush Color="#95A5A6"/>
+                    </Button.Foreground>
                     <fa:ImageAwesome Icon="Refresh" Height="14"/>
                 </Button>
 
@@ -111,21 +112,21 @@
                         CommandParameter="{Binding SelectedItems, ElementName=GridIngredients}"
                         Margin="0,0,10,5" Style="{StaticResource ActionButtonStyle}" Background="{StaticResource BrandOrange}">
                     <StackPanel Orientation="Horizontal">
-                        <fa:ImageAwesome Icon="Truck" Height="12" Foreground="White" Margin="0,0,8,0"/>
+                        <fa:ImageAwesome Icon="Truck" Height="13" Foreground="White" Margin="0,0,8,0"/>
                         <TextBlock Text="DISPATCH"/>
                     </StackPanel>
                 </Button>
 
-                <Button Command="{Binding RecordPurchaseCommand}" Style="{StaticResource ActionButtonStyle}" Background="#34495E" Margin="0,0,10,5">
+                <Button Command="{Binding RecordPurchaseCommand}" Style="{StaticResource ActionButtonStyle}" Background="{StaticResource BrandBlue}" Margin="0,0,10,5">
                     <StackPanel Orientation="Horizontal">
-                        <fa:ImageAwesome Icon="ShoppingCart" Height="12" Foreground="White" Margin="0,0,8,0"/>
+                        <fa:ImageAwesome Icon="ShoppingCart" Height="13" Foreground="White" Margin="0,0,8,0"/>
                         <TextBlock Text="BUY STOCK"/>
                     </StackPanel>
                 </Button>
 
                 <Button Command="{Binding AddItemCommand}" Style="{StaticResource ActionButtonStyle}" Margin="0,0,0,5">
                     <StackPanel Orientation="Horizontal">
-                        <fa:ImageAwesome Icon="Plus" Height="12" Foreground="White" Margin="0,0,8,0"/>
+                        <fa:ImageAwesome Icon="Plus" Height="13" Foreground="White" Margin="0,0,8,0"/>
                         <TextBlock Text="NEW ITEM"/>
                     </StackPanel>
                 </Button>
@@ -138,18 +139,21 @@
                       ItemsSource="{Binding Ingredients}" 
                       SelectedItem="{Binding SelectedIngredient}"
                       AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                      GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent" BorderThickness="0"
-                      RowHeight="50" VerticalScrollBarVisibility="Auto" Margin="10">
+                      GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent" 
+                      BorderThickness="0" RowHeight="55" VerticalScrollBarVisibility="Auto" Margin="15"
+                      AlternatingRowBackground="#FAFCFC">
 
                 <DataGrid.Resources>
                     <Style TargetType="DataGridColumnHeader">
                         <Setter Property="Background" Value="Transparent"/>
                         <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
-                        <Setter Property="FontWeight" Value="SemiBold"/>
-                        <Setter Property="Padding" Value="15,10"/>
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="FontSize" Value="11"/>
+                        <Setter Property="Padding" Value="15,12"/>
                         <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                        <Setter Property="BorderBrush" Value="#EEE"/>
+                        <Setter Property="BorderBrush" Value="#EAECEE"/>
                     </Style>
+
                     <Style TargetType="DataGridCell">
                         <Setter Property="BorderThickness" Value="0"/>
                         <Setter Property="Padding" Value="10,0"/>
@@ -172,37 +176,64 @@
                 </DataGrid.Resources>
 
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="ID" Binding="{Binding ItemID}" Width="60" Foreground="{StaticResource TextLight}"/>
+                    <DataGridTextColumn Header="ID" Binding="{Binding ItemID}" Width="70" Foreground="{StaticResource TextLight}" FontWeight="SemiBold"/>
 
-                    <DataGridTextColumn Header="INGREDIENT" Binding="{Binding ItemName}" Width="*" FontWeight="SemiBold" Foreground="{StaticResource TextDark}">
+                    <DataGridTextColumn Header="INGREDIENT" Binding="{Binding ItemName}" Width="*" FontWeight="Bold" Foreground="{StaticResource TextDark}">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="VerticalAlignment" Value="Center"/>
                                 <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                <Setter Property="FontSize" Value="14"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 
-                    <DataGridTemplateColumn Header="CATEGORY" Width="160">
+                    <DataGridTemplateColumn Header="CATEGORY" Width="150">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <Border Background="#F5F5F5" CornerRadius="6" Padding="10,5" HorizontalAlignment="Left">
-                                    <TextBlock Text="{Binding Category}" Foreground="{StaticResource TextDark}" FontSize="12" FontWeight="SemiBold"/>
+                                <Border Background="#F4F6F7" CornerRadius="6" Padding="12,6" HorizontalAlignment="Left">
+                                    <TextBlock Text="{Binding Category}" Foreground="{StaticResource TextDark}" FontSize="12" FontWeight="Bold"/>
                                 </Border>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
-                    <DataGridTextColumn Header="BUY UNIT" Binding="{Binding BulkUnit}" Width="100"/>
-                    <DataGridTextColumn Header="USE UNIT" Binding="{Binding BaseUnit}" Width="100"/>
-
-                    <DataGridTemplateColumn Header="CONVERSION" Width="140">
+                    <DataGridTemplateColumn Header="GLOBAL STOCK" Width="150">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="1:" Foreground="{StaticResource TextLight}"/>
-                                    <TextBlock Text="{Binding ConversionRatio, StringFormat='{}{0:N0}'}" FontWeight="Bold" Margin="4,0,0,0" Foreground="{StaticResource TextDark}"/>
+                                    <TextBlock Text="{Binding TotalStock, StringFormat='{}{0:N0}'}" FontWeight="Black" FontSize="16">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{StaticResource BrandGreen}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding TotalStock}" Value="0">
+                                                        <Setter Property="Foreground" Value="{StaticResource BrandRed}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+
+                                    <TextBlock Text="{Binding BulkUnit}" Foreground="{StaticResource TextLight}" FontWeight="Bold" 
+                                               Margin="5,0,0,0" VerticalAlignment="Bottom" Padding="0,0,0,2"/>
                                 </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTextColumn Header="BUY UNIT" Binding="{Binding BulkUnit}" Width="110" Foreground="{StaticResource TextDark}" FontWeight="Medium"/>
+                    <DataGridTextColumn Header="USE UNIT" Binding="{Binding BaseUnit}" Width="110" Foreground="{StaticResource TextDark}" FontWeight="Medium"/>
+
+                    <DataGridTemplateColumn Header="CONVERSION" Width="130">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border Background="#FAFAFA" BorderBrush="#EEEEEE" BorderThickness="1" CornerRadius="6" Padding="10,5" HorizontalAlignment="Left">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="1:" Foreground="{StaticResource TextLight}" FontWeight="Medium"/>
+                                        <TextBlock Text="{Binding ConversionRatio, StringFormat='{}{0:N0}'}" FontWeight="Bold" Margin="4,0,0,0" Foreground="{StaticResource TextDark}"/>
+                                    </StackPanel>
+                                </Border>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>

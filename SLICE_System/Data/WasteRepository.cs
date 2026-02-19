@@ -16,21 +16,67 @@ namespace SLICE_System.Data
             _dbService = new DatabaseService();
         }
 
-        // 1. RECORD WASTE
-        public void RecordWaste(WasteRecord waste)
+        // 1. RECORD WASTE (With Financial Valuation)
+        public void RecordWaste(int branchId, int itemId, decimal quantity, string reason, int userId)
         {
-            using (var connection = _dbService.GetConnection())
+            using (var conn = _dbService.GetConnection())
             {
-                string sql = @"
-                    INSERT INTO WasteTracker (BranchID, ItemID, QtyWasted, Reason, RecordedBy, DateRecorded)
-                    VALUES (@BranchID, @ItemID, @QtyWasted, @Reason, @RecordedBy, GETDATE());
+                conn.Open();
+                using (var trans = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        // A. Deduct from Physical Inventory
+                        string sqlDeduct = @"
+                            UPDATE BranchInventory 
+                            SET CurrentQuantity = CurrentQuantity - @Qty, LastUpdated = GETDATE()
+                            WHERE BranchID = @BranchID AND ItemID = @ItemID";
 
-                    -- DEDUCT FROM INVENTORY IMMEDIATELY
-                    UPDATE BranchInventory 
-                    SET CurrentQuantity = CurrentQuantity - @QtyWasted
-                    WHERE BranchID = @BranchID AND ItemID = @ItemID";
+                        conn.Execute(sqlDeduct, new { Qty = quantity, BranchID = branchId, ItemID = itemId }, trans);
 
-                connection.Execute(sql, waste);
+                        // B. Log in WasteTracker
+                        string sqlWaste = @"
+                            INSERT INTO WasteTracker (BranchID, ItemID, QtyWasted, Reason, RecordedBy, DateRecorded)
+                            VALUES (@BranchID, @ItemID, @Qty, @Reason, @UserID, GETDATE());
+                            SELECT SCOPE_IDENTITY();";
+
+                        int wasteId = conn.ExecuteScalar<int>(sqlWaste, new
+                        {
+                            BranchID = branchId,
+                            ItemID = itemId,
+                            Qty = quantity,
+                            Reason = reason,
+                            UserID = userId
+                        }, trans);
+
+                        // C. LOG FINANCIAL LOSS TO THE P&L
+                        decimal unitCost = GetLatestItemCost(itemId, conn, trans);
+                        decimal totalFinancialLoss = unitCost * quantity;
+
+                        // Only log to Ledger if it actually has a monetary value
+                        if (totalFinancialLoss > 0)
+                        {
+                            string sqlLedger = @"
+                                INSERT INTO FinancialLedger (TransactionDate, BranchID, Type, Category, Amount, Description, ReferenceID)
+                                VALUES (GETDATE(), @BranchID, 'Expense', 'Waste', @Amount, @Desc, @RefID)";
+
+                            conn.Execute(sqlLedger, new
+                            {
+                                BranchID = branchId,
+                                Amount = totalFinancialLoss,
+                                Desc = $"Spoilage/Waste: {reason} (x{quantity})",
+                                RefID = wasteId
+                            }, trans);
+                        }
+
+                        trans.Commit();
+                    }
+                    catch
+                    {
+                        trans.Rollback();
+                        throw;
+                    }
+                }
             }
         }
 
@@ -49,6 +95,22 @@ namespace SLICE_System.Data
 
                 return connection.Query<WasteRecord>(sql, new { BranchID = branchId }).ToList();
             }
+        }
+
+        // 3. HELPER: Get Latest Item Cost for Financial Valuation
+        private decimal GetLatestItemCost(int itemId, IDbConnection conn, IDbTransaction trans)
+        {
+            // Fetches the most recent price we paid for this ingredient
+            string sql = @"
+                SELECT TOP 1 UnitPrice 
+                FROM PurchaseDetails 
+                WHERE ItemID = @ItemID 
+                ORDER BY DetailID DESC";
+
+            var latestPrice = conn.ExecuteScalar<decimal?>(sql, new { ItemID = itemId }, trans);
+
+            // If we have never purchased it (e.g., test data), default to 0 to prevent crashes
+            return latestPrice ?? 0m;
         }
     }
 }

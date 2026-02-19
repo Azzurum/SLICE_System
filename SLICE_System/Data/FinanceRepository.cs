@@ -24,8 +24,13 @@ namespace SLICE_System.Data
 
                 string sql = $@"
                     SELECT 
-                        SUM(CASE WHEN Type = 'Income' THEN Amount ELSE 0 END) as TotalRevenue,
-                        SUM(CASE WHEN Type = 'Expense' THEN Amount ELSE 0 END) as TotalExpenses
+                        ISNULL(SUM(CASE WHEN Type = 'Income' THEN Amount ELSE 0 END), 0) as TotalRevenue,
+                        
+                        -- Total Expenses (Everything)
+                        ISNULL(SUM(CASE WHEN Type = 'Expense' THEN Amount ELSE 0 END), 0) as TotalExpenses,
+                        
+                        -- Specifically isolate Waste for the UI Banner
+                        ISNULL(SUM(CASE WHEN Type = 'Expense' AND Category = 'Waste' THEN Amount ELSE 0 END), 0) as TotalWasteCost
                     FROM FinancialLedger
                     WHERE TransactionDate BETWEEN @Start AND @End {branchFilter}";
 
@@ -53,8 +58,8 @@ namespace SLICE_System.Data
                 string sql = @"
                     SELECT 
                         b.BranchName,
-                        SUM(CASE WHEN f.Type = 'Income' THEN f.Amount ELSE 0 END) as Revenue,
-                        SUM(CASE WHEN f.Type = 'Expense' THEN f.Amount ELSE 0 END) as Expense
+                        ISNULL(SUM(CASE WHEN f.Type = 'Income' THEN f.Amount ELSE 0 END), 0) as Revenue,
+                        ISNULL(SUM(CASE WHEN f.Type = 'Expense' THEN f.Amount ELSE 0 END), 0) as Expense
                     FROM Branches b
                     LEFT JOIN FinancialLedger f ON b.BranchID = f.BranchID 
                         AND f.TransactionDate BETWEEN @Start AND @End

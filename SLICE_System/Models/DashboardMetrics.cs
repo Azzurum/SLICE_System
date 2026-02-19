@@ -11,10 +11,13 @@ namespace SLICE_System.Models
         public int LowStockCount { get; set; }
         public int PendingShipments { get; set; }
 
-        // --- NEW PROPERTIES FOR FINANCE/P&L (ADD THESE) ---
+        // --- NEW PROPERTIES FOR FINANCE/P&L ---
         public decimal TotalRevenue { get; set; }
         public decimal TotalExpenses { get; set; }
-        public decimal NetProfit => TotalRevenue - TotalExpenses; // Optional helper
+        public decimal NetProfit => TotalRevenue - TotalExpenses;
+
+        // --- PHASE 3: WASTE TRACKING ---
+        public decimal TotalWasteCost { get; set; }
 
         // --- Chart Data Collections ---
         public List<BranchPerformance> BranchRanking { get; set; } = new List<BranchPerformance>();

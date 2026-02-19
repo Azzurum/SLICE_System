@@ -37,6 +37,8 @@
         /// </summary>
         public decimal ConversionRatio { get; set; }
 
+        public decimal TotalStock { get; set; }
+
         // ---------------------------------------------------------
         // HELPER PROPERTIES (Read-Only)
         // ---------------------------------------------------------

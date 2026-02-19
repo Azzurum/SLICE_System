@@ -24,10 +24,22 @@ namespace SLICE_System.Data
         {
             using (var connection = _dbService.GetConnection())
             {
+                // UPDATED FOR PHASE 4: LEFT JOIN to sum up TotalStock from all branches
                 string sql = @"
-                    SELECT * FROM MasterInventory
-                    WHERE (@Search = '' OR ItemName LIKE @Search OR Category LIKE @Search)
-                    ORDER BY Category, ItemName";
+                    SELECT 
+                        m.ItemID, 
+                        m.ItemName, 
+                        m.Category, 
+                        m.BulkUnit, 
+                        m.BaseUnit, 
+                        m.ConversionRatio,
+                        ISNULL(SUM(b.CurrentQuantity), 0) AS TotalStock
+                    FROM MasterInventory m
+                    LEFT JOIN BranchInventory b ON m.ItemID = b.ItemID
+                    WHERE (@Search = '' OR m.ItemName LIKE @Search OR m.Category LIKE @Search)
+                    GROUP BY 
+                        m.ItemID, m.ItemName, m.Category, m.BulkUnit, m.BaseUnit, m.ConversionRatio
+                    ORDER BY m.Category, m.ItemName";
 
                 return connection.Query<MasterInventory>(sql, new { Search = "%" + search + "%" }).AsList();
             }
