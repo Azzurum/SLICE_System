@@ -71,22 +71,30 @@
                                 <DropShadowEffect Color="#BDC3C7" BlurRadius="15" Opacity="0.2" ShadowDepth="4"/>
                             </Border.Effect>
                             <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="*"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <Grid Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                    <Ellipse Width="90" Height="90" Fill="#FFF3E0"/>
-                                    <fa:ImageAwesome Icon="Cutlery" Foreground="{StaticResource BrandOrange}" Height="40"/>
+                                <Border x:Name="OutOfStockBadge" Background="#E74C3C" CornerRadius="6" Padding="10,4" 
+                                        HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,15,0,0"
+                                        Visibility="Collapsed" Panel.ZIndex="10">
+                                    <TextBlock Text="OUT OF STOCK" Foreground="White" FontWeight="Black" FontSize="11"/>
+                                </Border>
+
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <Ellipse Width="90" Height="90" Fill="#FFF3E0"/>
+                                        <fa:ImageAwesome Icon="Cutlery" Foreground="{StaticResource BrandOrange}" Height="40"/>
+                                    </Grid>
+                                    <StackPanel Grid.Row="1" Margin="15,0,15,20">
+                                        <TextBlock Text="{Binding DisplayName}" FontWeight="Bold" FontSize="15" 
+                                                   TextWrapping="Wrap" TextAlignment="Center" Foreground="{StaticResource TextDark}" 
+                                                   Height="40" VerticalAlignment="Top"/>
+                                        <Border Background="{StaticResource BrandOrange}" CornerRadius="8" HorizontalAlignment="Center" Padding="15,5" Margin="0,8,0,0">
+                                            <TextBlock Text="{Binding FormattedPrice}" Foreground="White" FontWeight="Bold" FontSize="14"/>
+                                        </Border>
+                                    </StackPanel>
                                 </Grid>
-                                <StackPanel Grid.Row="1" Margin="15,0,15,20">
-                                    <TextBlock Text="{Binding DisplayName}" FontWeight="Bold" FontSize="15" 
-                                               TextWrapping="Wrap" TextAlignment="Center" Foreground="{StaticResource TextDark}" 
-                                               Height="40" VerticalAlignment="Top"/>
-                                    <Border Background="{StaticResource BrandOrange}" CornerRadius="8" HorizontalAlignment="Center" Padding="15,5" Margin="0,8,0,0">
-                                        <TextBlock Text="{Binding FormattedPrice}" Foreground="White" FontWeight="Bold" FontSize="14"/>
-                                    </Border>
-                                </StackPanel>
                             </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -102,6 +110,13 @@
                                     </Setter.Value>
                                 </Setter>
                             </Trigger>
+
+                            <DataTrigger Binding="{Binding IsInStock}" Value="False">
+                                <Setter Property="IsEnabled" Value="False"/>
+                                <Setter TargetName="bdr" Property="Opacity" Value="0.4"/>
+                                <Setter TargetName="bdr" Property="Background" Value="#F2F4F4"/>
+                                <Setter TargetName="OutOfStockBadge" Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>

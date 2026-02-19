@@ -17,23 +17,32 @@ namespace SLICE_System.Data
         }
 
         // =========================================================
-        // 1. GET MENU
+        // 1. GET MENU (With Recipe-Driven Depletion Engine)
         // =========================================================
-        public List<MenuProduct> GetMenu()
+        public List<MenuProduct> GetMenu(int branchId)
         {
             using (var connection = _dbService.GetConnection())
             {
-                // Query 'MenuItems' table. 
-                // We default Category to 'General' since MenuItems doesn't have a Category column in the schema yet.
+                // Calculates the maximum portions that can be made based on the limiting ingredient.
+                // FIX: Changed 'bom.IngredientID' to 'bom.ItemID' to match your DB schema.
                 string sql = @"
-                    SELECT ProductID, 
-                           ProductName, 
-                           BasePrice, 
-                           'General' as Category 
-                    FROM MenuItems 
-                    WHERE IsAvailable = 1";
+                    SELECT 
+                        m.ProductID, 
+                        m.ProductName, 
+                        m.BasePrice, 
+                        'General' as Category,
+                        CAST(ISNULL(
+                            MIN(
+                                FLOOR(ISNULL(bi.CurrentQuantity, 0) / NULLIF(bom.RequiredQty, 0))
+                            ), 999
+                        ) AS INT) AS MaxCookable
+                    FROM MenuItems m
+                    LEFT JOIN BillOfMaterials bom ON m.ProductID = bom.ProductID
+                    LEFT JOIN BranchInventory bi ON bom.ItemID = bi.ItemID AND bi.BranchID = @BranchID
+                    WHERE m.IsAvailable = 1
+                    GROUP BY m.ProductID, m.ProductName, m.BasePrice";
 
-                return connection.Query<MenuProduct>(sql).ToList();
+                return connection.Query<MenuProduct>(sql, new { BranchID = branchId }).ToList();
             }
         }
 
@@ -46,13 +55,11 @@ namespace SLICE_System.Data
             {
                 connection.Open();
 
-                // Start a Transaction (All or Nothing)
                 using (var transaction = connection.BeginTransaction())
                 {
                     try
                     {
                         // --- STEP 1: GET PRODUCT PRICE SNAPSHOT ---
-                        // Crucial for P&L: We must capture the price *at the moment of sale*.
                         string sqlGetProduct = "SELECT ProductName, BasePrice FROM MenuItems WHERE ProductID = @Id";
                         var product = connection.QuerySingleOrDefault(sqlGetProduct, new { Id = productId }, transaction);
 
@@ -63,8 +70,8 @@ namespace SLICE_System.Data
                         string productName = product.ProductName;
 
                         // --- STEP 2: CALCULATE INGREDIENTS (Bill of Materials) ---
-                        // Get the recipe that links this Menu Item (ProductID) to Raw Stock (ItemID)
-                        string sqlGetRecipe = "SELECT * FROM BillOfMaterials WHERE ProductID = @ProductID";
+                        // FIX: Aliased ItemID as IngredientID so Dapper populates the Recipe.cs model correctly
+                        string sqlGetRecipe = "SELECT ProductID, ItemID as IngredientID, RequiredQty FROM BillOfMaterials WHERE ProductID = @ProductID";
                         var ingredients = connection.Query<Recipe>(sqlGetRecipe, new { ProductID = productId }, transaction).AsList();
 
                         // --- STEP 3: DEDUCT STOCK ---
@@ -83,14 +90,12 @@ namespace SLICE_System.Data
                                 {
                                     AmountToDeduct = totalNeeded,
                                     BranchID = branchId,
-                                    // Use the property name from your Recipe.cs model
                                     ItemID = ing.IngredientID
                                 }, transaction);
                             }
                         }
 
                         // --- STEP 4: RECORD THE SALE (With Price) ---
-                        // Updated to include UnitPrice so historical reports remain accurate even if menu prices change later.
                         string sqlRecord = @"
                             INSERT INTO SalesTransactions (BranchID, ProductID, QuantitySold, UnitPrice, TransactionDate)
                             VALUES (@BranchID, @ProductID, @Qty, @Price, GETDATE());
@@ -105,7 +110,6 @@ namespace SLICE_System.Data
                         }, transaction);
 
                         // --- STEP 5: FINANCIAL LEDGER (The P&L Entry) ---
-                        // This injects the "Income" directly into the central finance table.
                         string sqlLedger = @"
                             INSERT INTO FinancialLedger (TransactionDate, BranchID, Type, Category, Amount, Description, ReferenceID)
                             VALUES (GETDATE(), @BranchID, 'Income', 'Sales', @Amount, @Desc, @RefID)";
@@ -118,7 +122,6 @@ namespace SLICE_System.Data
                             RefID = newSaleId
                         }, transaction);
 
-                        // Complete the transaction
                         transaction.Commit();
                     }
                     catch

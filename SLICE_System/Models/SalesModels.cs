@@ -6,6 +6,10 @@
         public string ProductName { get; set; }
         public decimal BasePrice { get; set; }
         public string Category { get; set; }
+
+        // NEW: Smart POS Depletion Tracking
+        public int MaxCookable { get; set; }
+        public bool IsInStock => MaxCookable > 0;
     }
 
     public class CartItem
