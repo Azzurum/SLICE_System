@@ -116,6 +116,13 @@
                     </StackPanel>
                 </Button>
 
+                <Button Command="{Binding RecordPurchaseCommand}" Style="{StaticResource ActionButtonStyle}" Background="#34495E" Margin="0,0,10,5">
+                    <StackPanel Orientation="Horizontal">
+                        <fa:ImageAwesome Icon="ShoppingCart" Height="12" Foreground="White" Margin="0,0,8,0"/>
+                        <TextBlock Text="BUY STOCK"/>
+                    </StackPanel>
+                </Button>
+
                 <Button Command="{Binding AddItemCommand}" Style="{StaticResource ActionButtonStyle}" Margin="0,0,0,5">
                     <StackPanel Orientation="Horizontal">
                         <fa:ImageAwesome Icon="Plus" Height="12" Foreground="White" Margin="0,0,8,0"/>

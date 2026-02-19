@@ -50,6 +50,9 @@ namespace SLICE_System.ViewModels
         public ICommand AddItemCommand { get; }
         public ICommand DispatchCommand { get; }
 
+        // NEW: Command to open the purchase window
+        public ICommand RecordPurchaseCommand { get; }
+
         // --- CONSTRUCTOR ---
         public InventoryViewModel()
         {
@@ -63,6 +66,9 @@ namespace SLICE_System.ViewModels
 
             // UPDATED: DispatchCommand now accepts a parameter (the list of selected items)
             DispatchCommand = new RelayCommand<IList>(DispatchStock);
+
+            // NEW: Initialize the purchase command
+            RecordPurchaseCommand = new RelayCommand(OpenPurchaseWindow);
 
             LoadData();
         }
@@ -90,6 +96,17 @@ namespace SLICE_System.ViewModels
                 LoadData();
                 MessageBox.Show("New Ingredient Added Successfully!");
             }
+        }
+
+        // --- NEW PURCHASE LOGIC ---
+        private void OpenPurchaseWindow()
+        {
+            var win = new SLICE_System.Views.Dialogs.RecordPurchaseWindow();
+            win.ShowDialog();
+
+            // Refresh inventory after the purchase window is closed
+            // to reflect newly added stock in the UI
+            LoadData();
         }
 
         // --- UPDATED DISPATCH LOGIC ---
