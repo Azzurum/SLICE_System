@@ -2,183 +2,300 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:fa="http://schemas.fontawesome.io/icons/"
-             Background="#FDFBF7" FontFamily="Segoe UI">
+             Background="#F4F6F7" FontFamily="Segoe UI">
 
     <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <SolidColorBrush x:Key="BrandGreen" Color="#27AE60"/>
         <SolidColorBrush x:Key="BrandOrange" Color="#E67E22"/>
+        <SolidColorBrush x:Key="BrandBlue" Color="#34495E"/>
         <SolidColorBrush x:Key="TextDark" Color="#2C3E50"/>
         <SolidColorBrush x:Key="TextLight" Color="#95A5A6"/>
 
-        <Style x:Key="MenuCardStyle" TargetType="Border">
+        <Style x:Key="CardStyle" TargetType="Border">
             <Setter Property="Background" Value="White"/>
-            <Setter Property="CornerRadius" Value="12"/>
-            <Setter Property="Width" Value="200"/>
-            <Setter Property="Height" Value="220"/>
-            <Setter Property="Margin" Value="0,0,15,15"/>
+            <Setter Property="CornerRadius" Value="16"/>
             <Setter Property="Effect">
                 <Setter.Value>
-                    <DropShadowEffect BlurRadius="10" Color="#BDC3C7" ShadowDepth="2" Opacity="0.15"/>
+                    <DropShadowEffect BlurRadius="20" Color="#BDC3C7" ShadowDepth="4" Opacity="0.15"/>
                 </Setter.Value>
             </Setter>
         </Style>
     </UserControl.Resources>
 
-    <Grid>
+    <Grid Margin="30">
         <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="400"/>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
-        <Grid Grid.Column="0" Margin="30">
+        <Grid Grid.Column="0" Margin="0,0,25,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <Grid Grid.Row="0" Margin="0,0,0,20">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+            <StackPanel Grid.Row="0" Margin="0,0,0,15">
+                <TextBlock Text="Menu Registry" FontSize="28" FontWeight="Black" Foreground="{StaticResource TextDark}" Margin="0,0,0,5"/>
+                <TextBlock Text="Manage products and define recipes." FontSize="14" Foreground="{StaticResource TextLight}"/>
 
-                <StackPanel Grid.Column="0">
-                    <TextBlock Text="Menu Registry" FontSize="28" FontWeight="Black" Foreground="{StaticResource TextDark}"/>
-                    <TextBlock Text="Manage products, prices, and availability." FontSize="14" Foreground="{StaticResource TextLight}"/>
-                </StackPanel>
+                <Grid Margin="0,15,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Background="White" CornerRadius="20" Height="40" Width="220" Margin="0,0,10,0">
+                    <Border Background="White" CornerRadius="8" Height="42" BorderBrush="#EAECEE" BorderThickness="1">
                         <Border.Effect>
-                            <DropShadowEffect BlurRadius="10" Color="#BDC3C7" ShadowDepth="2" Opacity="0.1"/>
+                            <DropShadowEffect BlurRadius="10" Color="#BDC3C7" ShadowDepth="1" Opacity="0.1"/>
                         </Border.Effect>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="40"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <fa:ImageAwesome Icon="Search" Height="14" Foreground="{StaticResource TextLight}" HorizontalAlignment="Center"/>
-                            <TextBox x:Name="txtSearch" Grid.Column="1" BorderThickness="0" Background="Transparent" 
-                                     VerticalContentAlignment="Center" FontSize="14" Foreground="{StaticResource TextDark}"
-                                     TextChanged="txtSearch_TextChanged"/>
+                            <fa:ImageAwesome Icon="Search" Height="13" Foreground="{StaticResource TextLight}" HorizontalAlignment="Center"/>
+                            <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" 
+                                     BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextDark}"/>
                         </Grid>
                     </Border>
 
-                    <Button Click="AddNew_Click" Background="{StaticResource BrandOrange}" Foreground="White" 
-                            Height="40" Padding="20,0" BorderThickness="0" Cursor="Hand" FontWeight="Bold">
+                    <Button Grid.Column="1" Command="{Binding AddNewMenuCommand}" Background="{StaticResource BrandBlue}" 
+                            Foreground="White" FontWeight="Bold" Width="42" Height="42" Margin="10,0,0,0" Cursor="Hand" ToolTip="Add New Menu Item">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="8"/>
+                            </Style>
+                        </Button.Resources>
+                        <fa:ImageAwesome Icon="Plus" Height="14" Foreground="White"/>
+                    </Button>
+                </Grid>
+            </StackPanel>
+
+            <Border Grid.Row="1" Style="{StaticResource CardStyle}">
+                <DataGrid ItemsSource="{Binding MenuItems}" SelectedItem="{Binding SelectedMenuItem}" 
+                          AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="None" 
+                          Background="Transparent" BorderThickness="0" RowHeight="65" GridLinesVisibility="None"
+                          SelectionMode="Single" Margin="10" AlternatingRowBackground="#FAFCFC">
+                    <DataGrid.Resources>
+                        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="Transparent" />
+                        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="Black" />
+                        <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="Transparent" />
+                        <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="Black" />
+
+                        <Style TargetType="DataGridRow">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderBrush" Value="#EAECEE"/>
+                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#E8F8F5"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#F8F9F9"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                        </Style>
+                    </DataGrid.Resources>
+
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="15,10" Opacity="{Binding Opacity}">
+                                        <TextBlock Text="{Binding DisplayName}" FontWeight="Bold" FontSize="15" Foreground="{StaticResource TextDark}" Margin="0,0,0,2"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding FormattedPrice}" Foreground="{StaticResource BrandOrange}" FontWeight="Bold" FontSize="13" Width="70"/>
+                                            <Border Background="{Binding StatusColor}" CornerRadius="4" Padding="6,2">
+                                                <TextBlock Text="{Binding StatusText}" Foreground="White" FontSize="10" FontWeight="Bold"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+        </Grid>
+
+        <Border Grid.Column="1" Style="{StaticResource CardStyle}" Padding="35" 
+                Visibility="{Binding IsItemSelected, Converter={StaticResource BoolToVis}}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0">
+                    <TextBlock Text="Product Details" FontSize="20" FontWeight="Black" Foreground="{StaticResource TextDark}" Margin="0,0,0,15"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="130"/>
+                            <ColumnDefinition Width="110"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Margin="0,0,20,0">
+                            <TextBlock Text="PRODUCT NAME (Use '|' for categories, e.g., Pizza | Hawaiian)" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextLight}" Margin="0,0,0,6"/>
+                            <Border Background="#F8F9F9" BorderBrush="#EAECEE" BorderThickness="1" CornerRadius="8" Height="42">
+                                <TextBox Text="{Binding SelectedMenuItem.ProductName, UpdateSourceTrigger=PropertyChanged}" Background="Transparent" BorderThickness="0" VerticalContentAlignment="Center" Padding="15,0" FontSize="15" FontWeight="Bold" Foreground="{StaticResource TextDark}"/>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Margin="0,0,20,0">
+                            <TextBlock Text="BASE PRICE (₱)" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextLight}" Margin="0,0,0,6"/>
+                            <Border Background="#F8F9F9" BorderBrush="#EAECEE" BorderThickness="1" CornerRadius="8" Height="42">
+                                <TextBox Text="{Binding SelectedMenuItem.BasePrice, UpdateSourceTrigger=PropertyChanged}" Background="Transparent" BorderThickness="0" VerticalContentAlignment="Center" Padding="15,0" FontSize="15" FontWeight="Black" Foreground="{StaticResource BrandOrange}"/>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="STATUS" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextLight}" Margin="0,0,0,6"/>
+                            <CheckBox IsChecked="{Binding SelectedMenuItem.IsAvailable}" Content="Available" VerticalAlignment="Center" Height="42" FontWeight="Bold" Foreground="{StaticResource TextDark}" FontSize="14">
+                                <CheckBox.LayoutTransform>
+                                    <ScaleTransform ScaleX="1.1" ScaleY="1.1"/>
+                                </CheckBox.LayoutTransform>
+                            </CheckBox>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+
+                <Rectangle Grid.Row="1" Height="1" Fill="#EEEEEE" Margin="0,30,0,20"/>
+
+                <Grid Grid.Row="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                        <fa:ImageAwesome Icon="Book" Height="16" Foreground="{StaticResource BrandOrange}" Margin="0,0,10,0"/>
+                        <TextBlock Text="Bill of Materials (Depletion Engine Recipe)" FontSize="18" FontWeight="Black" Foreground="{StaticResource TextDark}"/>
+                    </StackPanel>
+
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding SelectedMenuItem.Recipe}" AutoGenerateColumns="False" 
+                              CanUserAddRows="False" Background="Transparent" BorderBrush="#EAECEE" BorderThickness="1" 
+                              RowHeight="50" HeadersVisibility="Column" GridLinesVisibility="Horizontal" AlternatingRowBackground="#FAFCFC">
+                        <DataGrid.Resources>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="#F8F9F9"/>
+                                <Setter Property="Foreground" Value="#95A5A6"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="FontSize" Value="11"/>
+                                <Setter Property="Padding" Value="15,10"/>
+                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                <Setter Property="BorderBrush" Value="#EAECEE"/>
+                            </Style>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="10,0"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="DataGridCell">
+                                            <Border Background="{TemplateBinding Background}">
+                                                <ContentPresenter VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="Foreground" Value="Black"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.Resources>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="RAW INGREDIENT" Binding="{Binding ItemName}" Width="*" IsReadOnly="True" FontWeight="Bold" Foreground="{StaticResource TextDark}"/>
+
+                            <DataGridTemplateColumn Header="REQUIRED QTY" Width="140">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Background="White" BorderThickness="1" BorderBrush="#EAECEE" CornerRadius="6" Height="34">
+                                            <TextBox Text="{Binding RequiredQty, UpdateSourceTrigger=PropertyChanged}" 
+                                                     Background="Transparent" BorderThickness="0" TextAlignment="Center" VerticalContentAlignment="Center" FontWeight="Black" Foreground="{StaticResource BrandBlue}" FontSize="14"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="UNIT" Binding="{Binding BaseUnit}" Width="80" IsReadOnly="True" Foreground="{StaticResource TextLight}" FontWeight="Bold"/>
+
+                            <DataGridTemplateColumn Width="60">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.RemoveIngredientCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="Remove from Recipe">
+                                            <fa:ImageAwesome Icon="Trash" Height="14" Foreground="#E74C3C"/>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+
+                <Grid Grid.Row="3" Margin="0,20,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Background="#F8F9F9" BorderBrush="#EAECEE" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,0,25,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <ComboBox Grid.Column="0" ItemsSource="{Binding AvailableIngredients}" SelectedItem="{Binding SelectedIngredient}" 
+                                      DisplayMemberPath="ItemName" Height="40" Margin="0,0,15,0" FontSize="14" FontWeight="SemiBold" ToolTip="Select Raw Material"/>
+
+                            <TextBox Grid.Column="1" Text="{Binding IngredientQuantity, UpdateSourceTrigger=PropertyChanged}" 
+                                     Height="40" Margin="0,0,15,0" VerticalContentAlignment="Center" TextAlignment="Center" FontSize="15" FontWeight="Black" Foreground="{StaticResource BrandBlue}" ToolTip="Amount needed per portion"/>
+
+                            <Button Grid.Column="2" Command="{Binding AddIngredientCommand}" Content="ADD TO RECIPE" 
+                                    Background="{StaticResource BrandBlue}" Foreground="White" FontWeight="Bold" Padding="20,0" Height="40" Cursor="Hand">
+                                <Button.Resources>
+                                    <Style TargetType="Border">
+                                        <Setter Property="CornerRadius" Value="6"/>
+                                    </Style>
+                                </Button.Resources>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <Button Grid.Column="1" Command="{Binding SaveMenuCommand}" Background="{StaticResource BrandGreen}" Foreground="White" 
+                            FontWeight="Bold" FontSize="15" Height="50" Cursor="Hand" Width="200" VerticalAlignment="Center">
                         <Button.Resources>
                             <Style TargetType="Border">
                                 <Setter Property="CornerRadius" Value="8"/>
                             </Style>
                         </Button.Resources>
                         <StackPanel Orientation="Horizontal">
-                            <fa:ImageAwesome Icon="Plus" Height="12" Foreground="White" Margin="0,0,8,0"/>
-                            <TextBlock Text="NEW ITEM"/>
+                            <fa:ImageAwesome Icon="Save" Height="16" Foreground="White" Margin="0,0,10,0"/>
+                            <TextBlock Text="SAVE MENU ITEM"/>
                         </StackPanel>
                     </Button>
-                </StackPanel>
-            </Grid>
-
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                <ItemsControl x:Name="icMenuList">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel Orientation="Horizontal"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border Style="{StaticResource MenuCardStyle}" Opacity="{Binding Opacity}">
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="*"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-
-                                    <Button Click="Edit_Click" Tag="{Binding}" Background="Transparent" BorderThickness="0" 
-                                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10" Cursor="Hand">
-                                        <fa:ImageAwesome Icon="Pencil" Height="14" Foreground="{StaticResource TextLight}"/>
-                                    </Button>
-
-                                    <StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                        <Border Background="#FFF3E0" CornerRadius="15" Padding="10,5" HorizontalAlignment="Center" Margin="0,0,0,10">
-                                            <TextBlock Text="{Binding VirtualCategory}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource BrandOrange}"/>
-                                        </Border>
-
-                                        <fa:ImageAwesome Icon="Cutlery" Height="40" Foreground="{StaticResource TextDark}" Margin="0,0,0,15" Opacity="0.8"/>
-
-                                        <TextBlock Text="{Binding DisplayName}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextDark}" 
-                                                   TextWrapping="Wrap" TextAlignment="Center" Margin="10,0"/>
-                                    </StackPanel>
-
-                                    <Border Grid.Row="1" BorderBrush="#EEE" BorderThickness="0,1,0,0" Padding="15,10">
-                                        <Grid>
-                                            <TextBlock Text="{Binding FormattedPrice}" FontWeight="Black" FontSize="16" Foreground="{StaticResource TextDark}" VerticalAlignment="Center"/>
-
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                                <Ellipse Width="8" Height="8" Fill="{Binding StatusColor}" Margin="0,0,5,0"/>
-                                                <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="{Binding StatusColor}" FontWeight="Bold"/>
-                                            </StackPanel>
-                                        </Grid>
-                                    </Border>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
-        </Grid>
-
-        <Border x:Name="pnlEditor" Grid.Column="1" Width="0" Background="White" BorderBrush="#EEE" BorderThickness="1,0,0,0">
-            <Grid Margin="25">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <StackPanel Grid.Row="0" Margin="0,0,0,20">
-                    <TextBlock x:Name="lblEditorTitle" Text="Edit Item" FontSize="20" FontWeight="Black" Foreground="{StaticResource TextDark}"/>
-                    <TextBlock Text="Modify item details." Foreground="{StaticResource TextLight}"/>
-                </StackPanel>
-
-                <StackPanel Grid.Row="1">
-                    <TextBlock Text="CATEGORY" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextLight}" Margin="0,0,0,5"/>
-                    <ComboBox x:Name="cmbCategory" Height="40" Margin="0,0,0,15" Padding="10,8">
-                        <ComboBoxItem Content="Pizza" IsSelected="True"/>
-                        <ComboBoxItem Content="Drinks"/>
-                        <ComboBoxItem Content="Sides"/>
-                        <ComboBoxItem Content="Dessert"/>
-                        <ComboBoxItem Content="General"/>
-                    </ComboBox>
-
-                    <TextBlock Text="PRODUCT NAME" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextLight}" Margin="0,0,0,5"/>
-                    <TextBox x:Name="txtName" Height="40" VerticalContentAlignment="Center" Padding="5" Margin="0,0,0,15"/>
-
-                    <TextBlock Text="BASE PRICE (₱)" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextLight}" Margin="0,0,0,5"/>
-                    <TextBox x:Name="txtPrice" Height="40" VerticalContentAlignment="Center" Padding="5" Margin="0,0,0,15"/>
-
-                    <TextBlock Text="AVAILABILITY" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextLight}" Margin="0,0,0,5"/>
-                    <CheckBox x:Name="chkActive" Content="Available for Sale" FontSize="14" Foreground="{StaticResource TextDark}" Margin="0,5,0,0"/>
-
-                    <Border Background="#FFF8E1" BorderBrush="#FFE082" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,20,0,0">
-                        <StackPanel>
-                            <TextBlock Text="⚠️ Warning" FontWeight="Bold" Foreground="#F39C12" FontSize="11"/>
-                            <TextBlock Text="Changing the price will affect all future transactions." FontSize="10" Foreground="#7F8C8D" TextWrapping="Wrap"/>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-
-                <StackPanel Grid.Row="2" Margin="0,20,0,0">
-                    <Button Content="SAVE CHANGES" Click="Save_Click" Height="45" Background="{StaticResource BrandOrange}" Foreground="White" FontWeight="Bold" BorderThickness="0" Margin="0,0,0,10" Cursor="Hand">
-                        <Button.Resources>
-                            <Style TargetType="Border">
-                                <Setter Property="CornerRadius" Value="8"/>
-                            </Style>
-                        </Button.Resources>
-                    </Button>
-                    <Button Content="Cancel" Click="CloseEditor_Click" Height="45" Background="Transparent" Foreground="{StaticResource TextLight}" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
-                </StackPanel>
+                </Grid>
             </Grid>
         </Border>
+
+        <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" 
+                    Visibility="{Binding IsItemSelected, Converter={StaticResource BoolToVis}, ConverterParameter=Inverted}">
+            <fa:ImageAwesome Icon="ListAlt" Height="60" Foreground="#EAECEE" Margin="0,0,0,20"/>
+            <TextBlock Text="Select a menu item to build its recipe" FontSize="20" Foreground="#BDC3C7" FontWeight="Black"/>
+            <TextBlock Text="or click the + button to create a new product." FontSize="14" Foreground="#D0D3D4" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+        </StackPanel>
     </Grid>
 </UserControl>

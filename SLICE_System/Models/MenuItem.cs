@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Collections.ObjectModel;
 
 namespace SLICE_System.Models
 {
@@ -10,6 +11,8 @@ namespace SLICE_System.Models
         private bool _isAvailable;
 
         public int ProductID { get; set; }
+
+        public ObservableCollection<RecipeItemVM> Recipe { get; set; } = new ObservableCollection<RecipeItemVM>();
 
         public string ProductName
         {
