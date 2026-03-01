@@ -17,14 +17,14 @@ namespace SLICE_System.Data
         }
 
         // =========================================================
-        // 1. MASTER INVENTORY (Global Ingredients Registry)
+        // 1. MASTER INVENTORY
         // =========================================================
 
         public List<MasterInventory> GetAllIngredients(string search = "")
         {
             using (var connection = _dbService.GetConnection())
             {
-                // UPDATED FOR PHASE 4: LEFT JOIN to sum up TotalStock from all branches
+                // Retrieve all raw materials and sum up enterprise-wide stock
                 string sql = @"
                     SELECT 
                         m.ItemID, 
@@ -58,7 +58,7 @@ namespace SLICE_System.Data
         }
 
         // =========================================================
-        // 2. BRANCH INVENTORY (Live Stock Levels)
+        // 2. BRANCH INVENTORY
         // =========================================================
 
         public List<BranchInventoryItem> GetStockForBranch(int branchId)
@@ -86,10 +86,10 @@ namespace SLICE_System.Data
         }
 
         // =========================================================
-        // 3. UTILITIES (Branches & Lookups)
+        // 3. UTILITIES
         // =========================================================
 
-        // Get All Branches (For Dropdowns/Admin)
+        // Get all branches
         public List<Branch> GetAllBranches()
         {
             using (var connection = _dbService.GetConnection())
@@ -98,7 +98,7 @@ namespace SLICE_System.Data
             }
         }
 
-        // Get Shipping Destinations (Exclude Current Branch)
+        // Get destinations for Mesh Logistics transfers
         public List<Branch> GetShippingDestinations(int myBranchId)
         {
             using (var connection = _dbService.GetConnection())
@@ -109,10 +109,10 @@ namespace SLICE_System.Data
         }
 
         // =========================================================
-        // 4. RECONCILIATION & ADJUSTMENTS
+        // 4. RECONCILIATION & LEAKAGE TRACKING
         // =========================================================
 
-        // Get Data for Reconciliation Sheet
+        // Load data for the physical stock count sheet
         public List<ReconItem> GetReconciliationSheet(int branchId)
         {
             using (var connection = _dbService.GetConnection())
@@ -120,9 +120,11 @@ namespace SLICE_System.Data
                 string sql = @"
                     SELECT 
                         bi.StockID, 
+                        bi.BranchID,
+                        mi.ItemID,
                         mi.ItemName, 
                         bi.CurrentQuantity as SystemQty, 
-                        0 as PhysicalQty -- Default to 0 for user input
+                        0 as PhysicalQty
                     FROM BranchInventory bi
                     JOIN MasterInventory mi ON bi.ItemID = mi.ItemID
                     WHERE bi.BranchID = @BranchID
@@ -132,34 +134,82 @@ namespace SLICE_System.Data
             }
         }
 
-        // Save Adjustment Transaction
-        public void SaveAdjustment(int stockId, decimal systemQty, decimal physicalQty, int userId)
+        // Save physical count and log financial leakage if missing items
+        public void SaveAdjustment(int stockId, int branchId, int itemId, decimal systemQty, decimal physicalQty, int userId)
         {
             using (var connection = _dbService.GetConnection())
             {
-                // Calculate Variance
-                decimal variance = physicalQty - systemQty;
+                connection.Open();
+                using (var trans = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        decimal variance = physicalQty - systemQty;
 
-                // A. Log the Adjustment History
-                string sqlLog = @"
-                    INSERT INTO InventoryAdjustments (StockID, SystemQty, PhysicalQty, Variance, AdjustedBy, AdjustmentDate)
-                    VALUES (@StockID, @Sys, @Phys, @Var, @User, GETDATE())";
+                        // 1. Log adjustment history
+                        string sqlLog = @"
+                            INSERT INTO InventoryAdjustments (StockID, SystemQty, PhysicalQty, Variance, AdjustedBy, AdjustmentDate)
+                            VALUES (@StockID, @Sys, @Phys, @Var, @User, GETDATE());
+                            SELECT SCOPE_IDENTITY();";
 
-                connection.Execute(sqlLog, new { StockID = stockId, Sys = systemQty, Phys = physicalQty, Var = variance, User = userId });
+                        int adjustmentId = connection.ExecuteScalar<int>(sqlLog, new
+                        {
+                            StockID = stockId,
+                            Sys = systemQty,
+                            Phys = physicalQty,
+                            Var = variance,
+                            User = userId
+                        }, trans);
 
-                // B. Update the Real Stock to match Physical Count
-                string sqlUpdate = "UPDATE BranchInventory SET CurrentQuantity = @Phys WHERE StockID = @StockID";
-                connection.Execute(sqlUpdate, new { Phys = physicalQty, StockID = stockId });
+                        // 2. Update real stock levels
+                        string sqlUpdate = "UPDATE BranchInventory SET CurrentQuantity = @Phys, LastUpdated = GETDATE() WHERE StockID = @StockID";
+                        connection.Execute(sqlUpdate, new { Phys = physicalQty, StockID = stockId }, trans);
+
+                        // 3. Log financial loss to P&L if items are missing
+                        if (variance < 0)
+                        {
+                            // Get latest unit cost for exact loss calculation
+                            string sqlCost = "SELECT TOP 1 UnitPrice FROM PurchaseDetails WHERE ItemID = @ItemID ORDER BY DetailID DESC";
+                            var unitCost = connection.ExecuteScalar<decimal?>(sqlCost, new { ItemID = itemId }, trans) ?? 0m;
+
+                            decimal totalLoss = Math.Abs(variance) * unitCost;
+
+                            if (totalLoss > 0)
+                            {
+                                string sqlLedger = @"
+                                    INSERT INTO FinancialLedger (TransactionDate, BranchID, Type, Category, Amount, Description, ReferenceID)
+                                    VALUES (GETDATE(), @BranchID, 'Expense', 'Leakage', @Amount, @Desc, @RefID)";
+
+                                connection.Execute(sqlLedger, new
+                                {
+                                    BranchID = branchId,
+                                    Amount = totalLoss,
+                                    Desc = $"Inventory Leakage: {Math.Abs(variance)} units missing",
+                                    RefID = adjustmentId
+                                }, trans);
+                            }
+                        }
+
+                        trans.Commit();
+                    }
+                    catch
+                    {
+                        trans.Rollback();
+                        throw;
+                    }
+                }
             }
         }
 
-        // Helper Class for Reconciliation Logic
+        // Helper class for UI binding
         public class ReconItem
         {
             public int StockID { get; set; }
+            public int BranchID { get; set; }
+            public int ItemID { get; set; }
             public string ItemName { get; set; }
             public decimal SystemQty { get; set; }
-            public decimal PhysicalQty { get; set; } // This property binds to the Editable Column
+            public decimal PhysicalQty { get; set; }
         }
     }
 }
