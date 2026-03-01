@@ -80,7 +80,7 @@ namespace SLICE_System
         // --- NAVIGATION HANDLERS ---
 
         public void Nav_Dashboard_Click(object sender, RoutedEventArgs e)
-            => LoadView("Executive Dashboard", new Views.DashboardView());
+            => LoadView("Executive Dashboard", new Views.DashboardView(_currentUser));
 
         private void Nav_Incoming_Click(object sender, RoutedEventArgs e)
         {
