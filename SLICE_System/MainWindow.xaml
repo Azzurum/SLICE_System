@@ -221,7 +221,7 @@
                                         <fa:FontAwesome Icon="Book" FontSize="16" Foreground="White"/>
                                     </Button.Tag>
                                 </Button>
-                                <Button x:Name="Btn_Inventory" Content="Global Inventory" Style="{StaticResource MenuButtonStyle}" Click="Nav_Inventory_Click">
+                                <Button x:Name="Btn_Inventory" Content="Central Warehouse" Style="{StaticResource MenuButtonStyle}" Click="Nav_Inventory_Click">
                                     <Button.Tag>
                                         <fa:FontAwesome Icon="Globe" FontSize="16" Foreground="White"/>
                                     </Button.Tag>

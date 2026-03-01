@@ -1,71 +1,178 @@
 ﻿<Window x:Class="SLICE_System.Views.Dialogs.AddIngredientWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Add Ingredient" Height="480" Width="420"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
+        Title="Add Ingredient" Height="580" Width="460"
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize" WindowStyle="None"
-        Background="White" BorderBrush="#27AE60" BorderThickness="1">
+        AllowsTransparency="True" Background="Transparent" FontFamily="Segoe UI"
+        MouseDown="Window_MouseDown">
 
-    <Grid Margin="25">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+    <Window.Resources>
+        <Style x:Key="ModernInput" TargetType="Control">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#BDC3C7"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#2C3E50"/>
+        </Style>
 
-        <StackPanel Grid.Row="0" Margin="0,0,0,20">
-            <TextBlock Text="New Ingredient" FontSize="22" FontWeight="Bold" Foreground="#2C3E50"/>
-            <TextBlock Text="Add a new raw material to the Master Registry." Foreground="#95A5A6" Margin="0,5,0,0"/>
-        </StackPanel>
+        <Style TargetType="TextBox" BasedOn="{StaticResource ModernInput}">
+            <Setter Property="Height" Value="42"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="0"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-        <StackPanel Grid.Row="1">
-            <TextBlock Text="INGREDIENT NAME" FontSize="11" FontWeight="Bold" Foreground="#95A5A6" Margin="0,0,0,5"/>
-            <TextBox x:Name="txtName" Height="40" VerticalContentAlignment="Center" Padding="5" Margin="0,0,0,15"/>
+        <Style TargetType="ComboBox" BasedOn="{StaticResource ModernInput}">
+            <Setter Property="Height" Value="42"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="30"/>
+                                </Grid.ColumnDefinitions>
+                                <ContentPresenter Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" Margin="{TemplateBinding Padding}" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                                <ToggleButton Grid.Column="1" Focusable="false" IsChecked="{Binding Path=IsDropDownOpen,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent}}">
+                                    <ToggleButton.Template>
+                                        <ControlTemplate TargetType="ToggleButton">
+                                            <Border Background="Transparent">
+                                                <Path Data="M0,0 L5,5 L10,0" Stroke="#7F8C8D" StrokeThickness="2" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </ToggleButton.Template>
+                                </ToggleButton>
+                                <Popup Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
+                                    <Grid Name="DropDown" MinWidth="{TemplateBinding ActualWidth}" MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                        <Border Background="White" BorderThickness="1" BorderBrush="#BDC3C7" CornerRadius="4">
+                                            <ScrollViewer SnapsToDevicePixels="True">
+                                                <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                            </ScrollViewer>
+                                        </Border>
+                                    </Grid>
+                                </Popup>
+                            </Grid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
 
-            <TextBlock Text="CATEGORY" FontSize="11" FontWeight="Bold" Foreground="#95A5A6" Margin="0,0,0,5"/>
-            <ComboBox x:Name="cmbCategory" Height="40" Margin="0,0,0,15" Padding="10,8">
-                <ComboBoxItem Content="Dough &amp; Flour" IsSelected="True"/>
-                <ComboBoxItem Content="Cheese &amp; Dairy"/>
-                <ComboBoxItem Content="Meat &amp; Protein"/>
-                <ComboBoxItem Content="Sauce &amp; Spices"/>
-                <ComboBoxItem Content="Vegetables"/>
-                <ComboBoxItem Content="Beverages"/>
-                <ComboBoxItem Content="Packaging"/>
-            </ComboBox>
+    <Border Background="White" CornerRadius="12" Margin="15">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="25" Color="#2C3E50" ShadowDepth="5" Opacity="0.2"/>
+        </Border.Effect>
 
-            <Grid Margin="0,0,0,15">
+        <Grid Margin="25">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="0,0,0,25">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="15"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0">
-                    <TextBlock Text="BULK UNIT (Buy)" FontSize="11" FontWeight="Bold" Foreground="#95A5A6" Margin="0,0,0,5"/>
-                    <TextBox x:Name="txtBulk" Height="40" VerticalContentAlignment="Center" Padding="5"/>
+
+                <StackPanel Orientation="Horizontal">
+                    <Border Background="#E8F8F5" Width="40" Height="40" CornerRadius="8" Margin="0,0,15,0">
+                        <fa:ImageAwesome Icon="Leaf" Height="18" Foreground="#27AE60"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock x:Name="txtHeaderTitle" Text="New Ingredient" FontSize="20" FontWeight="Black" Foreground="#2C3E50"/>
+                        <TextBlock Text="Register a raw material to the Master Database." FontSize="12" Foreground="#95A5A6" Margin="0,2,0,0"/>
+                    </StackPanel>
                 </StackPanel>
-                <StackPanel Grid.Column="2">
-                    <TextBlock Text="BASE UNIT (Use)" FontSize="11" FontWeight="Bold" Foreground="#95A5A6" Margin="0,0,0,5"/>
-                    <ComboBox x:Name="cmbBase" Height="40" Padding="10,8">
-                        <ComboBoxItem Content="g" IsSelected="True"/>
-                        <ComboBoxItem Content="ml"/>
-                        <ComboBoxItem Content="pcs"/>
-                    </ComboBox>
-                </StackPanel>
+
+                <Button Grid.Column="1" Click="Cancel_Click" Background="Transparent" BorderThickness="0" Cursor="Hand" VerticalAlignment="Top" Width="30" Height="30" ToolTip="Close">
+                    <fa:ImageAwesome Icon="Close" Height="14" Foreground="#BDC3C7"/>
+                </Button>
             </Grid>
 
-            <TextBlock Text="CONVERSION RATIO (How many Base Units in 1 Bulk?)" FontSize="11" FontWeight="Bold" Foreground="#95A5A6" Margin="0,0,0,5"/>
-            <TextBox x:Name="txtRatio" Height="40" VerticalContentAlignment="Center" Padding="5" Text="1000"/>
-            <TextBlock Text="Example: 1 Sack = 25000 g" FontSize="10" Foreground="#BDC3C7" Margin="0,5,0,0"/>
-        </StackPanel>
+            <StackPanel Grid.Row="1">
+                <TextBlock Text="INGREDIENT NAME" FontSize="11" FontWeight="Bold" Foreground="#95A5A6" Margin="0,0,0,5"/>
+                <TextBox x:Name="txtName" Margin="0,0,0,15"/>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
-            <Button Content="Cancel" Click="Cancel_Click" Width="100" Height="40" Background="Transparent" BorderThickness="0" Foreground="#95A5A6" Cursor="Hand"/>
-            <Button Content="SAVE ITEM" Click="Save_Click" Width="120" Height="40" Background="#27AE60" Foreground="White" FontWeight="Bold" Cursor="Hand">
-                <Button.Resources>
-                    <Style TargetType="Border">
-                        <Setter Property="CornerRadius" Value="6"/>
-                    </Style>
-                </Button.Resources>
-            </Button>
-        </StackPanel>
-    </Grid>
+                <TextBlock Text="CATEGORY" FontSize="11" FontWeight="Bold" Foreground="#95A5A6" Margin="0,0,0,5"/>
+                <ComboBox x:Name="cmbCategory" Margin="0,0,0,25">
+                    <ComboBoxItem Content="Dough &amp; Flour" IsSelected="True"/>
+                    <ComboBoxItem Content="Cheese &amp; Dairy"/>
+                    <ComboBoxItem Content="Meat &amp; Protein"/>
+                    <ComboBoxItem Content="Sauce &amp; Spices"/>
+                    <ComboBoxItem Content="Vegetables"/>
+                    <ComboBoxItem Content="Beverages"/>
+                    <ComboBoxItem Content="Packaging"/>
+                </ComboBox>
+
+                <Border Background="#FAFCFC" BorderBrush="#EAECEE" BorderThickness="1" CornerRadius="8" Padding="15">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                            <fa:ImageAwesome Icon="BalanceScale" Height="14" Foreground="#3498DB" Margin="0,0,8,0"/>
+                            <TextBlock Text="MEASUREMENT &amp; CONVERSION" FontSize="11" FontWeight="Black" Foreground="#2980B9"/>
+                        </StackPanel>
+
+                        <Grid Margin="0,0,0,15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="15"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="PURCHASED AS (Bulk)" FontSize="10" FontWeight="Bold" Foreground="#7F8C8D" Margin="0,0,0,5"/>
+                                <TextBox x:Name="txtBulk" ToolTip="e.g., Sack, Box, Case"/>
+                            </StackPanel>
+
+                            <fa:ImageAwesome Grid.Column="1" Icon="ArrowRight" Height="12" Foreground="#BDC3C7" VerticalAlignment="Bottom" Margin="0,0,0,15"/>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="RECIPE UNIT (Base)" FontSize="10" FontWeight="Bold" Foreground="#7F8C8D" Margin="0,0,0,5"/>
+                                <ComboBox x:Name="cmbBase" ToolTip="Unit used in POS recipes">
+                                    <ComboBoxItem Content="g" IsSelected="True"/>
+                                    <ComboBoxItem Content="ml"/>
+                                    <ComboBoxItem Content="pcs"/>
+                                </ComboBox>
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock Text="CONVERSION RATIO (Base units per Bulk unit)" FontSize="10" FontWeight="Bold" Foreground="#7F8C8D" Margin="0,0,0,5"/>
+                        <TextBox x:Name="txtRatio" Text="1000" Foreground="#E67E22" FontWeight="Black"/>
+                        <TextBlock Text="Example: 1 Sack = 25,000 g (Enter 25000)" FontSize="11" FontWeight="SemiBold" Foreground="#95A5A6" Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                <Button Content="CANCEL" Click="Cancel_Click" Width="90" Height="42" Background="Transparent" BorderThickness="0" Foreground="#95A5A6" FontWeight="Bold" Cursor="Hand" Margin="0,0,10,0"/>
+
+                <Button Click="Save_Click" Width="140" Height="42" Background="#27AE60" Foreground="White" FontWeight="Bold" Cursor="Hand">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="6"/>
+                        </Style>
+                    </Button.Resources>
+                    <StackPanel Orientation="Horizontal">
+                        <fa:ImageAwesome Icon="Save" Height="14" Foreground="White" Margin="0,0,8,0"/>
+                        <TextBlock Text="SAVE ITEM"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Border>
 </Window>

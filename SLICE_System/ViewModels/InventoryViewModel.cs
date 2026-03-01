@@ -3,7 +3,7 @@ using SLICE_System.Data;
 using SLICE_System.Models;
 using SLICE_System.Views.Dialogs;
 using System;
-using System.Collections; // Required for IList
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -46,12 +46,15 @@ namespace SLICE_System.ViewModels
             }
         }
 
+        // --- COMMANDS ---
         public ICommand RefreshCommand { get; }
         public ICommand AddItemCommand { get; }
         public ICommand DispatchCommand { get; }
-
-        // NEW: Command to open the purchase window
         public ICommand RecordPurchaseCommand { get; }
+
+        // NEW: Action Commands for the DataGrid Rows
+        public ICommand EditItemCommand { get; }
+        public ICommand DeleteItemCommand { get; }
 
         // --- CONSTRUCTOR ---
         public InventoryViewModel()
@@ -60,15 +63,15 @@ namespace SLICE_System.ViewModels
             _db = new DatabaseService();
             Ingredients = new ObservableCollection<MasterInventory>();
 
+            // Initialize Commands
             RefreshCommand = new RelayCommand(LoadData);
-
             AddItemCommand = new RelayCommand(AddItem);
-
-            // UPDATED: DispatchCommand now accepts a parameter (the list of selected items)
             DispatchCommand = new RelayCommand<IList>(DispatchStock);
-
-            // NEW: Initialize the purchase command
             RecordPurchaseCommand = new RelayCommand(OpenPurchaseWindow);
+
+            // NEW: Row Actions
+            EditItemCommand = new RelayCommand<MasterInventory>(EditItem);
+            DeleteItemCommand = new RelayCommand<MasterInventory>(DeleteItem);
 
             LoadData();
         }
@@ -89,27 +92,83 @@ namespace SLICE_System.ViewModels
 
         private void AddItem()
         {
-            var popup = new SLICE_System.Views.Dialogs.AddIngredientWindow();
+            var popup = new AddIngredientWindow(); // Standard empty window
+            if (popup.ShowDialog() == true)
+            {
+                LoadData();
+            }
+        }
+
+        // --- NEW: EDIT LOGIC ---
+        private void EditItem(MasterInventory item)
+        {
+            if (item == null) return;
+
+            // Use the full namespace to ensure it hits the Dialogs version with the custom constructor
+            var popup = new SLICE_System.Views.Dialogs.AddIngredientWindow(item);
 
             if (popup.ShowDialog() == true)
             {
                 LoadData();
-                MessageBox.Show("New Ingredient Added Successfully!");
             }
         }
 
-        // --- NEW PURCHASE LOGIC ---
+        // --- NEW: DELETE LOGIC ---
+        private void DeleteItem(MasterInventory item)
+        {
+            if (item == null) return;
+
+            // 1. Confirm with the user
+            var result = MessageBox.Show(
+                $"Are you sure you want to remove '{item.ItemName}'? This will permanently delete the item definition.",
+                "Confirm Deletion", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+            if (result != MessageBoxResult.Yes) return;
+
+            try
+            {
+                using (var conn = _db.GetConnection())
+                {
+                    // 2. SAFETY CHECK: Check if this item is used in Recipes or has Stock in Branches
+                    string sqlCheck = @"
+                SELECT 
+                    (SELECT COUNT(*) FROM BillOfMaterials WHERE ItemID = @Id) +
+                    (SELECT COUNT(*) FROM BranchInventory WHERE ItemID = @Id AND CurrentQuantity > 0) 
+                AS UsageCount";
+
+                    int usage = conn.ExecuteScalar<int>(sqlCheck, new { Id = item.ItemID });
+
+                    if (usage > 0)
+                    {
+                        // BLOCK THE DELETE: Explain that it's in use
+                        MessageBox.Show(
+                            $"Cannot delete '{item.ItemName}' because it is currently used in a Menu Recipe or still has remaining stock in one or more branches.\n\nPlease remove it from all recipes and empty the stock before deleting.",
+                            "Item In Use", MessageBoxButton.OK, MessageBoxImage.Stop);
+                        return;
+                    }
+
+                    // 3. IF SAFE: Proceed with Deletion
+                    // We also delete empty stock records (0 qty) to clean up the DB
+                    conn.Execute("DELETE FROM BranchInventory WHERE ItemID = @Id", new { Id = item.ItemID });
+                    conn.Execute("DELETE FROM MasterInventory WHERE ItemID = @Id", new { Id = item.ItemID });
+
+                    LoadData();
+                    MessageBox.Show("Ingredient successfully removed from the Central Warehouse.", "Success");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Deletion failed: {ex.Message}", "Database Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void OpenPurchaseWindow()
         {
-            var win = new SLICE_System.Views.Dialogs.RecordPurchaseWindow();
+            var win = new RecordPurchaseWindow();
             win.ShowDialog();
-
-            // Refresh inventory after the purchase window is closed
-            // to reflect newly added stock in the UI
             LoadData();
         }
 
-        // --- UPDATED DISPATCH LOGIC ---
         private void DispatchStock(IList selectedItems)
         {
             if (selectedItems == null || selectedItems.Count == 0)
@@ -118,7 +177,6 @@ namespace SLICE_System.ViewModels
                 return;
             }
 
-            // 1. Prepare the list for the Dialog
             var dispatchList = new List<DispatchItemModel>();
             foreach (var item in selectedItems)
             {
@@ -129,19 +187,16 @@ namespace SLICE_System.ViewModels
                         ItemID = inventoryItem.ItemID,
                         ItemName = inventoryItem.ItemName,
                         Unit = inventoryItem.BulkUnit,
-                        Quantity = 0 // User must enter this
+                        Quantity = 0
                     });
                 }
             }
 
-            // 2. Open the Multi-Item Dispatch Dialog
             var dialog = new DispatchDialog(dispatchList);
 
             if (dialog.ShowDialog() == true)
             {
-                // Filter out items with 0 quantity to avoid cluttering the database
                 var itemsToSend = dialog.ItemsToDispatch.Where(x => x.Quantity > 0).ToList();
-
                 if (itemsToSend.Count == 0) return;
 
                 try
@@ -153,7 +208,6 @@ namespace SLICE_System.ViewModels
                         {
                             try
                             {
-                                // A. Create the Transfer Header (The "Box")
                                 string sqlHeader = @"
                                     INSERT INTO MeshLogistics (FromBranchID, ToBranchID, Status, SenderID, SentDate)
                                     VALUES (1, @TargetBranchID, 'In-Transit', 1, GETDATE());
@@ -161,7 +215,6 @@ namespace SLICE_System.ViewModels
 
                                 int transferId = conn.ExecuteScalar<int>(sqlHeader, new { TargetBranchID = dialog.SelectedBranchID }, transaction);
 
-                                // B. Insert Details (The "Contents")
                                 string sqlDetail = @"
                                     INSERT INTO WaybillDetails (TransferID, ItemID, Quantity)
                                     VALUES (@TransferID, @ItemID, @Qty);";
@@ -185,9 +238,7 @@ namespace SLICE_System.ViewModels
                             }
                         }
                     }
-                    MessageBox.Show($"Successfully dispatched {itemsToSend.Count} distinct items to Branch #{dialog.SelectedBranchID}!", "Success");
-
-                    // Optional: Deselect or Refresh
+                    MessageBox.Show($"Successfully dispatched {itemsToSend.Count} items.", "Logistics Success");
                     LoadData();
                 }
                 catch (Exception ex)
@@ -198,7 +249,6 @@ namespace SLICE_System.ViewModels
         }
     }
 
-    // --- HELPER CLASS ---
     public class DispatchItemModel
     {
         public int ItemID { get; set; }

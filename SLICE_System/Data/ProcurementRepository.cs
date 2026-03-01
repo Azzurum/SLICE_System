@@ -34,6 +34,9 @@ namespace SLICE_System.Data
                         int newPurchaseId = conn.ExecuteScalar<int>(sqlHeader, header, trans);
 
                         // 2. Insert Details & Update Inventory
+                        // We must fetch the conversion ratio to turn Bulk Units (Sacks) into Base Units (Grams)
+                        string sqlConversion = "SELECT ISNULL(ConversionRatio, 1) FROM MasterInventory WHERE ItemID = @ItemId";
+
                         string sqlDetail = @"
                             INSERT INTO PurchaseDetails (PurchaseID, ItemID, Quantity, UnitPrice)
                             VALUES (@Pid, @ItemId, @Qty, @Price)";
@@ -53,14 +56,22 @@ namespace SLICE_System.Data
 
                         foreach (var item in details)
                         {
-                            // A. Ensure Record Exists
+                            // A. Fetch Conversion Ratio (e.g., 1 Sack = 25000 grams)
+                            decimal ratio = conn.ExecuteScalar<decimal>(sqlConversion, new { ItemId = item.ItemID }, trans);
+                            if (ratio <= 0) ratio = 1; // Safety fallback to prevent divide-by-zero
+
+                            // B. Perform Bulk-to-Base Conversion Math
+                            decimal baseQty = item.Quantity * ratio;           // e.g., 1 Sack * 25000 = 25000
+                            decimal baseUnitPrice = item.UnitPrice / ratio;    // e.g., ₱1000 / 25000 = ₱0.04 per gram
+
+                            // C. Ensure Record Exists
                             conn.Execute(sqlEnsureStock, new { Bid = header.BranchID, ItemId = item.ItemID }, trans);
 
-                            // B. Insert Detail
-                            conn.Execute(sqlDetail, new { Pid = newPurchaseId, ItemId = item.ItemID, Qty = item.Quantity, Price = item.UnitPrice }, trans);
+                            // D. Insert Detail (Saved in Base Units to fix P&L Waste & Reconciliation Calculations)
+                            conn.Execute(sqlDetail, new { Pid = newPurchaseId, ItemId = item.ItemID, Qty = baseQty, Price = baseUnitPrice }, trans);
 
-                            // C. Add Stock
-                            conn.Execute(sqlUpdateStock, new { Qty = item.Quantity, Bid = header.BranchID, ItemId = item.ItemID }, trans);
+                            // E. Add Stock (In Base Units)
+                            conn.Execute(sqlUpdateStock, new { Qty = baseQty, Bid = header.BranchID, ItemId = item.ItemID }, trans);
                         }
 
                         // 3. LOG TO FINANCIAL LEDGER (The Critical P&L Step)
