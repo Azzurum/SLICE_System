@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Controls;
 using SLICE_System.Models;
-using SLICE_System.Services; // Ensure you have the AccessControlService here
+using SLICE_System.Services; // Ensure AccessControlService is here
 using SLICE_System.ViewModels;
 
 namespace SLICE_System
@@ -21,7 +21,7 @@ namespace SLICE_System
             txtUserBadge.Text = _currentUser.FullName;
             txtUserRole.Text = _currentUser.Role;
 
-            // 2. Apply Role-Based Security using the Service
+            // 2. Apply Role-Based Security
             ApplyPermissions();
 
             // 3. Load Default View based on role capabilities
@@ -49,7 +49,14 @@ namespace SLICE_System
             Toggle(Btn_Waste, AccessControlService.CanAccess(r, AccessControlService.Module.WasteTracker));
             Toggle(Btn_Recon, AccessControlService.CanAccess(r, AccessControlService.Module.Reconciliation));
 
-            bool anyOps = Btn_Incoming.Visibility == Visibility.Visible || Btn_MyInventory.Visibility == Visibility.Visible;
+            // FIX 1: Use exact Database Roles ('Clerk', 'Manager'). 
+            // Removed 'Super-Admin' so the Owner does NOT see the Submit form.
+            Toggle(Btn_SubmitFeedback, r == "Clerk" || r == "Manager");
+
+            bool anyOps = Btn_Incoming.Visibility == Visibility.Visible ||
+                          Btn_MyInventory.Visibility == Visibility.Visible ||
+                          Btn_SubmitFeedback.Visibility == Visibility.Visible;
+
             Grp_Ops.Visibility = anyOps ? Visibility.Visible : Visibility.Collapsed;
 
             // 3. ADMIN GROUP
@@ -57,16 +64,18 @@ namespace SLICE_System
             Toggle(Btn_Inventory, AccessControlService.CanAccess(r, AccessControlService.Module.GlobalInventory));
             Toggle(Btn_Users, AccessControlService.CanAccess(r, AccessControlService.Module.UserAdmin));
             Toggle(Btn_Audit, AccessControlService.CanAccess(r, AccessControlService.Module.AuditLogs));
-
-            // NEW: Only Super-Admin gets access to the Finance Module
             Toggle(Btn_Finance, r == "Super-Admin");
+
+            // FIX 2: Only Super-Admin (Owner) sees the Review panel
+            Toggle(Btn_ReviewFeedback, r == "Super-Admin");
 
             // Hide Admin Header if all children are hidden
             bool anyAdmin = Btn_Menu.Visibility == Visibility.Visible ||
                             Btn_Inventory.Visibility == Visibility.Visible ||
                             Btn_Users.Visibility == Visibility.Visible ||
                             Btn_Audit.Visibility == Visibility.Visible ||
-                            Btn_Finance.Visibility == Visibility.Visible;
+                            Btn_Finance.Visibility == Visibility.Visible ||
+                            Btn_ReviewFeedback.Visibility == Visibility.Visible;
 
             Grp_Admin.Visibility = anyAdmin ? Visibility.Visible : Visibility.Collapsed;
         }
@@ -126,16 +135,32 @@ namespace SLICE_System
         private void Nav_Users_Click(object sender, RoutedEventArgs e) => LoadView("User Administration", new Views.UsersView());
         private void Nav_Audit_Click(object sender, RoutedEventArgs e) => LoadView("System Audit Logs", new Views.AuditLogView());
 
-        // NEW: Load the Finance Module
         private void Nav_Finance_Click(object sender, RoutedEventArgs e)
         {
             txtPageTitle.Text = "Financial Performance";
-
-            // Set up the FinanceView with its ViewModel
             var view = new Views.FinanceView();
             var viewModel = new FinanceViewModel();
             view.DataContext = viewModel;
+            MainContentArea.Child = view;
+        }
 
+        // NEW: Submit Feedback Handler (For Cashiers/Managers)
+        private void Nav_SubmitFeedback_Click(object sender, RoutedEventArgs e)
+        {
+            txtPageTitle.Text = "Submit Feedback";
+            var view = new Views.SubmitSuggestionView();
+            var viewModel = new ViewModels.SubmitSuggestionViewModel(_currentUser.UserID);
+            view.DataContext = viewModel;
+            MainContentArea.Child = view;
+        }
+
+        // NEW: Review Feedback Handler (For Owner)
+        private void Nav_ReviewFeedback_Click(object sender, RoutedEventArgs e)
+        {
+            txtPageTitle.Text = "Review Suggestions";
+            var view = new Views.ReviewSuggestionsView();
+            var viewModel = new ViewModels.ReviewSuggestionsViewModel();
+            view.DataContext = viewModel;
             MainContentArea.Child = view;
         }
 
