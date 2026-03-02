@@ -24,7 +24,6 @@ namespace SLICE_System.Data
             using (var connection = _dbService.GetConnection())
             {
                 // Calculates the maximum portions that can be made based on the limiting ingredient.
-                // FIX: Changed 'bom.IngredientID' to 'bom.ItemID' to match your DB schema.
                 string sql = @"
                     SELECT 
                         m.ProductID, 
@@ -60,8 +59,9 @@ namespace SLICE_System.Data
                     try
                     {
                         // --- STEP 1: GET PRODUCT PRICE SNAPSHOT ---
-                        string sqlGetProduct = "SELECT ProductName, BasePrice FROM MenuItems WHERE ProductID = @Id";
-                        var product = connection.QuerySingleOrDefault(sqlGetProduct, new { Id = productId }, transaction);
+                        string sqlGetProduct = "SELECT ProductID, ProductName, BasePrice FROM MenuItems WHERE ProductID = @Id";
+                        // FIX: Strongly typed to MenuItem to prevent dynamic runtime crashes
+                        var product = connection.QuerySingleOrDefault<MenuItem>(sqlGetProduct, new { Id = productId }, transaction);
 
                         if (product == null) throw new Exception("Product not found or invalid.");
 
@@ -70,28 +70,34 @@ namespace SLICE_System.Data
                         string productName = product.ProductName;
 
                         // --- STEP 2: CALCULATE INGREDIENTS (Bill of Materials) ---
-                        // FIX: Aliased ItemID as IngredientID so Dapper populates the Recipe.cs model correctly
                         string sqlGetRecipe = "SELECT ProductID, ItemID as IngredientID, RequiredQty FROM BillOfMaterials WHERE ProductID = @ProductID";
                         var ingredients = connection.Query<Recipe>(sqlGetRecipe, new { ProductID = productId }, transaction).AsList();
 
-                        // --- STEP 3: DEDUCT STOCK ---
+                        // --- STEP 3: DEDUCT STOCK (With Negative Stock Prevention) ---
                         if (ingredients.Any())
                         {
                             string sqlDeduct = @"
                                 UPDATE BranchInventory 
                                 SET CurrentQuantity = CurrentQuantity - @AmountToDeduct
-                                WHERE BranchID = @BranchID AND ItemID = @ItemID";
+                                WHERE BranchID = @BranchID AND ItemID = @ItemID 
+                                AND CurrentQuantity >= @AmountToDeduct"; // Safety check to prevent negative inventory
 
                             foreach (var ing in ingredients)
                             {
                                 decimal totalNeeded = ing.RequiredQty * quantitySold;
 
-                                connection.Execute(sqlDeduct, new
+                                int rowsAffected = connection.Execute(sqlDeduct, new
                                 {
                                     AmountToDeduct = totalNeeded,
                                     BranchID = branchId,
                                     ItemID = ing.IngredientID
                                 }, transaction);
+
+                                // If 0 rows were updated, it means stock was insufficient
+                                if (rowsAffected == 0)
+                                {
+                                    throw new Exception($"Transaction blocked: Insufficient stock for an ingredient required to make {productName}.");
+                                }
                             }
                         }
 

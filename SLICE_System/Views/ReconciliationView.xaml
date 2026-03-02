@@ -129,7 +129,8 @@
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBox Text="{Binding PhysicalQty, UpdateSourceTrigger=PropertyChanged}" 
-                                             Style="{StaticResource AuditInput}" Margin="5"/>
+                                             Style="{StaticResource AuditInput}" Margin="5"
+                                             PreviewTextInput="TextBox_PreviewTextInput"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
