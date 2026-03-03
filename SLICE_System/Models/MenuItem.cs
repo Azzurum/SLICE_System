@@ -39,6 +39,8 @@ namespace SLICE_System.Models
             }
         }
 
+        public string ImagePath { get; set; }
+
         // --- UI HELPERS ---
 
         // Extract "Pizza" from "Pizza | Pepperoni"

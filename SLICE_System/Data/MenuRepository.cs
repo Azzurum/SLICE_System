@@ -24,7 +24,7 @@ namespace SLICE_System.Data
             }
         }
 
-        // --- NEW: FETCH RECIPE FOR A SPECIFIC ITEM ---
+        // --- FETCH RECIPE FOR A SPECIFIC ITEM ---
         public List<RecipeItemVM> GetRecipeForProduct(int productId)
         {
             using (var connection = _dbService.GetConnection())
@@ -44,7 +44,7 @@ namespace SLICE_System.Data
             }
         }
 
-        // 2. ADD NEW ITEM (Upgraded with Recipe support)
+        // 2. ADD NEW ITEM (Upgraded with Recipe & Image support)
         public void AddMenuItem(MenuItem item)
         {
             using (var connection = _dbService.GetConnection())
@@ -56,8 +56,8 @@ namespace SLICE_System.Data
                     {
                         // A. Insert the Menu Item
                         string sqlMenu = @"
-                            INSERT INTO MenuItems (ProductName, BasePrice, IsAvailable)
-                            VALUES (@ProductName, @BasePrice, @IsAvailable);
+                            INSERT INTO MenuItems (ProductName, BasePrice, IsAvailable, ImagePath)
+                            VALUES (@ProductName, @BasePrice, @IsAvailable, @ImagePath);
                             SELECT SCOPE_IDENTITY();";
 
                         // Get the new auto-generated ProductID
@@ -84,7 +84,7 @@ namespace SLICE_System.Data
             }
         }
 
-        // 3. UPDATE ITEM (Wipe and Replace Strategy)
+        // 3. UPDATE ITEM (Wipe and Replace Strategy with ImagePath)
         public void UpdateMenuItem(MenuItem item)
         {
             using (var connection = _dbService.GetConnection())
@@ -99,7 +99,8 @@ namespace SLICE_System.Data
                             UPDATE MenuItems 
                             SET ProductName = @ProductName, 
                                 BasePrice = @BasePrice, 
-                                IsAvailable = @IsAvailable
+                                IsAvailable = @IsAvailable,
+                                ImagePath = @ImagePath
                             WHERE ProductID = @ProductID";
                         connection.Execute(sqlUpdate, item, trans);
 
@@ -135,6 +136,39 @@ namespace SLICE_System.Data
             {
                 string sql = "UPDATE MenuItems SET IsAvailable = @Status WHERE ProductID = @ID";
                 connection.Execute(sql, new { Status = newStatus, ID = id });
+            }
+        }
+
+        // 5. DELETE ITEM (Safe Deletion with FK protection)
+        public void DeleteMenuItem(int productId)
+        {
+            using (var conn = _dbService.GetConnection())
+            {
+                conn.Open();
+                using (var tx = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        // 1. Delete associated recipe mappings (BOM) first to prevent FK errors
+                        conn.Execute("DELETE FROM BillOfMaterials WHERE ProductID = @Id", new { Id = productId }, tx);
+
+                        // 2. Delete the actual menu item
+                        conn.Execute("DELETE FROM MenuItems WHERE ProductID = @Id", new { Id = productId }, tx);
+
+                        tx.Commit();
+                    }
+                    // FIXED: Using standard Exception with message filtering to avoid CS1069 assembly errors
+                    catch (Exception ex) when (ex.Message.Contains("REFERENCE constraint") || ex.Message.Contains("FOREIGN KEY"))
+                    {
+                        tx.Rollback();
+                        throw new Exception("Cannot delete this item because it has existing Sales records. Please mark it as 'Unavailable' instead to preserve financial integrity.");
+                    }
+                    catch
+                    {
+                        tx.Rollback();
+                        throw; // Throws any other normal SQL errors
+                    }
+                }
             }
         }
     }

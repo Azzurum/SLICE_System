@@ -1,7 +1,10 @@
 ﻿using System;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media.Imaging;
+using Microsoft.Win32;
 using Dapper;
 using SLICE_System.Data;
 using SLICE_System.Models;
@@ -12,6 +15,9 @@ namespace SLICE_System.Views.Dialogs
     {
         private readonly DatabaseService _db = new DatabaseService();
         private MasterInventory _existingItem;
+
+        // NEW: Stores the path of the selected image
+        private string _uploadedImagePath;
 
         // 1. CONSTRUCTOR FOR NEW ITEM
         public AddIngredientWindow()
@@ -41,8 +47,49 @@ namespace SLICE_System.Views.Dialogs
 
             txtRatio.Text = itemToEdit.ConversionRatio.ToString();
 
+            // Load Existing Image if available
+            _uploadedImagePath = itemToEdit.ImagePath;
+            if (!string.IsNullOrEmpty(_uploadedImagePath) && File.Exists(_uploadedImagePath))
+            {
+                imgIngredient.Source = new BitmapImage(new Uri(_uploadedImagePath));
+            }
+
             // Update UI Header
             txtHeaderTitle.Text = "Edit Ingredient";
+        }
+
+        // --- NEW: UPLOAD IMAGE LOGIC ---
+        private void UploadIngredientImage_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog
+            {
+                Filter = "Image Files|*.jpg;*.jpeg;*.png;*.webp",
+                Title = "Select Ingredient Image"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                try
+                {
+                    // Create a local directory in the app folder to store images permanently
+                    string targetDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "IngredientImages");
+                    if (!Directory.Exists(targetDir)) Directory.CreateDirectory(targetDir);
+
+                    // Generate a unique filename so images don't overwrite each other
+                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(dlg.FileName);
+                    string targetPath = Path.Combine(targetDir, fileName);
+
+                    File.Copy(dlg.FileName, targetPath);
+                    _uploadedImagePath = targetPath;
+
+                    // Preview the image in the dialog
+                    imgIngredient.Source = new BitmapImage(new Uri(targetPath));
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to upload image: {ex.Message}", "Upload Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
         }
 
         private void Save_Click(object sender, RoutedEventArgs e)
@@ -70,8 +117,8 @@ namespace SLICE_System.Views.Dialogs
                     if (_existingItem == null)
                     {
                         // --- LOGIC: INSERT NEW ---
-                        string sql = @"INSERT INTO MasterInventory (ItemName, Category, BulkUnit, BaseUnit, ConversionRatio) 
-                                       VALUES (@Name, @Cat, @Bulk, @Base, @Ratio)";
+                        string sql = @"INSERT INTO MasterInventory (ItemName, Category, BulkUnit, BaseUnit, ConversionRatio, ImagePath) 
+                                       VALUES (@Name, @Cat, @Bulk, @Base, @Ratio, @Img)";
 
                         conn.Execute(sql, new
                         {
@@ -79,7 +126,8 @@ namespace SLICE_System.Views.Dialogs
                             Cat = category,
                             Bulk = txtBulk.Text,
                             Base = baseUnit,
-                            Ratio = ratio
+                            Ratio = ratio,
+                            Img = _uploadedImagePath // New property
                         });
 
                         MessageBox.Show("New ingredient successfully added to the Warehouse.", "Success");
@@ -88,7 +136,7 @@ namespace SLICE_System.Views.Dialogs
                     {
                         // --- LOGIC: UPDATE EXISTING ---
                         string sql = @"UPDATE MasterInventory 
-                                       SET ItemName = @Name, Category = @Cat, BulkUnit = @Bulk, BaseUnit = @Base, ConversionRatio = @Ratio 
+                                       SET ItemName = @Name, Category = @Cat, BulkUnit = @Bulk, BaseUnit = @Base, ConversionRatio = @Ratio, ImagePath = @Img 
                                        WHERE ItemID = @ID";
 
                         conn.Execute(sql, new
@@ -98,6 +146,7 @@ namespace SLICE_System.Views.Dialogs
                             Bulk = txtBulk.Text,
                             Base = baseUnit,
                             Ratio = ratio,
+                            Img = _uploadedImagePath, // New property
                             ID = _existingItem.ItemID
                         });
                     }

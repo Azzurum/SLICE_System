@@ -3,9 +3,11 @@ using SLICE_System.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO; // Required for Image Upload (File/Directory operations)
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using Microsoft.Win32; // Required for OpenFileDialog
 
 namespace SLICE_System.ViewModels
 {
@@ -22,7 +24,7 @@ namespace SLICE_System.ViewModels
 
         // --- PROPERTIES FOR THE UI ---
 
-        // Left Panel: The 39 existing pizzas
+        // Left Panel: The existing pizzas
         public ObservableCollection<MenuItem> MenuItems { get; set; }
 
         // Right Panel: The dropdown for raw ingredients (Flour, Cheese, etc.)
@@ -83,6 +85,10 @@ namespace SLICE_System.ViewModels
         public ICommand SaveMenuCommand { get; }
         public ICommand AddNewMenuCommand { get; }
 
+        // NEW: Image and Deletion Commands
+        public ICommand UploadImageCommand { get; }
+        public ICommand DeleteMenuCommand { get; }
+
         public MenuViewModel()
         {
             _menuRepo = new MenuRepository();
@@ -96,6 +102,10 @@ namespace SLICE_System.ViewModels
             RemoveIngredientCommand = new RelayCommand<RecipeItemVM>(RemoveIngredient);
             SaveMenuCommand = new RelayCommand(SaveMenu, CanSaveMenu);
             AddNewMenuCommand = new RelayCommand(AddNewMenu);
+
+            // NEW: Initialize Image & Delete commands
+            UploadImageCommand = new RelayCommand(UploadImage, () => SelectedMenuItem != null);
+            DeleteMenuCommand = new RelayCommand(DeleteSelectedMenu, () => SelectedMenuItem != null && SelectedMenuItem.ProductID > 0);
 
             LoadData();
         }
@@ -203,7 +213,7 @@ namespace SLICE_System.ViewModels
                 }
                 else
                 {
-                    // This triggers the "Wipe and Replace" transaction we built in Step 2
+                    // This triggers the "Wipe and Replace" transaction
                     _menuRepo.UpdateMenuItem(SelectedMenuItem);
                     MessageBox.Show("Menu item and recipe updated successfully!", "Success");
                 }
@@ -213,6 +223,52 @@ namespace SLICE_System.ViewModels
             catch (Exception ex)
             {
                 MessageBox.Show($"Error saving menu item: {ex.Message}", "Database Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // --- NEW: IMAGE UPLOAD METHOD ---
+        private void UploadImage()
+        {
+            OpenFileDialog dlg = new OpenFileDialog
+            {
+                Filter = "Image Files|*.jpg;*.jpeg;*.png;*.webp",
+                Title = "Select Menu Image"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                // Create a local directory in the app folder to store images permanently
+                string targetDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "MenuImages");
+                if (!Directory.Exists(targetDir)) Directory.CreateDirectory(targetDir);
+
+                // Generate a unique filename so images don't overwrite each other
+                string fileName = Guid.NewGuid().ToString() + Path.GetExtension(dlg.FileName);
+                string targetPath = Path.Combine(targetDir, fileName);
+
+                File.Copy(dlg.FileName, targetPath);
+
+                SelectedMenuItem.ImagePath = targetPath;
+                OnPropertyChanged(nameof(SelectedMenuItem)); // Force UI to refresh to show new image
+            }
+        }
+
+        // --- NEW: DELETE MENU ITEM METHOD ---
+        private void DeleteSelectedMenu()
+        {
+            if (MessageBox.Show($"Are you sure you want to permanently delete {SelectedMenuItem.ProductName}?\n\nThis cannot be undone.",
+                "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    _menuRepo.DeleteMenuItem(SelectedMenuItem.ProductID);
+                    LoadData(); // Refresh the list
+                    SelectedMenuItem = null; // Clear the right panel
+                    MessageBox.Show("Menu item deleted successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Deletion Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
     }
