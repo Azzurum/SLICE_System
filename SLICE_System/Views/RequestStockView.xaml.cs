@@ -18,7 +18,13 @@ namespace SLICE_System.Views
     {
         public ObservableCollection<MarketItem> MarketItems { get; set; } = new ObservableCollection<MarketItem>();
         public ObservableCollection<MarketItem> CartItems { get; set; } = new ObservableCollection<MarketItem>();
-        public List<Branch> AvailableBranches { get; set; }
+
+        private List<Branch> _availableBranches;
+        public List<Branch> AvailableBranches
+        {
+            get => _availableBranches;
+            set { _availableBranches = value; OnPropertyChanged(nameof(AvailableBranches)); }
+        }
 
         private User _currentUser;
         private InventoryRepository _invRepo = new InventoryRepository();
@@ -35,10 +41,38 @@ namespace SLICE_System.Views
 
         private void LoadData()
         {
+            // Load the dropdown list of other branches
             AvailableBranches = _invRepo.GetShippingDestinations(_currentUser.BranchID.GetValueOrDefault());
-            if (AvailableBranches.Any() && cmbSource != null) cmbSource.SelectedIndex = 0;
 
-            var stocks = _invRepo.GetStockForBranch(_currentUser.BranchID.GetValueOrDefault());
+            if (AvailableBranches.Any() && cmbSource != null)
+            {
+                cmbSource.SelectedIndex = 0; // Automatically select the first branch
+
+                // Manually trigger the first load based on the selected branch
+                if (cmbSource.SelectedValue != null && int.TryParse(cmbSource.SelectedValue.ToString(), out int sourceBranchId))
+                {
+                    LoadMarketItems(sourceBranchId);
+                }
+            }
+        }
+
+        // --- NEW EVENT: Triggers every time you pick a different branch from the dropdown ---
+        private void CmbSource_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (cmbSource.SelectedValue != null && int.TryParse(cmbSource.SelectedValue.ToString(), out int sourceBranchId))
+            {
+                LoadMarketItems(sourceBranchId);
+            }
+        }
+
+        // --- NEW METHOD: Fetches the stock of the branch you want to request from ---
+        private void LoadMarketItems(int branchId)
+        {
+            MarketItems.Clear();
+
+            // Fetch inventory for the SOURCE branch, not your current branch
+            var stocks = _invRepo.GetStockForBranch(branchId);
+
             foreach (var s in stocks)
             {
                 MarketItems.Add(new MarketItem
@@ -47,7 +81,7 @@ namespace SLICE_System.Views
                     Name = s.ItemName,
                     Unit = s.BaseUnit,
                     Icon = GetIconForIngredient(s.ItemName),
-                    CurrentStock = s.CurrentQuantity
+                    CurrentStock = s.CurrentQuantity // Shows you exactly how much they have!
                 });
             }
         }
@@ -155,7 +189,6 @@ namespace SLICE_System.Views
             await Task.Delay(400);
 
             // --- RESET STATE (Invisible) ---
-            // We must explicitly STOP animations by passing 'null' before setting values manually
             TicketTranslate.BeginAnimation(TranslateTransform.XProperty, null);
             TicketTranslate.BeginAnimation(TranslateTransform.YProperty, null);
             TicketRotate.BeginAnimation(RotateTransform.AngleProperty, null);
@@ -231,7 +264,6 @@ namespace SLICE_System.Views
         protected void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 
-    // --- THIS WAS MISSING BEFORE ---
     public class MarketItem : INotifyPropertyChanged
     {
         public int ItemID { get; set; }
