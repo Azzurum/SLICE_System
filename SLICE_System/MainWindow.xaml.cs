@@ -65,6 +65,7 @@ namespace SLICE_System
             Toggle(Btn_Users, AccessControlService.CanAccess(r, AccessControlService.Module.UserAdmin));
             Toggle(Btn_Audit, AccessControlService.CanAccess(r, AccessControlService.Module.AuditLogs));
             Toggle(Btn_Finance, r == "Super-Admin");
+            Toggle(Btn_ManageDiscounts, r == "Super-Admin");
 
             // FIX 2: Only Super-Admin (Owner) sees the Review panel
             Toggle(Btn_ReviewFeedback, r == "Super-Admin");
@@ -142,6 +143,12 @@ namespace SLICE_System
             var viewModel = new FinanceViewModel();
             view.DataContext = viewModel;
             MainContentArea.Child = view;
+        }
+
+        private void Nav_ManageDiscounts_Click(object sender, RoutedEventArgs e)
+        {
+            txtPageTitle.Text = "Pricing & Promotions Rules";
+            MainContentArea.Child = new Views.ManageDiscountsView();
         }
 
         // NEW: Submit Feedback Handler (For Cashiers/Managers)

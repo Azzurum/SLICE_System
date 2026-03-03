@@ -354,5 +354,47 @@ namespace SLICE_System.ViewModels
                 MessageBox.Show($"Transaction Failed: {errorMessage}", "Checkout Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        public class ProductDisplay
+        {
+            public int ProductID { get; set; }
+            public string RawName { get; set; }
+            public decimal BasePrice { get; set; }
+
+            public int MaxCookable { get; set; }
+            public bool IsInStock => MaxCookable > 0;
+
+            // Standard Category Split
+            public string Category => RawName.Contains("|") ? RawName.Split('|')[0].Trim() : "Others";
+
+            // Extracts just the name: "Classic Pepperoni"
+            public string DisplayName
+            {
+                get
+                {
+                    string namePart = RawName.Contains("|") ? RawName.Split('|')[1].Trim() : RawName;
+                    return namePart.Contains("(") ? namePart.Substring(0, namePart.IndexOf("(")).Trim() : namePart;
+                }
+            }
+
+            // Extracts the size: "Small" (If it exists)
+            public string SizeText
+            {
+                get
+                {
+                    if (RawName.Contains("(") && RawName.Contains(")"))
+                    {
+                        int start = RawName.IndexOf("(") + 1;
+                        int length = RawName.IndexOf(")") - start;
+                        return RawName.Substring(start, length).Trim();
+                    }
+                    return ""; // Returns empty if no size is specified (e.g., Drinks)
+                }
+            }
+
+            public bool HasSize => !string.IsNullOrEmpty(SizeText);
+
+            public string FormattedPrice => $"₱{BasePrice:N0}";
+        }
     }
 }
