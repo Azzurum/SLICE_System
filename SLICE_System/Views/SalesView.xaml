@@ -291,15 +291,50 @@
                 </ScrollViewer>
 
                 <StackPanel Grid.Row="2">
+                    <Grid Margin="0,0,0,10">
+                        <TextBlock Text="Subtotal:" FontSize="14" Foreground="{StaticResource TextLight}"/>
+                        <TextBlock Text="{Binding SubTotal, StringFormat='₱{0:N2}'}" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextDark}" HorizontalAlignment="Right"/>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,15" Visibility="{Binding HasDiscount, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Discount:" FontSize="14" Foreground="#E74C3C"/>
+                            <Border Background="#FDEDEC" CornerRadius="4" Padding="5,2" Margin="10,0,0,0">
+                                <TextBlock Text="{Binding ActiveDiscount.DiscountName}" FontSize="11" Foreground="#E74C3C" FontWeight="Bold"/>
+                            </Border>
+                            <Button Command="{Binding RemoveDiscountCommand}" Background="Transparent" BorderThickness="0" Margin="5,0,0,0" Cursor="Hand" ToolTip="Remove Discount">
+                                <fa:ImageAwesome Icon="Times" Height="10" Foreground="#95A5A6"/>
+                            </Button>
+                        </StackPanel>
+                        <TextBlock Text="{Binding DiscountAmount, StringFormat='-₱{0:N2}'}" FontSize="14" FontWeight="Bold" Foreground="#E74C3C" HorizontalAlignment="Right"/>
+                    </Grid>
+
                     <Grid Margin="0,0,0,25">
                         <TextBlock Text="Total Due" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextLight}" VerticalAlignment="Bottom"/>
                         <TextBlock Text="{Binding GrandTotal, StringFormat='₱{0:N2}'}" FontSize="32" FontWeight="Black" Foreground="{StaticResource TextDark}" HorizontalAlignment="Right"/>
                     </Grid>
 
-                    <Button Style="{StaticResource CheckoutBtnStyle}" 
-                            Content="PLACE ORDER" 
-                            Command="{Binding CheckoutCommand}" 
-                            Height="60"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="15"/>
+                            <ColumnDefinition Width="3*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Button Grid.Column="0" Command="{Binding OpenDiscountCommand}" Height="60" Background="#F1C40F" Foreground="White" Cursor="Hand" BorderThickness="0" ToolTip="Apply Discount">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="12"/>
+                                </Style>
+                            </Button.Resources>
+                            <fa:ImageAwesome Icon="Tags" Height="24" Foreground="White"/>
+                        </Button>
+
+                        <Button Grid.Column="2" Style="{StaticResource CheckoutBtnStyle}" 
+                                Content="PLACE ORDER" 
+                                Command="{Binding CheckoutCommand}" 
+                                Height="60"/>
+                    </Grid>
 
                     <Button Command="{Binding ClearCartCommand}" Margin="0,15,0,0"
                             Background="Transparent" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Center">

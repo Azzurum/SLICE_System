@@ -1,0 +1,67 @@
+﻿<Window x:Class="SLICE_System.Views.Dialogs.ApplyDiscountWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Apply Discount" Height="500" Width="450" 
+        WindowStartupLocation="CenterScreen" WindowStyle="None" 
+        AllowsTransparency="True" Background="Transparent" FontFamily="Segoe UI">
+
+    <Border Background="White" CornerRadius="12" BorderBrush="#EAECEE" BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="20" Color="Black" Opacity="0.2" ShadowDepth="4"/>
+        </Border.Effect>
+
+        <Grid Margin="25">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Text="APPLY DISCOUNT" FontSize="18" FontWeight="Black" Foreground="#2C3E50"/>
+            <Button Grid.Row="0" Content="✕" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0" Foreground="#95A5A6" Cursor="Hand" Click="Cancel_Click"/>
+
+            <TextBlock Grid.Row="1" Text="Select an applicable pricing adjustment below:" FontSize="13" Foreground="#7F8C8D" Margin="0,5,0,20"/>
+
+            <ListBox x:Name="lstDiscounts" Grid.Row="2" BorderThickness="0" SelectionChanged="LstDiscounts_SelectionChanged">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="#F8F9F9" CornerRadius="6" Padding="15" Margin="0,0,0,10" Width="380">
+                            <Grid>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding DiscountName}" FontWeight="Bold" FontSize="14" Foreground="#2C3E50"/>
+                                    <TextBlock Text="{Binding DiscountType}" FontSize="11" Foreground="#E67E22" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <StackPanel x:Name="pnlInputs" Grid.Row="2" VerticalAlignment="Bottom" Visibility="Collapsed" Background="White">
+                <Separator Margin="0,0,0,15"/>
+
+                <StackPanel x:Name="pnlID" Visibility="Collapsed" Margin="0,0,0,15">
+                    <TextBlock Text="CUSTOMER ID NUMBER (PWD/SENIOR)" FontSize="11" FontWeight="Bold" Foreground="#95A5A6"/>
+                    <TextBox x:Name="txtID" Height="35" FontSize="14" Padding="5" BorderBrush="#BDC3C7"/>
+                </StackPanel>
+
+                <StackPanel x:Name="pnlManual" Visibility="Collapsed" Margin="0,0,0,15">
+                    <TextBlock Text="MANUAL AMOUNT / PERCENTAGE" FontSize="11" FontWeight="Bold" Foreground="#95A5A6"/>
+                    <TextBox x:Name="txtManualValue" Height="35" FontSize="14" Padding="5" BorderBrush="#BDC3C7"/>
+
+                    <TextBlock Text="REASON FOR OVERRIDE" FontSize="11" FontWeight="Bold" Foreground="#95A5A6" Margin="0,10,0,0"/>
+                    <TextBox x:Name="txtReason" Height="35" FontSize="14" Padding="5" BorderBrush="#BDC3C7"/>
+                </StackPanel>
+            </StackPanel>
+
+            <Button Grid.Row="3" Content="CONFIRM DISCOUNT" Height="45" Background="#27AE60" Foreground="White" FontWeight="Bold" Cursor="Hand" BorderThickness="0" Margin="0,20,0,0" Click="Confirm_Click">
+                <Button.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="6"/>
+                    </Style>
+                </Button.Resources>
+            </Button>
+        </Grid>
+    </Border>
+</Window>
