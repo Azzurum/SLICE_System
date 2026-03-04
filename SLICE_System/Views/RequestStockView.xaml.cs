@@ -81,7 +81,8 @@ namespace SLICE_System.Views
                     Name = s.ItemName,
                     Unit = s.BaseUnit,
                     Icon = GetIconForIngredient(s.ItemName),
-                    CurrentStock = s.CurrentQuantity // Shows you exactly how much they have!
+                    CurrentStock = s.CurrentQuantity, // Shows you exactly how much they have!
+                    ImagePath = s.ImagePath
                 });
             }
         }
@@ -272,6 +273,9 @@ namespace SLICE_System.Views
         public string Unit { get; set; }
         public decimal CurrentStock { get; set; }
         public FontAwesomeIcon Icon { get; set; }
+
+        public string ImagePath { get; set; }
+        public bool HasImage => !string.IsNullOrEmpty(ImagePath);
 
         private decimal _requestQty;
         public decimal RequestQty

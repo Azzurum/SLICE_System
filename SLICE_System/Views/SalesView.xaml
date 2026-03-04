@@ -12,7 +12,6 @@
         <SolidColorBrush x:Key="BrandOrange" Color="#E67E22"/>
         <SolidColorBrush x:Key="TextDark" Color="#2C3E50"/>
         <SolidColorBrush x:Key="TextLight" Color="#95A5A6"/>
-        <SolidColorBrush x:Key="BtnGray" Color="#ECF0F1"/>
 
         <Style TargetType="ListBoxItem" x:Key="CategoryChipStyle">
             <Setter Property="Template">
@@ -28,11 +27,6 @@
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter TargetName="bdr" Property="Background" Value="{StaticResource BrandOrange}"/>
                                 <Setter Property="Foreground" Value="White"/>
-                                <Setter TargetName="bdr" Property="Effect">
-                                    <Setter.Value>
-                                        <DropShadowEffect Color="#E67E22" BlurRadius="8" Opacity="0.4" ShadowDepth="2"/>
-                                    </Setter.Value>
-                                </Setter>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bdr" Property="Background" Value="#FFF3E0"/>
@@ -54,21 +48,17 @@
 
         <Style TargetType="Button" x:Key="MenuCardStyle">
             <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderBrush" Value="#E0E0E0"/>
-            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Margin" Value="0,0,15,15"/>
-            <Setter Property="Width" Value="190"/>
-            <Setter Property="Height" Value="210"/>
+            <Setter Property="Width" Value="200"/>
+            <Setter Property="Height" Value="240"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="bdr" Background="{TemplateBinding Background}" 
-                                BorderBrush="{TemplateBinding BorderBrush}" 
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="16">
+                        <Border x:Name="bdr" Background="{TemplateBinding Background}" CornerRadius="16">
                             <Border.Effect>
-                                <DropShadowEffect Color="#BDC3C7" BlurRadius="15" Opacity="0.2" ShadowDepth="4"/>
+                                <DropShadowEffect Color="#BDC3C7" BlurRadius="15" Opacity="0.3" ShadowDepth="4"/>
                             </Border.Effect>
                             <Grid>
                                 <Border x:Name="OutOfStockBadge" Background="#E74C3C" CornerRadius="6" Padding="10,4" 
@@ -79,23 +69,39 @@
 
                                 <Grid>
                                     <Grid.RowDefinitions>
+                                        <RowDefinition Height="120"/>
                                         <RowDefinition Height="*"/>
-                                        <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
-                                    <Grid Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                        <Ellipse Width="90" Height="90" Fill="#FFF3E0"/>
-                                        <fa:ImageAwesome Icon="Cutlery" Foreground="{StaticResource BrandOrange}" Height="40"/>
-                                    </Grid>
-                                    <StackPanel Grid.Row="1" Margin="15,0,15,20">
+
+                                    <Border Grid.Row="0" CornerRadius="16,16,0,0" Background="White" ClipToBounds="True" BorderBrush="#F0F3F4" BorderThickness="0,0,0,1">
+                                        <Grid>
+                                            <fa:ImageAwesome Icon="Cutlery" Foreground="#F5CBA7" Height="40" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+
+                                            <Image Source="{Binding ImagePath}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10">
+                                                <Image.Style>
+                                                    <Style TargetType="Image">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HasImage}" Value="False">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Image.Style>
+                                            </Image>
+                                        </Grid>
+                                    </Border>
+
+                                    <StackPanel Grid.Row="1" Margin="15,10,15,10">
                                         <TextBlock Text="{Binding DisplayName}" FontWeight="Bold" FontSize="15" 
                                                    TextWrapping="Wrap" TextAlignment="Center" Foreground="{StaticResource TextDark}" 
                                                    Height="40" VerticalAlignment="Top"/>
 
                                         <TextBlock Text="{Binding SizeText}" FontSize="12" FontWeight="Black" Foreground="#95A5A6" 
-                                                   HorizontalAlignment="Center" Margin="0,-5,0,5" 
-                                                   Visibility="{Binding HasSize, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                    HorizontalAlignment="Center" Margin="0,-5,0,5" 
+                                                    Visibility="{Binding HasSize, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
-                                        <Border Background="{StaticResource BrandOrange}" CornerRadius="8" HorizontalAlignment="Center" Padding="15,5" Margin="0,4,0,0">
+                                        <Border Background="{StaticResource BrandOrange}" CornerRadius="8" HorizontalAlignment="Center" Padding="15,5" Margin="0,0,0,0">
                                             <TextBlock Text="{Binding FormattedPrice}" Foreground="White" FontWeight="Bold" FontSize="14"/>
                                         </Border>
                                     </StackPanel>
@@ -104,22 +110,15 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bdr" Property="Effect">
-                                    <Setter.Value>
-                                        <DropShadowEffect Color="#E67E22" BlurRadius="20" Opacity="0.4" ShadowDepth="5"/>
-                                    </Setter.Value>
-                                </Setter>
                                 <Setter TargetName="bdr" Property="RenderTransform">
                                     <Setter.Value>
                                         <TranslateTransform Y="-4"/>
                                     </Setter.Value>
                                 </Setter>
                             </Trigger>
-
                             <DataTrigger Binding="{Binding IsInStock}" Value="False">
                                 <Setter Property="IsEnabled" Value="False"/>
-                                <Setter TargetName="bdr" Property="Opacity" Value="0.4"/>
-                                <Setter TargetName="bdr" Property="Background" Value="#F2F4F4"/>
+                                <Setter TargetName="bdr" Property="Opacity" Value="0.6"/>
                                 <Setter TargetName="OutOfStockBadge" Property="Visibility" Value="Visible"/>
                             </DataTrigger>
                         </ControlTemplate.Triggers>
@@ -128,30 +127,24 @@
             </Setter>
         </Style>
 
-        <Style TargetType="Button" x:Key="QtyBtnStyle">
+        <Style TargetType="Button" x:Key="MinusBtnStyle">
             <Setter Property="Width" Value="28"/>
             <Setter Property="Height" Value="28"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="#D0D3D4"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Foreground" Value="#95A5A6"/>
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#EAECEE"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="Foreground" Value="#E74C3C"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="bdr" CornerRadius="14" Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                        <Border x:Name="bdr" CornerRadius="14" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bdr" Property="BorderBrush" Value="{StaticResource BrandOrange}"/>
-                                <Setter TargetName="bdr" Property="Background" Value="#FFF3E0"/>
-                                <Setter Property="Foreground" Value="{StaticResource BrandOrange}"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="bdr" Property="Background" Value="{StaticResource BrandOrange}"/>
-                                <Setter Property="Foreground" Value="White"/>
+                                <Setter TargetName="bdr" Property="Background" Value="#FDEDEC"/>
+                                <Setter TargetName="bdr" Property="BorderBrush" Value="#E74C3C"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -159,33 +152,24 @@
             </Setter>
         </Style>
 
-        <Style TargetType="Button" x:Key="CheckoutBtnStyle">
-            <Setter Property="Background" Value="{StaticResource BrandOrange}"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="18"/>
-            <Setter Property="FontWeight" Value="Black"/>
+        <Style TargetType="Button" x:Key="PlusBtnStyle">
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#EAECEE"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="Foreground" Value="#27AE60"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="bdr" CornerRadius="12" Background="{TemplateBinding Background}">
-                            <Border.Effect>
-                                <DropShadowEffect Color="#E67E22" BlurRadius="10" Opacity="0.4" ShadowDepth="3"/>
-                            </Border.Effect>
-                            <Grid>
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <fa:ImageAwesome Icon="Fire" Foreground="#FFEB3B" Height="20" Margin="0,0,10,0"/>
-                                    <ContentPresenter/>
-                                </StackPanel>
-                            </Grid>
+                        <Border x:Name="bdr" CornerRadius="14" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bdr" Property="Background" Value="#D35400"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="bdr" Property="Background" Value="#BDC3C7"/>
-                                <Setter TargetName="bdr" Property="Effect" Value="{x:Null}"/>
+                                <Setter TargetName="bdr" Property="Background" Value="#E8F8F5"/>
+                                <Setter TargetName="bdr" Property="BorderBrush" Value="#27AE60"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -207,10 +191,34 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="0" Margin="0,0,0,20">
-                <TextBlock Text="Counter" FontSize="32" FontWeight="Black" Foreground="{StaticResource TextDark}"/>
-                <TextBlock Text="Select items to add to the order." FontSize="16" Foreground="{StaticResource TextLight}"/>
-            </StackPanel>
+            <Grid Grid.Row="0" Margin="0,0,0,20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="300"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel>
+                    <TextBlock Text="Counter" FontSize="32" FontWeight="Black" Foreground="{StaticResource TextDark}"/>
+                    <TextBlock Text="Select items to add to the order." FontSize="16" Foreground="{StaticResource TextLight}"/>
+                </StackPanel>
+
+                <Border Grid.Column="1" Background="White" CornerRadius="10" Height="45" BorderBrush="#EAECEE" BorderThickness="1" VerticalAlignment="Center">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="10" Color="#BDC3C7" ShadowDepth="1" Opacity="0.15"/>
+                    </Border.Effect>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="45"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <fa:ImageAwesome Icon="Search" Height="14" Foreground="#95A5A6" HorizontalAlignment="Center"/>
+                        <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" 
+                                 BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center" 
+                                 FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource TextDark}" 
+                                 ToolTip="Search Menu Items..."/>
+                    </Grid>
+                </Border>
+            </Grid>
 
             <ListBox Grid.Row="1" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" 
                      Background="Transparent" BorderThickness="0" Margin="0,0,0,20"
@@ -270,19 +278,19 @@
                                                TextWrapping="Wrap" Margin="0,0,10,0" FontSize="14"/>
 
                                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <Button Style="{StaticResource QtyBtnStyle}" 
+                                        <Button Style="{StaticResource MinusBtnStyle}" 
                                                 Command="{Binding DataContext.DecreaseQtyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
                                                 CommandParameter="{Binding}">
-                                            <fa:ImageAwesome Icon="Minus" Height="8"/>
+                                            <TextBlock Text="—" FontSize="10" FontWeight="Bold" Margin="0,-1,0,0"/>
                                         </Button>
 
-                                        <TextBlock Text="{Binding Qty}" Width="30" TextAlignment="Center" VerticalAlignment="Center" 
-                                                   FontWeight="Bold" FontSize="15" Foreground="{StaticResource TextDark}"/>
+                                        <TextBlock Text="{Binding Qty}" Width="36" TextAlignment="Center" VerticalAlignment="Center" 
+                                                   FontWeight="Black" FontSize="16" Foreground="{StaticResource TextDark}"/>
 
-                                        <Button Style="{StaticResource QtyBtnStyle}" 
+                                        <Button Style="{StaticResource PlusBtnStyle}" 
                                                 Command="{Binding DataContext.IncreaseQtyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
                                                 CommandParameter="{Binding}">
-                                            <fa:ImageAwesome Icon="Plus" Height="8"/>
+                                            <TextBlock Text="+" FontSize="16" FontWeight="Medium" Margin="0,-2,0,0"/>
                                         </Button>
                                     </StackPanel>
 
@@ -335,14 +343,16 @@
                             <fa:ImageAwesome Icon="Tags" Height="24" Foreground="White"/>
                         </Button>
 
-                        <Button Grid.Column="2" Style="{StaticResource CheckoutBtnStyle}" 
-                                Content="PLACE ORDER" 
-                                Command="{Binding CheckoutCommand}" 
-                                Height="60"/>
+                        <Button Grid.Column="2" Content="PLACE ORDER" Command="{Binding CheckoutCommand}" Height="60" Background="{StaticResource BrandOrange}" Foreground="White" FontSize="18" FontWeight="Black" Cursor="Hand">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="12"/>
+                                </Style>
+                            </Button.Resources>
+                        </Button>
                     </Grid>
 
-                    <Button Command="{Binding ClearCartCommand}" Margin="0,15,0,0"
-                            Background="Transparent" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Center">
+                    <Button Command="{Binding ClearCartCommand}" Margin="0,15,0,0" Background="Transparent" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Center">
                         <StackPanel Orientation="Horizontal">
                             <fa:ImageAwesome Icon="Trash" Foreground="#E74C3C" Height="12" Margin="0,0,8,0"/>
                             <TextBlock Text="Clear Order" Foreground="#E74C3C" FontWeight="SemiBold"/>

@@ -12,6 +12,9 @@ using System.Windows.Input;
 
 namespace SLICE_System.ViewModels
 {
+    // =========================================================
+    // CART ITEM MODEL: Represents a line item in the current order
+    // =========================================================
     public class CartItemVM : INotifyPropertyChanged
     {
         private int _qty;
@@ -19,6 +22,7 @@ namespace SLICE_System.ViewModels
         public string RawName { get; set; }
         public decimal BasePrice { get; set; }
 
+        // Strips the category prefix for a cleaner receipt/cart display
         public string DisplayName => RawName.Contains("|") ? RawName.Split('|')[1].Trim() : RawName;
 
         public int Qty
@@ -30,7 +34,7 @@ namespace SLICE_System.ViewModels
                 {
                     _qty = value;
                     OnPropertyChanged();
-                    OnPropertyChanged(nameof(TotalPrice));
+                    OnPropertyChanged(nameof(TotalPrice)); // Auto-update total when qty changes
                 }
             }
         }
@@ -42,34 +46,73 @@ namespace SLICE_System.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 
+    // =========================================================
+    // PRODUCT DISPLAY MODEL: Represents the menu cards in the POS
+    // =========================================================
     public class ProductDisplay
     {
         public int ProductID { get; set; }
         public string RawName { get; set; }
         public decimal BasePrice { get; set; }
 
-        // Smart POS Properties
+        // Image Mapping
+        public string ImagePath { get; set; }
+        public bool HasImage => !string.IsNullOrEmpty(ImagePath);
+
+        // Smart POS Inventory Depletion Properties
         public int MaxCookable { get; set; }
         public bool IsInStock => MaxCookable > 0;
 
+        // Auto-categorization based on the pipe '|' delimiter in DB
         public string Category => RawName.Contains("|") ? RawName.Split('|')[0].Trim() : "Others";
-        public string DisplayName => RawName.Contains("|") ? RawName.Split('|')[1].Trim() : RawName;
+
+        // Extracts just the base product name (e.g., "Classic Pepperoni")
+        public string DisplayName
+        {
+            get
+            {
+                string namePart = RawName.Contains("|") ? RawName.Split('|')[1].Trim() : RawName;
+                return namePart.Contains("(") ? namePart.Substring(0, namePart.IndexOf("(")).Trim() : namePart;
+            }
+        }
+
+        // Extracts the size variant for the UI Badge (e.g., "Large")
+        public string SizeText
+        {
+            get
+            {
+                if (RawName.Contains("(") && RawName.Contains(")"))
+                {
+                    int start = RawName.IndexOf("(") + 1;
+                    int length = RawName.IndexOf(")") - start;
+                    return RawName.Substring(start, length).Trim();
+                }
+                return ""; // Returns empty if no size is specified (e.g., Drinks)
+            }
+        }
+
+        public bool HasSize => !string.IsNullOrEmpty(SizeText);
         public string FormattedPrice => $"₱{BasePrice:N0}";
     }
 
+    // =========================================================
+    // MAIN SALES VIEWMODEL: Handles POS logic, cart math, and checkout
+    // =========================================================
     public class SalesViewModel : ViewModelBase
     {
         private int _branchId;
         private int _userId;
-        private string _currentUserRole; // Added for discount security
+        private string _currentUserRole; // Used for secure discount application
         private bool _isCooking;
 
         private SalesRepository _repo;
-        private DiscountRepository _discountRepo; // New repository
-        private string _selectedCategory;
-        private List<ProductDisplay> _allProducts;
+        private DiscountRepository _discountRepo;
 
-        // --- NEW DISCOUNT & TOTAL PROPERTIES ---
+        private string _selectedCategory;
+        private string _searchText;
+        private List<ProductDisplay> _allProducts; // Master cache of all loaded products
+
+        // --- DISCOUNT & TOTAL PROPERTIES ---
         private Discount _activeDiscount;
         public Discount ActiveDiscount
         {
@@ -78,7 +121,7 @@ namespace SLICE_System.ViewModels
             {
                 if (SetProperty(ref _activeDiscount, value))
                 {
-                    CalculateTotal();
+                    CalculateTotal(); // Re-run math immediately when a discount is applied/removed
                     OnPropertyChanged(nameof(HasDiscount));
                 }
             }
@@ -94,7 +137,6 @@ namespace SLICE_System.ViewModels
 
         private decimal _grandTotal;
         public decimal GrandTotal { get => _grandTotal; set => SetProperty(ref _grandTotal, value); }
-        // -------------------------------------
 
         public bool IsCooking
         {
@@ -102,7 +144,7 @@ namespace SLICE_System.ViewModels
             set
             {
                 if (SetProperty(ref _isCooking, value))
-                    CommandManager.InvalidateRequerySuggested();
+                    CommandManager.InvalidateRequerySuggested(); // Disable buttons during animation
             }
         }
 
@@ -111,6 +153,7 @@ namespace SLICE_System.ViewModels
         public ObservableCollection<CartItemVM> CartItems { get; set; }
         public ObservableCollection<string> Categories { get; set; }
 
+        // Triggers UI filtering when category tabs are clicked
         public string SelectedCategory
         {
             get => _selectedCategory;
@@ -121,22 +164,32 @@ namespace SLICE_System.ViewModels
             }
         }
 
+        // Triggers live UI filtering as the user types in the search bar
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                if (SetProperty(ref _searchText, value))
+                    FilterList();
+            }
+        }
+
+        // --- COMMANDS ---
         public ICommand AddToCartCommand { get; }
         public ICommand CheckoutCommand { get; }
         public ICommand ClearCartCommand { get; }
         public ICommand IncreaseQtyCommand { get; }
         public ICommand DecreaseQtyCommand { get; }
-
-        // New Discount Commands
         public ICommand OpenDiscountCommand { get; }
         public ICommand RemoveDiscountCommand { get; }
 
-        // Updated constructor to accept userRole (defaults to Clerk for safety)
         public SalesViewModel(int branchId, int userId, string userRole = "Clerk")
         {
             _branchId = branchId;
             _userId = userId;
             _currentUserRole = userRole;
+
             _repo = new SalesRepository();
             _discountRepo = new DiscountRepository();
 
@@ -160,12 +213,14 @@ namespace SLICE_System.ViewModels
         {
             var rawList = _repo.GetMenu(_branchId);
 
+            // Map DB models to UI Display models (including ImagePath and Inventory Limits)
             _allProducts = rawList.Select(x => new ProductDisplay
             {
                 ProductID = x.ProductID,
                 RawName = x.ProductName,
                 BasePrice = x.BasePrice,
-                MaxCookable = x.MaxCookable
+                MaxCookable = x.MaxCookable,
+                ImagePath = x.ImagePath
             }).ToList();
 
             var uniqueCategories = _allProducts.Select(p => p.Category).Distinct().OrderBy(c => c).ToList();
@@ -177,11 +232,20 @@ namespace SLICE_System.ViewModels
             SelectedCategory = "All";
         }
 
+        // Combined Filter: Handles both Category Tabs and the Search Bar simultaneously
         private void FilterList()
         {
             if (_allProducts == null) return;
             FilteredProducts.Clear();
-            var query = SelectedCategory == "All" ? _allProducts : _allProducts.Where(p => p.Category == SelectedCategory);
+
+            var query = _allProducts.AsEnumerable();
+
+            if (SelectedCategory != "All")
+                query = query.Where(p => p.Category == SelectedCategory);
+
+            if (!string.IsNullOrWhiteSpace(SearchText))
+                query = query.Where(p => p.DisplayName.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0);
+
             foreach (var item in query) FilteredProducts.Add(item);
         }
 
@@ -192,7 +256,7 @@ namespace SLICE_System.ViewModels
             var existing = CartItems.FirstOrDefault(c => c.ProductID == product.ProductID);
             int currentQty = existing != null ? existing.Qty : 0;
 
-            // RECIPE-DRIVEN LIMIT CHECK
+            // PREVENT OVER-SELLING: Block adding to cart if recipe ingredients are depleted
             if (currentQty + 1 > product.MaxCookable)
             {
                 MessageBox.Show($"Not enough ingredients! You can only make {product.MaxCookable} portions of {product.DisplayName}.", "Stock Warning");
@@ -221,7 +285,6 @@ namespace SLICE_System.ViewModels
             {
                 var product = _allProducts.FirstOrDefault(p => p.ProductID == item.ProductID);
 
-                // RECIPE-DRIVEN LIMIT CHECK
                 if (product != null && item.Qty + 1 > product.MaxCookable)
                 {
                     MessageBox.Show($"Not enough ingredients! You can only make {product.MaxCookable} portions of {product.DisplayName}.", "Stock Warning");
@@ -243,7 +306,7 @@ namespace SLICE_System.ViewModels
             }
         }
 
-        // --- UPDATED PRICING ENGINE ---
+        // Calculates Subtotal, applies Fixed or Percentage discounts, and sets Grand Total
         private void CalculateTotal()
         {
             SubTotal = CartItems.Sum(x => x.TotalPrice);
@@ -251,15 +314,11 @@ namespace SLICE_System.ViewModels
             if (ActiveDiscount != null)
             {
                 if (ActiveDiscount.ValueType == "Percentage")
-                {
                     DiscountAmount = SubTotal * (ActiveDiscount.DiscountValue / 100m);
-                }
-                else // Fixed
-                {
+                else
                     DiscountAmount = ActiveDiscount.DiscountValue;
-                }
 
-                // Prevent negative totals
+                // Safety net: Prevent discounts from exceeding the total order value
                 if (DiscountAmount > SubTotal) DiscountAmount = SubTotal;
                 ActiveDiscount.CalculatedAmount = DiscountAmount;
             }
@@ -274,12 +333,11 @@ namespace SLICE_System.ViewModels
         private void ClearCart()
         {
             CartItems.Clear();
-            ActiveDiscount = null; // Clear discount on reset
+            ActiveDiscount = null;
             CalculateTotal();
             CommandManager.InvalidateRequerySuggested();
         }
 
-        // --- NEW DISCOUNT DIALOG HANDLER ---
         private void OpenDiscountDialog()
         {
             if (CartItems.Count == 0)
@@ -288,6 +346,7 @@ namespace SLICE_System.ViewModels
                 return;
             }
 
+            // Fetches strictly the discounts allowed for the current user's role
             var available = _discountRepo.GetAvailableDiscounts(_currentUserRole);
             var dialog = new Views.Dialogs.ApplyDiscountWindow(available);
 
@@ -305,7 +364,7 @@ namespace SLICE_System.ViewModels
             bool success = false;
             string errorMessage = "";
 
-            // Capture state variables for the background thread
+            // Capture thread-safe variables for the background task
             var currentDiscount = ActiveDiscount;
             var currentDiscountAmount = DiscountAmount;
 
@@ -313,11 +372,11 @@ namespace SLICE_System.ViewModels
             {
                 try
                 {
-                    // 1. Process standard item sales (Full Price Gross Income)
+                    // 1. Process standard item sales and deduct recipe stock
                     foreach (var item in CartItems)
                         _repo.ProcessSale(_branchId, item.ProductID, item.Qty, _userId);
 
-                    // 2. Log Discount if one is applied (Offsets Gross Income in Financial Ledger)
+                    // 2. Log Applied Discount (Offsets Gross Income in Financial Ledger)
                     if (currentDiscount != null && currentDiscountAmount > 0)
                     {
                         _discountRepo.LogAppliedDiscount(
@@ -334,67 +393,23 @@ namespace SLICE_System.ViewModels
                 catch (Exception ex)
                 {
                     success = false;
-                    errorMessage = ex.Message; // Capture the real SQL error
+                    errorMessage = ex.Message;
                 }
             });
 
             if (success)
             {
-                await Task.Delay(5500); // Wait for the cooking animation
+                await Task.Delay(5500); // Display the POS cooking/receipt animation
                 ClearCart();
                 IsCooking = false;
 
-                // REFRESH DATA AFTER SALE TO RE-CALCULATE MAX STOCK
-                LoadData();
+                LoadData(); // Force refresh to recalculate new MaxCookable stock limits
             }
             else
             {
                 IsCooking = false;
-                // Show the ACTUAL error to the user instead of a generic message
                 MessageBox.Show($"Transaction Failed: {errorMessage}", "Checkout Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-        }
-
-        public class ProductDisplay
-        {
-            public int ProductID { get; set; }
-            public string RawName { get; set; }
-            public decimal BasePrice { get; set; }
-
-            public int MaxCookable { get; set; }
-            public bool IsInStock => MaxCookable > 0;
-
-            // Standard Category Split
-            public string Category => RawName.Contains("|") ? RawName.Split('|')[0].Trim() : "Others";
-
-            // Extracts just the name: "Classic Pepperoni"
-            public string DisplayName
-            {
-                get
-                {
-                    string namePart = RawName.Contains("|") ? RawName.Split('|')[1].Trim() : RawName;
-                    return namePart.Contains("(") ? namePart.Substring(0, namePart.IndexOf("(")).Trim() : namePart;
-                }
-            }
-
-            // Extracts the size: "Small" (If it exists)
-            public string SizeText
-            {
-                get
-                {
-                    if (RawName.Contains("(") && RawName.Contains(")"))
-                    {
-                        int start = RawName.IndexOf("(") + 1;
-                        int length = RawName.IndexOf(")") - start;
-                        return RawName.Substring(start, length).Trim();
-                    }
-                    return ""; // Returns empty if no size is specified (e.g., Drinks)
-                }
-            }
-
-            public bool HasSize => !string.IsNullOrEmpty(SizeText);
-
-            public string FormattedPrice => $"₱{BasePrice:N0}";
         }
     }
 }

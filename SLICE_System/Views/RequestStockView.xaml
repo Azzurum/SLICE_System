@@ -82,7 +82,35 @@
                                             <RowDefinition Height="1*"/>
                                             <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
-                                        <fa:ImageAwesome Icon="{Binding Icon}" Foreground="{StaticResource PizzaOrange}" Height="40" VerticalAlignment="Center" Grid.Row="0"/>
+                                        <Grid Grid.Row="0" Margin="0,15,0,0">
+                                            <fa:ImageAwesome Icon="{Binding Icon}" Foreground="{StaticResource PizzaOrange}" Height="40" VerticalAlignment="Center">
+                                                <fa:ImageAwesome.Style>
+                                                    <Style TargetType="fa:ImageAwesome">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HasImage}" Value="False">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </fa:ImageAwesome.Style>
+                                            </fa:ImageAwesome>
+
+                                            <Border CornerRadius="8" Width="60" Height="60" ClipToBounds="True" Background="White" BorderBrush="#EAECEE" BorderThickness="1">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HasImage}" Value="False">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <Image Source="{Binding ImagePath}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="4"/>
+                                            </Border>
+
+                                        </Grid>
                                         <Border Background="#F0F3F4" CornerRadius="10" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="8" Padding="6,2">
                                             <TextBlock Text="{Binding CurrentStock, StringFormat='In Stock: {0:N0}'}" FontSize="10" Foreground="{StaticResource LightText}"/>
                                         </Border>

@@ -75,7 +75,8 @@ namespace SLICE_System.Data
                         bi.ExpirationDate,
                         mi.ItemName, 
                         mi.BaseUnit, 
-                        mi.Category
+                        mi.Category,
+                        mi.ImagePath
                     FROM BranchInventory bi
                     INNER JOIN MasterInventory mi ON bi.ItemID = mi.ItemID
                     WHERE bi.BranchID = @BranchID

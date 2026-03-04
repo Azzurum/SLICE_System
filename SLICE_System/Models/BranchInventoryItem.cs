@@ -22,6 +22,9 @@ namespace SLICE_System.Models
         public string BaseUnit { get; set; } = string.Empty;
         public string Category { get; set; } = string.Empty;
 
+        // The image of the ingredient
+        public string ImagePath { get; set; }
+
         // --- HELPER PROPERTIES ---
 
         // Returns TRUE if we are in the danger zone

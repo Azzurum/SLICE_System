@@ -25,21 +25,22 @@ namespace SLICE_System.Data
             {
                 // Calculates the maximum portions that can be made based on the limiting ingredient.
                 string sql = @"
-                    SELECT 
-                        m.ProductID, 
-                        m.ProductName, 
-                        m.BasePrice, 
-                        'General' as Category,
-                        CAST(ISNULL(
-                            MIN(
-                                FLOOR(ISNULL(bi.CurrentQuantity, 0) / NULLIF(bom.RequiredQty, 0))
-                            ), 999
-                        ) AS INT) AS MaxCookable
-                    FROM MenuItems m
-                    LEFT JOIN BillOfMaterials bom ON m.ProductID = bom.ProductID
-                    LEFT JOIN BranchInventory bi ON bom.ItemID = bi.ItemID AND bi.BranchID = @BranchID
-                    WHERE m.IsAvailable = 1
-                    GROUP BY m.ProductID, m.ProductName, m.BasePrice";
+            SELECT 
+                m.ProductID, 
+                m.ProductName, 
+                m.BasePrice, 
+                m.ImagePath, -- FETCH THE IMAGE PATH
+                'General' as Category,
+                CAST(ISNULL(
+                    MIN(
+                        FLOOR(ISNULL(bi.CurrentQuantity, 0) / NULLIF(bom.RequiredQty, 0))
+                    ), 999
+                ) AS INT) AS MaxCookable
+            FROM MenuItems m
+            LEFT JOIN BillOfMaterials bom ON m.ProductID = bom.ProductID
+            LEFT JOIN BranchInventory bi ON bom.ItemID = bi.ItemID AND bi.BranchID = @BranchID
+            WHERE m.IsAvailable = 1
+            GROUP BY m.ProductID, m.ProductName, m.BasePrice, m.ImagePath";
 
                 return connection.Query<MenuProduct>(sql, new { BranchID = branchId }).ToList();
             }

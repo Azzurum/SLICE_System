@@ -10,6 +10,8 @@
         // NEW: Smart POS Depletion Tracking
         public int MaxCookable { get; set; }
         public bool IsInStock => MaxCookable > 0;
+
+        public string ImagePath { get; set; }
     }
 
     public class CartItem
