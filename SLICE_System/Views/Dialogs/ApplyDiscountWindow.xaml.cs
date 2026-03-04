@@ -1,5 +1,7 @@
-﻿using System.Windows;
+﻿using System.Text.RegularExpressions;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using SLICE_System.Models;
 
 namespace SLICE_System.Views.Dialogs
@@ -24,6 +26,23 @@ namespace SLICE_System.Views.Dialogs
             }
         }
 
+        // --- input validation to ONLY allow Letters, Numbers, and Dashes ---
+        private void TxtID_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            // If the typed character is NOT a letter, number, or dash, block it.
+            Regex regex = new Regex("[^a-zA-Z0-9-]");
+            e.Handled = regex.IsMatch(e.Text);
+        }
+
+        // --- Block the spacebar key entirely ---
+        private void TxtID_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Space)
+            {
+                e.Handled = true;
+            }
+        }
+
         private void Confirm_Click(object sender, RoutedEventArgs e)
         {
             if (lstDiscounts.SelectedItem is Discount selected)
@@ -44,8 +63,8 @@ namespace SLICE_System.Views.Dialogs
                     selected.DiscountValue = val;
                 }
 
-                selected.ReferenceID = txtID.Text;
-                selected.Reason = txtReason.Text;
+                selected.ReferenceID = txtID.Text.Trim(); // Trim added for safety
+                selected.Reason = txtReason.Text.Trim();
                 SelectedDiscount = selected;
 
                 DialogResult = true;

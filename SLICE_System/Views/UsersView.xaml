@@ -1,9 +1,11 @@
 ﻿<UserControl x:Class="SLICE_System.Views.UsersView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:fa="http://schemas.fontawesome.io/icons/"
              Background="#FDFBF7" FontFamily="Segoe UI">
 
     <UserControl.Resources>
+        <SolidColorBrush x:Key="BrandOrange" Color="#E67E22"/>
         <SolidColorBrush x:Key="BrandBlue" Color="#3498DB"/>
         <SolidColorBrush x:Key="BrandRed" Color="#C0392B"/>
         <SolidColorBrush x:Key="BrandGreen" Color="#27AE60"/>
@@ -14,13 +16,14 @@
         <Geometry x:Key="Vec_Plus">M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z</Geometry>
         <Geometry x:Key="Vec_Trash">M9,3V4H4V6H5V19A2,2 0 0,0 7,21H17A2,2 0 0,0 19,19V6H20V4H15V3H9M9,8H11V17H9V8M13,8H15V17H13V8Z</Geometry>
         <Geometry x:Key="Vec_Restore">M13,3A9,9 0 0,0 4,12H1L4.89,15.89L4.96,16.03L9,12H6A7,7 0 0,1 13,5A7,7 0 0,1 20,12A7,7 0 0,1 13,19C11.07,19 9.32,18.21 8.06,16.94L6.64,18.36C8.27,20 10.5,21 13,21A9,9 0 0,0 22,12A9,9 0 0,0 13,3Z</Geometry>
+        <Geometry x:Key="Vec_Edit">M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z</Geometry>
 
         <Style x:Key="CardStyle" TargetType="Border">
             <Setter Property="Background" Value="White"/>
-            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="CornerRadius" Value="12"/>
             <Setter Property="Effect">
                 <Setter.Value>
-                    <DropShadowEffect BlurRadius="15" Color="#BDC3C7" ShadowDepth="3" Opacity="0.2"/>
+                    <DropShadowEffect BlurRadius="20" Color="#BDC3C7" ShadowDepth="4" Opacity="0.15"/>
                 </Setter.Value>
             </Setter>
         </Style>
@@ -28,14 +31,12 @@
         <Style x:Key="ActionButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="{StaticResource BrandBlue}"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Padding" Value="15,8"/>
-            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="20,0">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
@@ -46,6 +47,27 @@
                     <Setter Property="Opacity" Value="0.9"/>
                 </Trigger>
             </Style.Triggers>
+        </Style>
+
+        <Style x:Key="IconActionButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Width" Value="34"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bdr" Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bdr" Property="Background" Value="#F0F3F4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </UserControl.Resources>
 
@@ -61,26 +83,23 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="0">
-                <TextBlock Text="User Administration" FontSize="28" FontWeight="Black" Foreground="{StaticResource TextDark}"/>
-                <TextBlock Text="Manage system access and permissions." FontSize="14" Foreground="{StaticResource TextLight}"/>
+            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                <TextBlock Text="User Administration" FontSize="30" FontWeight="Black" Foreground="{StaticResource TextDark}"/>
+                <TextBlock Text="Manage system access and permissions." FontSize="15" Foreground="{StaticResource TextLight}" Margin="0,4,0,0"/>
             </StackPanel>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                <Border Background="White" CornerRadius="20" Height="40" Width="250" Margin="0,0,15,0">
-                    <Border.Effect>
-                        <DropShadowEffect BlurRadius="10" Color="#BDC3C7" ShadowDepth="2" Opacity="0.1"/>
-                    </Border.Effect>
+                <Border Background="White" CornerRadius="8" Height="44" Width="280" Margin="0,0,15,0" BorderBrush="#EAECEE" BorderThickness="1.5">
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="40"/>
+                            <ColumnDefinition Width="45"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Path Data="{StaticResource Vec_Search}" Fill="{StaticResource TextLight}" Height="14" Width="14" Stretch="Uniform" HorizontalAlignment="Center"/>
+                        <Path Data="{StaticResource Vec_Search}" Fill="{StaticResource TextLight}" Height="16" Width="16" Stretch="Uniform" HorizontalAlignment="Center"/>
                         <TextBox x:Name="txtSearch" Grid.Column="1" BorderThickness="0" Background="Transparent" 
-                                 VerticalContentAlignment="Center" FontSize="14" Foreground="{StaticResource TextDark}"
+                                 VerticalContentAlignment="Center" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource TextDark}"
                                  TextChanged="txtSearch_TextChanged"/>
-                        <TextBlock Grid.Column="1" Text="Find user..." Foreground="#BDC3C7" VerticalAlignment="Center" IsHitTestVisible="False" Margin="2,0,0,0">
+                        <TextBlock Grid.Column="1" Text="Find user..." Foreground="#BDC3C7" VerticalAlignment="Center" IsHitTestVisible="False" Margin="2,0,0,0" FontSize="15" FontWeight="SemiBold">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Visibility" Value="Collapsed"/>
@@ -95,10 +114,10 @@
                     </Grid>
                 </Border>
 
-                <Button Click="AddUser_Click" Style="{StaticResource ActionButtonStyle}">
+                <Button Click="AddUser_Click" Style="{StaticResource ActionButtonStyle}" Height="44">
                     <StackPanel Orientation="Horizontal">
-                        <Path Data="{StaticResource Vec_Plus}" Fill="White" Height="12" Width="12" Stretch="Uniform" Margin="0,0,8,0"/>
-                        <TextBlock Text="NEW USER"/>
+                        <Path Data="{StaticResource Vec_Plus}" Fill="White" Height="14" Width="14" Stretch="Uniform" Margin="0,0,8,0"/>
+                        <TextBlock Text="NEW USER" FontSize="14"/>
                     </StackPanel>
                 </Button>
             </StackPanel>
@@ -107,16 +126,27 @@
         <Border Grid.Row="1" Style="{StaticResource CardStyle}">
             <DataGrid x:Name="dgUsers" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                       GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent" BorderThickness="0"
-                      RowHeight="55" VerticalScrollBarVisibility="Auto" Margin="10">
+                      RowHeight="65" VerticalScrollBarVisibility="Auto" Margin="10">
 
                 <DataGrid.Resources>
                     <Style TargetType="DataGridColumnHeader">
                         <Setter Property="Background" Value="Transparent"/>
                         <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
-                        <Setter Property="FontWeight" Value="SemiBold"/>
-                        <Setter Property="Padding" Value="15,10"/>
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="FontSize" Value="11"/>
+                        <Setter Property="Padding" Value="15,15,15,10"/>
                         <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                        <Setter Property="BorderBrush" Value="#EEE"/>
+                        <Setter Property="BorderBrush" Value="#EAECEE"/>
+                    </Style>
+                    <Style TargetType="DataGridRow">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="BorderBrush" Value="#F4F6F6"/>
+                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#FFFBF5"/>
+                            </Trigger>
+                        </Style.Triggers>
                     </Style>
                     <Style TargetType="DataGridCell">
                         <Setter Property="BorderThickness" Value="0"/>
@@ -132,7 +162,7 @@
                         </Setter>
                         <Style.Triggers>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="#F0F8FF"/>
+                                <Setter Property="Background" Value="Transparent"/>
                                 <Setter Property="Foreground" Value="{StaticResource TextDark}"/>
                             </Trigger>
                         </Style.Triggers>
@@ -140,23 +170,23 @@
                 </DataGrid.Resources>
 
                 <DataGrid.Columns>
-                    <DataGridTemplateColumn Width="70">
+                    <DataGridTemplateColumn Width="80">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <Border Width="35" Height="35" CornerRadius="17" Background="#ECF0F1">
+                                <Border Width="42" Height="42" CornerRadius="21" Background="{Binding RoleColor}">
                                     <TextBlock Text="{Binding Initials}" HorizontalAlignment="Center" VerticalAlignment="Center" 
-                                               FontWeight="Bold" Foreground="{StaticResource TextLight}"/>
+                                               FontWeight="Black" FontSize="16" Foreground="White"/>
                                 </Border>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
-                    <DataGridTemplateColumn Header="NAME" Width="200">
+                    <DataGridTemplateColumn Header="EMPLOYEE NAME" Width="240">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" Foreground="{StaticResource TextDark}"/>
-                                    <TextBlock Text="{Binding Username}" FontSize="11" Foreground="{StaticResource TextLight}"/>
+                                    <TextBlock Text="{Binding FullName}" FontWeight="Black" FontSize="16" Foreground="{StaticResource TextDark}"/>
+                                    <TextBlock Text="{Binding Username, StringFormat='@{0}'}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextLight}" Margin="0,2,0,0"/>
                                 </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
@@ -165,33 +195,45 @@
                     <DataGridTemplateColumn Header="ROLE" Width="140">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <Border CornerRadius="4" Padding="8,4" HorizontalAlignment="Left" Background="White" BorderThickness="1" BorderBrush="{Binding RoleColor}">
-                                    <TextBlock Text="{Binding Role}" Foreground="{Binding RoleColor}" FontSize="11" FontWeight="Bold"/>
-                                </Border>
+                                <Grid HorizontalAlignment="Left">
+                                    <Border Background="{Binding RoleColor}" Opacity="0.15" CornerRadius="6"/>
+                                    <TextBlock Text="{Binding Role}" Foreground="{Binding RoleColor}" FontSize="12" FontWeight="Black" Margin="12,6"/>
+                                </Grid>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
-                    <DataGridTextColumn Header="BRANCH ASSIGNMENT" Binding="{Binding BranchName}" Width="*" Foreground="{StaticResource TextDark}"/>
+                    <DataGridTemplateColumn Header="BRANCH ASSIGNMENT" Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding BranchName}" FontWeight="Bold" Foreground="{StaticResource TextDark}" VerticalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
 
-                    <DataGridTemplateColumn Header="STATUS" Width="100">
+                    <DataGridTemplateColumn Header="STATUS" Width="120">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Ellipse Width="8" Height="8" Fill="{Binding StatusColor}" Margin="0,0,6,0"/>
-                                    <TextBlock Text="{Binding StatusText}" Foreground="{Binding StatusColor}" FontSize="12"/>
+                                    <Ellipse Width="8" Height="8" Fill="{Binding StatusColor}" Margin="0,0,8,0"/>
+                                    <TextBlock Text="{Binding StatusText}" Foreground="{Binding StatusColor}" FontWeight="Bold" FontSize="12"/>
                                 </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
-                    <DataGridTemplateColumn Width="70" Header="ACTION">
+                    <DataGridTemplateColumn Width="130" Header="ACTIONS">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <Grid>
-                                    <Button Click="DeleteUser_Click" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="Deactivate User" Tag="{Binding UserID}">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+
+                                    <Button Click="EditUser_Click" Style="{StaticResource IconActionButton}" ToolTip="Edit User" Tag="{Binding}" Margin="0,0,5,0">
+                                        <Path Data="{StaticResource Vec_Edit}" Fill="{StaticResource BrandBlue}" Height="15" Width="15" Stretch="Uniform"/>
+                                    </Button>
+
+                                    <Button Click="DeleteUser_Click" ToolTip="Deactivate User" Tag="{Binding}">
                                         <Button.Style>
-                                            <Style TargetType="Button">
+                                            <Style TargetType="Button" BasedOn="{StaticResource IconActionButton}">
                                                 <Setter Property="Visibility" Value="Collapsed"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsActive}" Value="True">
@@ -200,12 +242,12 @@
                                                 </Style.Triggers>
                                             </Style>
                                         </Button.Style>
-                                        <Path Data="{StaticResource Vec_Trash}" Fill="{StaticResource BrandRed}" Height="14" Width="14" Stretch="Uniform" Opacity="0.7"/>
+                                        <Path Data="{StaticResource Vec_Trash}" Fill="{StaticResource BrandRed}" Height="15" Width="15" Stretch="Uniform"/>
                                     </Button>
 
-                                    <Button Click="RestoreUser_Click" Background="Transparent" BorderThickness="0" Cursor="Hand" ToolTip="Restore User" Tag="{Binding UserID}">
+                                    <Button Click="RestoreUser_Click" ToolTip="Restore User" Tag="{Binding UserID}">
                                         <Button.Style>
-                                            <Style TargetType="Button">
+                                            <Style TargetType="Button" BasedOn="{StaticResource IconActionButton}">
                                                 <Setter Property="Visibility" Value="Collapsed"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsActive}" Value="False">
@@ -214,9 +256,10 @@
                                                 </Style.Triggers>
                                             </Style>
                                         </Button.Style>
-                                        <Path Data="{StaticResource Vec_Restore}" Fill="{StaticResource BrandGreen}" Height="14" Width="14" Stretch="Uniform"/>
+                                        <Path Data="{StaticResource Vec_Restore}" Fill="{StaticResource BrandGreen}" Height="15" Width="15" Stretch="Uniform"/>
                                     </Button>
-                                </Grid>
+
+                                </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>

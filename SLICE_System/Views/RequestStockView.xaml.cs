@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -19,12 +18,8 @@ namespace SLICE_System.Views
         public ObservableCollection<MarketItem> MarketItems { get; set; } = new ObservableCollection<MarketItem>();
         public ObservableCollection<MarketItem> CartItems { get; set; } = new ObservableCollection<MarketItem>();
 
-        private List<Branch> _availableBranches;
-        public List<Branch> AvailableBranches
-        {
-            get => _availableBranches;
-            set { _availableBranches = value; OnPropertyChanged(nameof(AvailableBranches)); }
-        }
+        // ID 1 is standard for "Headquarters" or "Main Commissary" in most POS databases.
+        private const int HEADQUARTERS_BRANCH_ID = 1;
 
         private User _currentUser;
         private InventoryRepository _invRepo = new InventoryRepository();
@@ -35,42 +30,22 @@ namespace SLICE_System.Views
             InitializeComponent();
             _currentUser = user;
             DataContext = this;
+
             LoadData();
             StartBackgroundAnimation();
         }
 
         private void LoadData()
         {
-            // Load the dropdown list of other branches
-            AvailableBranches = _invRepo.GetShippingDestinations(_currentUser.BranchID.GetValueOrDefault());
-
-            if (AvailableBranches.Any() && cmbSource != null)
-            {
-                cmbSource.SelectedIndex = 0; // Automatically select the first branch
-
-                // Manually trigger the first load based on the selected branch
-                if (cmbSource.SelectedValue != null && int.TryParse(cmbSource.SelectedValue.ToString(), out int sourceBranchId))
-                {
-                    LoadMarketItems(sourceBranchId);
-                }
-            }
+            // Instead of populating a dropdown, we immediately load the inventory available at Headquarters
+            LoadMarketItems(HEADQUARTERS_BRANCH_ID);
         }
 
-        // --- NEW EVENT: Triggers every time you pick a different branch from the dropdown ---
-        private void CmbSource_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (cmbSource.SelectedValue != null && int.TryParse(cmbSource.SelectedValue.ToString(), out int sourceBranchId))
-            {
-                LoadMarketItems(sourceBranchId);
-            }
-        }
-
-        // --- NEW METHOD: Fetches the stock of the branch you want to request from ---
         private void LoadMarketItems(int branchId)
         {
             MarketItems.Clear();
 
-            // Fetch inventory for the SOURCE branch, not your current branch
+            // Fetch inventory strictly from the Headquarters branch
             var stocks = _invRepo.GetStockForBranch(branchId);
 
             foreach (var s in stocks)
@@ -81,7 +56,7 @@ namespace SLICE_System.Views
                     Name = s.ItemName,
                     Unit = s.BaseUnit,
                     Icon = GetIconForIngredient(s.ItemName),
-                    CurrentStock = s.CurrentQuantity, // Shows you exactly how much they have!
+                    CurrentStock = s.CurrentQuantity, // Shows exactly what HQ currently has
                     ImagePath = s.ImagePath
                 });
             }
@@ -98,6 +73,7 @@ namespace SLICE_System.Views
                 DoubleAnimation anim = new DoubleAnimation(0.95, 1.0, TimeSpan.FromMilliseconds(100));
                 scale.BeginAnimation(ScaleTransform.ScaleXProperty, anim);
                 scale.BeginAnimation(ScaleTransform.ScaleYProperty, anim);
+
                 AddToCart(item);
             }
         }
@@ -131,15 +107,18 @@ namespace SLICE_System.Views
 
         private async void Submit_Click(object sender, RoutedEventArgs e)
         {
-            if (CartItems.Count == 0) return;
-            if (cmbSource.SelectedValue == null) { MessageBox.Show("Select a source."); return; }
+            if (CartItems.Count == 0)
+            {
+                MessageBox.Show("Your request ticket is empty. Please add items to request.", "Empty Ticket", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             try
             {
                 MeshLogistics header = new MeshLogistics
                 {
-                    FromBranchID = (int)cmbSource.SelectedValue,
-                    ToBranchID = _currentUser.BranchID.Value,
+                    FromBranchID = HEADQUARTERS_BRANCH_ID, // ALWAYS request from HQ
+                    ToBranchID = _currentUser.BranchID.Value, // To this specific branch
                     ReceiverID = _currentUser.UserID
                 };
 
@@ -160,7 +139,7 @@ namespace SLICE_System.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error: " + ex.Message);
+                MessageBox.Show("Error submitting request: " + ex.Message, "Database Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -221,10 +200,15 @@ namespace SLICE_System.Views
 
         private FontAwesomeIcon GetIconForIngredient(string name)
         {
+            if (string.IsNullOrEmpty(name)) return FontAwesomeIcon.Leaf;
+
             name = name.ToLower();
             if (name.Contains("cheese")) return FontAwesomeIcon.DotCircleOutline;
             if (name.Contains("dough") || name.Contains("flour")) return FontAwesomeIcon.Cloud;
             if (name.Contains("sauce") || name.Contains("tomato")) return FontAwesomeIcon.Tint;
+            if (name.Contains("meat") || name.Contains("pepperoni") || name.Contains("bacon")) return FontAwesomeIcon.Cutlery;
+            if (name.Contains("box") || name.Contains("packaging")) return FontAwesomeIcon.Cube;
+
             return FontAwesomeIcon.Leaf;
         }
 

@@ -8,23 +8,55 @@ namespace SLICE_System.Views
 {
     public partial class AddUserWindow : Window
     {
+        private User _existingUser; // Stores the user if we are editing
+
+        // 1. CONSTRUCTOR FOR NEW USER
         public AddUserWindow()
         {
             InitializeComponent();
             LoadBranches();
         }
 
+        // 2. CONSTRUCTOR FOR EDITING EXISTING USER (Fixes the CS1729 Error)
+        public AddUserWindow(User userToEdit) : this() // Calls the first constructor to load branches
+        {
+            _existingUser = userToEdit;
+
+            // Populate the textboxes with the existing data so the owner can see/edit them
+            txtName.Text = _existingUser.FullName;
+            txtUser.Text = _existingUser.Username;
+            txtPass.Text = _existingUser.PasswordHash; // The owner can see and edit the password
+
+            // Match the Role Dropdown
+            foreach (ComboBoxItem item in cmbRole.Items)
+            {
+                if (item.Content.ToString() == _existingUser.Role)
+                {
+                    cmbRole.SelectedItem = item;
+                    break;
+                }
+            }
+
+            // Match the Branch Dropdown
+            if (_existingUser.BranchID.HasValue)
+            {
+                cmbBranch.SelectedValue = _existingUser.BranchID.Value;
+            }
+
+            // Update UI title
+            this.Title = "Edit User";
+        }
+
         private void LoadBranches()
         {
             try
             {
-                // We reuse the InventoryRepository for branches as per your existing structure
-                // Ideally, move 'GetAllBranches' to a common repository later.
                 InventoryRepository repo = new InventoryRepository();
                 cmbBranch.ItemsSource = repo.GetAllBranches();
 
-                // Select first branch by default if available
-                if (cmbBranch.Items.Count > 0) cmbBranch.SelectedIndex = 0;
+                // Select first branch by default if creating a new user
+                if (cmbBranch.Items.Count > 0 && _existingUser == null)
+                    cmbBranch.SelectedIndex = 0;
             }
             catch (Exception ex)
             {
@@ -34,7 +66,6 @@ namespace SLICE_System.Views
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
-            // 1. Validation
             if (string.IsNullOrWhiteSpace(txtName.Text) || string.IsNullOrWhiteSpace(txtUser.Text) || string.IsNullOrWhiteSpace(txtPass.Text))
             {
                 MessageBox.Show("Please fill in all required fields (Name, Username, Password).", "Missing Information", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -49,30 +80,38 @@ namespace SLICE_System.Views
 
             try
             {
-                // 2. Prepare Data
                 UserRepository repo = new UserRepository();
-
                 string selectedRole = (cmbRole.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Clerk";
                 int? selectedBranch = (int?)cmbBranch.SelectedValue;
 
-                // Super-Admins usually don't need a specific branch (or can see all), 
-                // but we assign one if selected, or null if you prefer global access logic.
-                // Keeping logic simple: always assign what is selected.
-
-                User newUser = new User
+                if (_existingUser == null)
                 {
-                    FullName = txtName.Text.Trim(),
-                    Username = txtUser.Text.Trim(),
-                    PasswordHash = txtPass.Text, // TODO: In production, Hash this password!
-                    Role = selectedRole,
-                    BranchID = selectedBranch,
-                    IsActive = true
-                };
+                    // --- INSERT NEW USER ---
+                    User newUser = new User
+                    {
+                        FullName = txtName.Text.Trim(),
+                        Username = txtUser.Text.Trim(),
+                        PasswordHash = txtPass.Text,
+                        Role = selectedRole,
+                        BranchID = selectedBranch,
+                        IsActive = true
+                    };
+                    repo.AddUser(newUser);
+                    MessageBox.Show("User account created successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    // --- UPDATE EXISTING USER ---
+                    _existingUser.FullName = txtName.Text.Trim();
+                    _existingUser.Username = txtUser.Text.Trim();
+                    _existingUser.PasswordHash = txtPass.Text; // Update to the new password
+                    _existingUser.Role = selectedRole;
+                    _existingUser.BranchID = selectedBranch;
 
-                // 3. Save
-                repo.AddUser(newUser);
+                    repo.UpdateUser(_existingUser);
+                    MessageBox.Show("User account updated successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
 
-                MessageBox.Show("User account created successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 this.Close();
             }
             catch (Exception ex)

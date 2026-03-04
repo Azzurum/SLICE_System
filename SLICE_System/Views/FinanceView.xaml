@@ -63,7 +63,7 @@
                 <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="100" FontWeight="SemiBold"/>
                 <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="120"/>
                 <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*"/>
-                <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat=N2}" Width="100" FontWeight="Bold"/>
+                <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat='₱ {0:N2}'}" Width="100" FontWeight="Bold"/>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

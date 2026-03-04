@@ -56,8 +56,8 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel Grid.Row="0" Margin="10,0,0,20">
-                    <TextBlock Text="Pantry Market" FontSize="26" FontWeight="Bold" Foreground="{StaticResource DarkText}"/>
-                    <TextBlock Text="Select ingredients to request from another branch." FontSize="14" Foreground="{StaticResource LightText}"/>
+                    <TextBlock Text="Request Stock" FontSize="26" FontWeight="Bold" Foreground="{StaticResource DarkText}"/>
+                    <TextBlock Text="Request stock replenishments from Headquarters." FontSize="14" Foreground="{StaticResource LightText}"/>
                 </StackPanel>
 
                 <WrapPanel Grid.Row="1" Margin="10,0,0,20">
@@ -96,7 +96,7 @@
                                                 </fa:ImageAwesome.Style>
                                             </fa:ImageAwesome>
 
-                                            <Border CornerRadius="8" Width="60" Height="60" ClipToBounds="True" Background="White" BorderBrush="#EAECEE" BorderThickness="1">
+                                            <Border CornerRadius="50" Width="60" Height="60" ClipToBounds="True" BorderBrush="#EAECEE" BorderThickness="1">
                                                 <Border.Style>
                                                     <Style TargetType="Border">
                                                         <Setter Property="Visibility" Value="Visible"/>
@@ -109,7 +109,6 @@
                                                 </Border.Style>
                                                 <Image Source="{Binding ImagePath}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="4"/>
                                             </Border>
-
                                         </Grid>
                                         <Border Background="#F0F3F4" CornerRadius="10" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="8" Padding="6,2">
                                             <TextBlock Text="{Binding CurrentStock, StringFormat='In Stock: {0:N0}'}" FontSize="10" Foreground="{StaticResource LightText}"/>
@@ -159,12 +158,17 @@
                             </Grid.RowDefinitions>
 
                             <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,20">
-                                <TextBlock Text="ORDER TICKET #104" FontFamily="Consolas" FontSize="18" FontWeight="Bold" Foreground="{StaticResource DarkText}"/>
+                                <TextBlock Text="TRANSFER TICKET" FontFamily="Consolas" FontSize="18" FontWeight="Bold" Foreground="{StaticResource DarkText}"/>
                             </StackPanel>
 
                             <StackPanel Grid.Row="1" Margin="0,0,0,15">
-                                <TextBlock Text="REQUEST FROM" FontSize="10" FontWeight="Bold" Foreground="{StaticResource LightText}"/>
-                                <ComboBox x:Name="cmbSource" ItemsSource="{Binding AvailableBranches}" DisplayMemberPath="BranchName" SelectedValuePath="BranchID" Height="35" FontSize="14" SelectionChanged="CmbSource_SelectionChanged"/>
+                                <TextBlock Text="DESTINATION ROUTING" FontSize="10" FontWeight="Bold" Foreground="{StaticResource LightText}" Margin="0,0,0,5"/>
+                                <Border Background="#F4F6F6" BorderBrush="#BDC3C7" BorderThickness="1" CornerRadius="4" Padding="10">
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <fa:ImageAwesome Icon="Building" Height="14" Foreground="{StaticResource DarkText}" Margin="0,0,10,0"/>
+                                        <TextBlock Text="MAIN COMMISSARY / HQ" FontWeight="Bold" FontSize="14" Foreground="{StaticResource DarkText}"/>
+                                    </StackPanel>
+                                </Border>
                             </StackPanel>
 
                             <ListView Grid.Row="2" ItemsSource="{Binding CartItems}" BorderThickness="0" Background="Transparent" Margin="-5,0">
@@ -205,7 +209,7 @@
                                         <Setter Property="CornerRadius" Value="0"/>
                                     </Style>
                                 </Button.Resources>
-                                <TextBlock Text="SEND TO KITCHEN" FontFamily="Consolas" FontWeight="Bold" Foreground="White"/>
+                                <TextBlock Text="SUBMIT REQUEST TO HQ" FontFamily="Consolas" FontWeight="Bold" Foreground="White"/>
                             </Button>
                         </Grid>
                     </Grid>

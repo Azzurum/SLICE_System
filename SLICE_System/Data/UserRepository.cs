@@ -14,7 +14,8 @@ namespace SLICE_System.Data
             _dbService = new DatabaseService();
         }
 
-        // 1. LOGIN (Existing)
+        // --- 1. AUTHENTICATION ---
+        // Validates user credentials and ensures the account is actively permitted to log in
         public User? Login(string username, string password)
         {
             using (var connection = _dbService.GetConnection())
@@ -24,7 +25,8 @@ namespace SLICE_System.Data
             }
         }
 
-        // 2. GET ALL USERS (Updated with Search)
+        // --- 2. RETRIEVE USERS ---
+        // Fetches all users, joins their assigned branch name, and applies an optional search filter
         public List<User> GetAllUsers(string search = "")
         {
             using (var connection = _dbService.GetConnection())
@@ -40,7 +42,8 @@ namespace SLICE_System.Data
             }
         }
 
-        // 3. ADD USER
+        // --- 3. CREATE USER ---
+        // Inserts a newly registered employee into the system (defaults to Active = 1)
         public void AddUser(User user)
         {
             using (var connection = _dbService.GetConnection())
@@ -53,23 +56,43 @@ namespace SLICE_System.Data
             }
         }
 
+        // --- 4. UPDATE USER ---
+        // Modifies an existing employee's details, role, branch assignment, or password
+        public void UpdateUser(User user)
+        {
+            using (var connection = _dbService.GetConnection())
+            {
+                string sql = @"
+                    UPDATE Users 
+                    SET Username = @Username, 
+                        PasswordHash = @PasswordHash, 
+                        FullName = @FullName, 
+                        Role = @Role, 
+                        BranchID = @BranchID
+                    WHERE UserID = @UserID";
+
+                connection.Execute(sql, user);
+            }
+        }
+
+        // --- 5. DEACTIVATE USER (SOFT DELETE) ---
+        // Revokes access immediately without deleting the row, keeping financial/audit logs perfectly intact
+        public void DeactivateUser(int userId)
+        {
+            using (var connection = _dbService.GetConnection())
+            {
+                string sql = "UPDATE Users SET IsActive = 0 WHERE UserID = @UserID";
+                connection.Execute(sql, new { UserID = userId });
+            }
+        }
+
+        // --- 6. REACTIVATE USER ---
+        // Restores system access for a previously deactivated employee
         public void ReactivateUser(int userId)
         {
             using (var connection = _dbService.GetConnection())
             {
                 string sql = "UPDATE Users SET IsActive = 1 WHERE UserID = @UserID";
-                connection.Execute(sql, new { UserID = userId });
-            }
-        }
-
-        // 4. DEACTIVATE USER (Soft Delete)
-        public void DeactivateUser(int userId)
-        {
-            using (var connection = _dbService.GetConnection())
-            {
-                // We set IsActive to 0 instead of deleting the row
-                // This preserves their history in Sales/Audit logs.
-                string sql = "UPDATE Users SET IsActive = 0 WHERE UserID = @UserID";
                 connection.Execute(sql, new { UserID = userId });
             }
         }
