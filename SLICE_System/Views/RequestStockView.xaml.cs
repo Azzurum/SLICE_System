@@ -18,8 +18,7 @@ namespace SLICE_System.Views
         public ObservableCollection<MarketItem> MarketItems { get; set; } = new ObservableCollection<MarketItem>();
         public ObservableCollection<MarketItem> CartItems { get; set; } = new ObservableCollection<MarketItem>();
 
-        // ID 1 is standard for "Headquarters" or "Main Commissary" in most POS databases.
-        private const int HEADQUARTERS_BRANCH_ID = 1;
+        private const int HEADQUARTERS_BRANCH_ID = 4;
 
         private User _currentUser;
         private InventoryRepository _invRepo = new InventoryRepository();

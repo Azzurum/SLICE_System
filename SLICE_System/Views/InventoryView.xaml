@@ -123,21 +123,36 @@
                     <fa:ImageAwesome Icon="Refresh" Height="14"/>
                 </Button>
 
-                <Button Command="{Binding DispatchCommand}" CommandParameter="{Binding SelectedItems, ElementName=GridIngredients}" Margin="0,0,10,5" Style="{StaticResource ActionButtonStyle}" Background="{StaticResource BrandOrange}">
+                <Button x:Name="btnDispatch" Command="{Binding DispatchCommand}" CommandParameter="{Binding SelectedItems, ElementName=GridIngredients}" Margin="0,0,10,5" Background="{StaticResource BrandOrange}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource ActionButtonStyle}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </Style>
+                    </Button.Style>
                     <StackPanel Orientation="Horizontal">
                         <fa:ImageAwesome Icon="Truck" Height="13" Foreground="White" Margin="0,0,8,0"/>
                         <TextBlock Text="DISPATCH"/>
                     </StackPanel>
                 </Button>
 
-                <Button Command="{Binding RecordPurchaseCommand}" Style="{StaticResource ActionButtonStyle}" Background="{StaticResource BrandBlue}" Margin="0,0,10,5">
+                <Button x:Name="btnBuyStock" Command="{Binding RecordPurchaseCommand}" Background="{StaticResource BrandBlue}" Margin="0,0,10,5">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource ActionButtonStyle}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </Style>
+                    </Button.Style>
                     <StackPanel Orientation="Horizontal">
                         <fa:ImageAwesome Icon="ShoppingCart" Height="13" Foreground="White" Margin="0,0,8,0"/>
                         <TextBlock Text="BUY STOCK"/>
                     </StackPanel>
                 </Button>
 
-                <Button Command="{Binding AddItemCommand}" Style="{StaticResource ActionButtonStyle}" Margin="0,0,0,5">
+                <Button x:Name="btnAddItem" Command="{Binding AddItemCommand}" Margin="0,0,0,5">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource ActionButtonStyle}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </Style>
+                    </Button.Style>
                     <StackPanel Orientation="Horizontal">
                         <fa:ImageAwesome Icon="Plus" Height="13" Foreground="White" Margin="0,0,8,0"/>
                         <TextBlock Text="NEW ITEM"/>
@@ -228,10 +243,10 @@
                     <DataGridTextColumn Header="BUY UNIT" Binding="{Binding BulkUnit}" Width="90" Foreground="{StaticResource TextDark}"/>
                     <DataGridTextColumn Header="USE UNIT" Binding="{Binding BaseUnit}" Width="90" Foreground="{StaticResource TextDark}"/>
 
-                    <DataGridTemplateColumn Header="ACTIONS" Width="100">
+                    <DataGridTemplateColumn x:Name="colActions" Header="ACTIONS" Width="100">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <StackPanel x:Name="spActions" Orientation="Horizontal" HorizontalAlignment="Center" Visibility="Collapsed">
                                     <Button Style="{StaticResource RowIconButtonStyle}" 
                                             Command="{Binding DataContext.EditItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
                                             CommandParameter="{Binding}" ToolTip="Edit Ingredient">

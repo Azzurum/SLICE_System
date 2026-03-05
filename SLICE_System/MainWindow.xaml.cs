@@ -25,8 +25,10 @@ namespace SLICE_System
             ApplyPermissions();
 
             // 3. Load Default View based on role capabilities
-            if (AccessControlService.CanAccess(_currentUser.Role, AccessControlService.Module.Dashboard))
+            if (AccessControlService.CanAccess(_currentUser.Role, AccessControlService.Module.Dashboard) || _currentUser.Role == "Logistics Admin")
                 Nav_Dashboard_Click(null, null);
+            else if (_currentUser.Role == "Logistics Admin")
+                Nav_Inventory_Click(null, null); // Fallback specifically for Logistics Admin
             else
                 Nav_MyStock_Click(null, null); // Fallback for clerks
         }
@@ -34,41 +36,46 @@ namespace SLICE_System
         private void ApplyPermissions()
         {
             string r = _currentUser.Role;
+            bool isLA = (r == "Logistics Admin");
 
             // 1. DASHBOARD GROUP
-            bool canViewDashboard = AccessControlService.CanAccess(r, AccessControlService.Module.Dashboard);
+            bool canViewDashboard = AccessControlService.CanAccess(r, AccessControlService.Module.Dashboard) || isLA;
             Toggle(Btn_Dashboard, canViewDashboard);
             Grp_Dash.Visibility = canViewDashboard ? Visibility.Visible : Visibility.Collapsed;
 
             // 2. OPERATIONS GROUP
-            Toggle(Btn_Incoming, AccessControlService.CanAccess(r, AccessControlService.Module.IncomingOrders));
-            Toggle(Btn_MyInventory, AccessControlService.CanAccess(r, AccessControlService.Module.MyInventory));
-            Toggle(Btn_RequestStock, AccessControlService.CanAccess(r, AccessControlService.Module.RequestStock));
-            Toggle(Btn_Sales, AccessControlService.CanAccess(r, AccessControlService.Module.SalesPOS));
-            Toggle(Btn_Approve, AccessControlService.CanAccess(r, AccessControlService.Module.ApproveRequests));
-            Toggle(Btn_Waste, AccessControlService.CanAccess(r, AccessControlService.Module.WasteTracker));
-            Toggle(Btn_Recon, AccessControlService.CanAccess(r, AccessControlService.Module.Reconciliation));
+            // LA needs to see Incoming, Approvals, Waste, and Recon. They DO NOT need Sales, Branch Inventory, or Request Stock.
+            Toggle(Btn_Incoming, AccessControlService.CanAccess(r, AccessControlService.Module.IncomingOrders) || isLA);
+            Toggle(Btn_MyInventory, AccessControlService.CanAccess(r, AccessControlService.Module.MyInventory) && !isLA);
+            Toggle(Btn_RequestStock, AccessControlService.CanAccess(r, AccessControlService.Module.RequestStock) && !isLA);
+            Toggle(Btn_Sales, AccessControlService.CanAccess(r, AccessControlService.Module.SalesPOS) && !isLA);
+            Toggle(Btn_Approve, AccessControlService.CanAccess(r, AccessControlService.Module.ApproveRequests) || isLA);
+            Toggle(Btn_Waste, AccessControlService.CanAccess(r, AccessControlService.Module.WasteTracker) || isLA);
+            Toggle(Btn_Recon, AccessControlService.CanAccess(r, AccessControlService.Module.Reconciliation) || isLA);
 
-            // FIX 1: Use exact Database Roles ('Clerk', 'Manager'). 
-            // Removed 'Super-Admin' so the Owner does NOT see the Submit form.
-            Toggle(Btn_SubmitFeedback, r == "Clerk" || r == "Manager");
+            Toggle(Btn_SubmitFeedback, r == "Clerk" || r == "Manager" || isLA);
 
             bool anyOps = Btn_Incoming.Visibility == Visibility.Visible ||
                           Btn_MyInventory.Visibility == Visibility.Visible ||
+                          Btn_RequestStock.Visibility == Visibility.Visible ||
+                          Btn_Sales.Visibility == Visibility.Visible ||
+                          Btn_Approve.Visibility == Visibility.Visible ||
+                          Btn_Waste.Visibility == Visibility.Visible ||
+                          Btn_Recon.Visibility == Visibility.Visible ||
                           Btn_SubmitFeedback.Visibility == Visibility.Visible;
 
             Grp_Ops.Visibility = anyOps ? Visibility.Visible : Visibility.Collapsed;
 
             // 3. ADMIN GROUP
-            Toggle(Btn_Menu, AccessControlService.CanAccess(r, AccessControlService.Module.MenuRegistry));
-            Toggle(Btn_Inventory, AccessControlService.CanAccess(r, AccessControlService.Module.GlobalInventory));
-            Toggle(Btn_Users, AccessControlService.CanAccess(r, AccessControlService.Module.UserAdmin));
-            Toggle(Btn_Audit, AccessControlService.CanAccess(r, AccessControlService.Module.AuditLogs));
-            Toggle(Btn_Finance, r == "Super-Admin");
-            Toggle(Btn_ManageDiscounts, r == "Super-Admin");
+            // LA only needs access to the Central Warehouse in the admin group.
+            Toggle(Btn_Menu, AccessControlService.CanAccess(r, AccessControlService.Module.MenuRegistry) && !isLA);
+            Toggle(Btn_Inventory, AccessControlService.CanAccess(r, AccessControlService.Module.GlobalInventory) || isLA);
+            Toggle(Btn_Users, AccessControlService.CanAccess(r, AccessControlService.Module.UserAdmin) && !isLA);
+            Toggle(Btn_Audit, AccessControlService.CanAccess(r, AccessControlService.Module.AuditLogs) && !isLA);
 
-            // FIX 2: Only Super-Admin (Owner) sees the Review panel
-            Toggle(Btn_ReviewFeedback, r == "Super-Admin");
+            Toggle(Btn_Finance, r == "Super-Admin" || r == "Owner");
+            Toggle(Btn_ManageDiscounts, r == "Super-Admin" || r == "Owner");
+            Toggle(Btn_ReviewFeedback, r == "Super-Admin" || r == "Owner");
 
             // Hide Admin Header if all children are hidden
             bool anyAdmin = Btn_Menu.Visibility == Visibility.Visible ||
@@ -76,6 +83,7 @@ namespace SLICE_System
                             Btn_Users.Visibility == Visibility.Visible ||
                             Btn_Audit.Visibility == Visibility.Visible ||
                             Btn_Finance.Visibility == Visibility.Visible ||
+                            Btn_ManageDiscounts.Visibility == Visibility.Visible ||
                             Btn_ReviewFeedback.Visibility == Visibility.Visible;
 
             Grp_Admin.Visibility = anyAdmin ? Visibility.Visible : Visibility.Collapsed;
@@ -103,7 +111,7 @@ namespace SLICE_System
 
         private void Nav_RequestStock_Click(object sender, RoutedEventArgs e)
         {
-            txtPageTitle.Text = "Pantry Market";
+            txtPageTitle.Text = "Stock Requisition";
             MainContentArea.Child = new Views.RequestStockView(_currentUser);
         }
 
@@ -132,7 +140,9 @@ namespace SLICE_System
             => LoadView("Stock Reconciliation", new Views.ReconciliationView(_currentUser.BranchID ?? 0, _currentUser.UserID));
 
         private void Nav_Menu_Click(object sender, RoutedEventArgs e) => LoadView("Menu Registry", new Views.MenuView());
-        private void Nav_Inventory_Click(object sender, RoutedEventArgs e) => LoadView("Central Warehouse", new Views.InventoryView());
+
+        private void Nav_Inventory_Click(object sender, RoutedEventArgs e) => LoadView("Central Warehouse", new Views.InventoryView(_currentUser));
+
         private void Nav_Users_Click(object sender, RoutedEventArgs e) => LoadView("User Administration", new Views.UsersView());
         private void Nav_Audit_Click(object sender, RoutedEventArgs e) => LoadView("System Audit Logs", new Views.AuditLogView());
 
@@ -151,7 +161,6 @@ namespace SLICE_System
             MainContentArea.Child = new Views.ManageDiscountsView();
         }
 
-        // NEW: Submit Feedback Handler (For Cashiers/Managers)
         private void Nav_SubmitFeedback_Click(object sender, RoutedEventArgs e)
         {
             txtPageTitle.Text = "Submit Feedback";
@@ -161,7 +170,6 @@ namespace SLICE_System
             MainContentArea.Child = view;
         }
 
-        // NEW: Review Feedback Handler (For Owner)
         private void Nav_ReviewFeedback_Click(object sender, RoutedEventArgs e)
         {
             txtPageTitle.Text = "Review Suggestions";

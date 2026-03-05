@@ -1,7 +1,7 @@
 ﻿<Window x:Class="SLICE_System.Views.AddUserWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Create New User" Height="600" Width="450"
+        Title="Create New User" Height="620" Width="450"
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent">
 
@@ -67,8 +67,9 @@
                 <TextBox x:Name="txtPass" Tag="*******"/>
 
                 <TextBlock Text="ROLE" FontSize="11" FontWeight="Bold" Foreground="#95A5A6" Margin="0,15,0,5"/>
-                <ComboBox x:Name="cmbRole" Height="40" FontSize="14" Padding="10,8" Background="#F9F9F9" BorderBrush="#E0E0E0">
+                <ComboBox x:Name="cmbRole" Height="40" FontSize="14" Padding="10,8" Background="#F9F9F9" BorderBrush="#E0E0E0" SelectionChanged="cmbRole_SelectionChanged">
                     <ComboBoxItem Content="Clerk" IsSelected="True"/>
+                    <ComboBoxItem Content="Logistics Admin"/>
                     <ComboBoxItem Content="Manager"/>
                     <ComboBoxItem Content="Super-Admin"/>
                 </ComboBox>
