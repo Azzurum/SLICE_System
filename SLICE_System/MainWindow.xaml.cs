@@ -44,11 +44,14 @@ namespace SLICE_System
             Grp_Dash.Visibility = canViewDashboard ? Visibility.Visible : Visibility.Collapsed;
 
             // 2. OPERATIONS GROUP
-            // LA needs to see Incoming, Approvals, Waste, and Recon. They DO NOT need Sales, Branch Inventory, or Request Stock.
+            // Allow Super-Admin to see these for auditing
             Toggle(Btn_Incoming, AccessControlService.CanAccess(r, AccessControlService.Module.IncomingOrders) || isLA);
             Toggle(Btn_MyInventory, AccessControlService.CanAccess(r, AccessControlService.Module.MyInventory) && !isLA);
             Toggle(Btn_RequestStock, AccessControlService.CanAccess(r, AccessControlService.Module.RequestStock) && !isLA);
-            Toggle(Btn_Sales, AccessControlService.CanAccess(r, AccessControlService.Module.SalesPOS) && !isLA);
+
+            // POS is purely for selling. Super-Admin and Logistics don't sell.
+            Toggle(Btn_Sales, AccessControlService.CanAccess(r, AccessControlService.Module.SalesPOS) && r != "Super-Admin" && !isLA);
+
             Toggle(Btn_Approve, AccessControlService.CanAccess(r, AccessControlService.Module.ApproveRequests) || isLA);
             Toggle(Btn_Waste, AccessControlService.CanAccess(r, AccessControlService.Module.WasteTracker) || isLA);
             Toggle(Btn_Recon, AccessControlService.CanAccess(r, AccessControlService.Module.Reconciliation) || isLA);

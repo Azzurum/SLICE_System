@@ -24,22 +24,22 @@ namespace SLICE_System.Data
         {
             using (var connection = _dbService.GetConnection())
             {
-                // Retrieve all raw materials and sum up enterprise-wide stock
+                // STRICT ENTERPRISE RULE: The Central Warehouse view must ONLY show stock physically located at Headquarters (BranchID = 4).
                 string sql = @"
-                    SELECT 
-                        m.ItemID, 
-                        m.ItemName, 
-                        m.Category, 
-                        m.BulkUnit, 
-                        m.BaseUnit, 
-                        m.ConversionRatio,
-                        ISNULL(SUM(b.CurrentQuantity), 0) AS TotalStock
-                    FROM MasterInventory m
-                    LEFT JOIN BranchInventory b ON m.ItemID = b.ItemID
-                    WHERE (@Search = '' OR m.ItemName LIKE @Search OR m.Category LIKE @Search)
-                    GROUP BY 
-                        m.ItemID, m.ItemName, m.Category, m.BulkUnit, m.BaseUnit, m.ConversionRatio
-                    ORDER BY m.Category, m.ItemName";
+                SELECT 
+                    m.ItemID, 
+                    m.ItemName, 
+                    m.Category, 
+                    m.BulkUnit, 
+                    m.BaseUnit, 
+                    m.ConversionRatio,
+                    ISNULL(SUM(b.CurrentQuantity), 0) AS TotalStock
+                FROM MasterInventory m
+                LEFT JOIN BranchInventory b ON m.ItemID = b.ItemID AND b.BranchID = 4
+                WHERE (@Search = '' OR m.ItemName LIKE @Search OR m.Category LIKE @Search)
+                GROUP BY 
+                    m.ItemID, m.ItemName, m.Category, m.BulkUnit, m.BaseUnit, m.ConversionRatio
+                ORDER BY m.Category, m.ItemName";
 
                 return connection.Query<MasterInventory>(sql, new { Search = "%" + search + "%" }).AsList();
             }

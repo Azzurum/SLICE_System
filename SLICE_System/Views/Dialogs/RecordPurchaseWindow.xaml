@@ -227,7 +227,7 @@
                     <TextBlock Text="{Binding GrandTotal, StringFormat=₱ {0:N2}}" FontSize="32" FontWeight="Black" Foreground="#E67E22" HorizontalAlignment="Right" Margin="0,-5,0,0"/>
                 </StackPanel>
 
-                <Button Command="{Binding SaveCommand}" Click="Confirm_Click" Background="#27AE60" Foreground="White" FontWeight="Bold" FontSize="15" Width="240" Height="55" Cursor="Hand">
+                <Button Command="{Binding SaveCommand}" Background="#27AE60" Foreground="White" FontWeight="Bold" FontSize="15" Width="240" Height="55" Cursor="Hand">
                     <Button.Resources>
                         <Style TargetType="Border">
                             <Setter Property="CornerRadius" Value="8"/>

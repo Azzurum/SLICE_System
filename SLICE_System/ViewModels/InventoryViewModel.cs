@@ -14,12 +14,14 @@ namespace SLICE_System.ViewModels
 {
     public class InventoryViewModel : ViewModelBase
     {
+        // Central Warehouse Database ID
+        private const int HEADQUARTERS_BRANCH_ID = 4;
+
         private readonly InventoryRepository _repo;
         private readonly DatabaseService _db;
         private MasterInventory _selectedItem;
         private string _searchText;
 
-        // --- PROPERTIES ---
         public ObservableCollection<MasterInventory> Ingredients { get; set; }
 
         public MasterInventory SelectedIngredient
@@ -46,30 +48,26 @@ namespace SLICE_System.ViewModels
             }
         }
 
-        // --- COMMANDS ---
         public ICommand RefreshCommand { get; }
         public ICommand AddItemCommand { get; }
         public ICommand DispatchCommand { get; }
         public ICommand RecordPurchaseCommand { get; }
-
-        // NEW: Action Commands for the DataGrid Rows
         public ICommand EditItemCommand { get; }
         public ICommand DeleteItemCommand { get; }
 
-        // --- CONSTRUCTOR ---
         public InventoryViewModel()
         {
             _repo = new InventoryRepository();
             _db = new DatabaseService();
             Ingredients = new ObservableCollection<MasterInventory>();
 
-            // Initialize Commands
             RefreshCommand = new RelayCommand(LoadData);
             AddItemCommand = new RelayCommand(AddItem);
-            DispatchCommand = new RelayCommand<IList>(DispatchStock);
-            RecordPurchaseCommand = new RelayCommand(OpenPurchaseWindow);
 
-            // NEW: Row Actions
+            // Commands now expect an IList of highlighted DataGrid items
+            DispatchCommand = new RelayCommand<IList>(DispatchStock);
+            RecordPurchaseCommand = new RelayCommand<IList>(OpenPurchaseWindow);
+
             EditItemCommand = new RelayCommand<MasterInventory>(EditItem);
             DeleteItemCommand = new RelayCommand<MasterInventory>(DeleteItem);
 
@@ -92,33 +90,27 @@ namespace SLICE_System.ViewModels
 
         private void AddItem()
         {
-            var popup = new AddIngredientWindow(); // Standard empty window
+            var popup = new AddIngredientWindow();
             if (popup.ShowDialog() == true)
             {
                 LoadData();
             }
         }
 
-        // --- NEW: EDIT LOGIC ---
         private void EditItem(MasterInventory item)
         {
             if (item == null) return;
-
-            // Use the full namespace to ensure it hits the Dialogs version with the custom constructor
             var popup = new SLICE_System.Views.Dialogs.AddIngredientWindow(item);
-
             if (popup.ShowDialog() == true)
             {
                 LoadData();
             }
         }
 
-        // --- NEW: DELETE LOGIC ---
         private void DeleteItem(MasterInventory item)
         {
             if (item == null) return;
 
-            // 1. Confirm with the user
             var result = MessageBox.Show(
                 $"Are you sure you want to remove '{item.ItemName}'? This will permanently delete the item definition.",
                 "Confirm Deletion", MessageBoxButton.YesNo, MessageBoxImage.Warning);
@@ -129,7 +121,7 @@ namespace SLICE_System.ViewModels
             {
                 using (var conn = _db.GetConnection())
                 {
-                    // 2. SAFETY CHECK: Check if this item is used in Recipes or has Stock in Branches
+                    // Block deletion if the item is linked to recipes or still exists in physical stock
                     string sqlCheck = @"
                 SELECT 
                     (SELECT COUNT(*) FROM BillOfMaterials WHERE ItemID = @Id) +
@@ -140,15 +132,12 @@ namespace SLICE_System.ViewModels
 
                     if (usage > 0)
                     {
-                        // BLOCK THE DELETE: Explain that it's in use
                         MessageBox.Show(
                             $"Cannot delete '{item.ItemName}' because it is currently used in a Menu Recipe or still has remaining stock in one or more branches.\n\nPlease remove it from all recipes and empty the stock before deleting.",
                             "Item In Use", MessageBoxButton.OK, MessageBoxImage.Stop);
                         return;
                     }
 
-                    // 3. IF SAFE: Proceed with Deletion
-                    // We also delete empty stock records (0 qty) to clean up the DB
                     conn.Execute("DELETE FROM BranchInventory WHERE ItemID = @Id", new { Id = item.ItemID });
                     conn.Execute("DELETE FROM MasterInventory WHERE ItemID = @Id", new { Id = item.ItemID });
 
@@ -162,13 +151,25 @@ namespace SLICE_System.ViewModels
             }
         }
 
-        private void OpenPurchaseWindow()
+        // Opens the Procurement window and pre-fills selected items
+        private void OpenPurchaseWindow(IList selectedItems)
         {
-            var win = new RecordPurchaseWindow();
+            var preSelected = new List<MasterInventory>();
+
+            if (selectedItems != null)
+            {
+                foreach (var item in selectedItems)
+                {
+                    if (item is MasterInventory mi) preSelected.Add(mi);
+                }
+            }
+
+            var win = new RecordPurchaseWindow(preSelected);
             win.ShowDialog();
             LoadData();
         }
 
+        // Handles sending bulk stock to one or more branches
         private void DispatchStock(IList selectedItems)
         {
             if (selectedItems == null || selectedItems.Count == 0)
@@ -197,7 +198,9 @@ namespace SLICE_System.ViewModels
             if (dialog.ShowDialog() == true)
             {
                 var itemsToSend = dialog.ItemsToDispatch.Where(x => x.Quantity > 0).ToList();
-                if (itemsToSend.Count == 0) return;
+                var targetBranches = dialog.SelectedBranchIDs; // Fetches multiple selected branches
+
+                if (itemsToSend.Count == 0 || targetBranches.Count == 0) return;
 
                 try
                 {
@@ -208,25 +211,40 @@ namespace SLICE_System.ViewModels
                         {
                             try
                             {
-                                string sqlHeader = @"
-                                    INSERT INTO MeshLogistics (FromBranchID, ToBranchID, Status, SenderID, SentDate)
-                                    VALUES (1, @TargetBranchID, 'In-Transit', 1, GETDATE());
-                                    SELECT SCOPE_IDENTITY();";
-
-                                int transferId = conn.ExecuteScalar<int>(sqlHeader, new { TargetBranchID = dialog.SelectedBranchID }, transaction);
-
-                                string sqlDetail = @"
-                                    INSERT INTO WaybillDetails (TransferID, ItemID, Quantity)
-                                    VALUES (@TransferID, @ItemID, @Qty);";
-
+                                // STEP 1: Verify warehouse has enough total stock for all combined branches
                                 foreach (var item in itemsToSend)
                                 {
-                                    conn.Execute(sqlDetail, new
+                                    string sqlCheckStock = "SELECT ISNULL(CurrentQuantity, 0) FROM BranchInventory WHERE BranchID = @HQ AND ItemID = @ItemID";
+                                    decimal currentStock = conn.ExecuteScalar<decimal>(sqlCheckStock, new { HQ = HEADQUARTERS_BRANCH_ID, ItemID = item.ItemID }, transaction);
+
+                                    decimal totalRequired = item.Quantity * targetBranches.Count;
+
+                                    if (currentStock < totalRequired)
                                     {
-                                        TransferID = transferId,
-                                        ItemID = item.ItemID,
-                                        Qty = item.Quantity
-                                    }, transaction);
+                                        throw new Exception($"You cannot dispatch {totalRequired} units of {item.ItemName} ({item.Quantity} x {targetBranches.Count} branches). The warehouse only has {currentStock} units available!");
+                                    }
+                                }
+
+                                // STEP 2: Create separate logistics records for each selected branch
+                                foreach (int targetBranchId in targetBranches)
+                                {
+                                    string sqlHeader = @"
+                                        INSERT INTO MeshLogistics (FromBranchID, ToBranchID, Status, SenderID, SentDate)
+                                        VALUES (@HQ, @TargetBranchID, 'In-Transit', 1, GETDATE());
+                                        SELECT SCOPE_IDENTITY();";
+
+                                    int transferId = conn.ExecuteScalar<int>(sqlHeader, new { HQ = HEADQUARTERS_BRANCH_ID, TargetBranchID = targetBranchId }, transaction);
+
+                                    foreach (var item in itemsToSend)
+                                    {
+                                        // Deduct specific branch quantity from Headquarters
+                                        string sqlDeduct = "UPDATE BranchInventory SET CurrentQuantity = CurrentQuantity - @Qty WHERE BranchID = @HQ AND ItemID = @ItemID";
+                                        conn.Execute(sqlDeduct, new { HQ = HEADQUARTERS_BRANCH_ID, ItemID = item.ItemID, Qty = item.Quantity }, transaction);
+
+                                        // Attach item to this specific branch's waybill
+                                        string sqlDetail = "INSERT INTO WaybillDetails (TransferID, ItemID, Quantity) VALUES (@TransferID, @ItemID, @Qty);";
+                                        conn.Execute(sqlDetail, new { TransferID = transferId, ItemID = item.ItemID, Qty = item.Quantity }, transaction);
+                                    }
                                 }
 
                                 transaction.Commit();
@@ -238,12 +256,12 @@ namespace SLICE_System.ViewModels
                             }
                         }
                     }
-                    MessageBox.Show($"Successfully dispatched {itemsToSend.Count} items.", "Logistics Success");
+                    MessageBox.Show($"Successfully dispatched items to {targetBranches.Count} branch(es). Stock has been deducted from the warehouse.", "Logistics Success", MessageBoxButton.OK, MessageBoxImage.Information);
                     LoadData();
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Dispatch failed: {ex.Message}");
+                    MessageBox.Show($"Dispatch failed: {ex.Message}", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
         }

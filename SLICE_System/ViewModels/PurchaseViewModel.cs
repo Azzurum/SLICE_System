@@ -1,6 +1,7 @@
 ﻿using SLICE_System.Data;
 using SLICE_System.Models;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -10,26 +11,25 @@ namespace SLICE_System.ViewModels
 {
     public class PurchaseViewModel : ViewModelBase
     {
+        private const int HEADQUARTERS_BRANCH_ID = 4;
+
         private readonly ProcurementRepository _procurementRepo;
         private readonly InventoryRepository _inventoryRepo;
 
-        // --- Header Data ---
         public string SupplierName { get; set; }
         public DateTime PurchaseDate { get; set; } = DateTime.Now;
 
-        // --- Line Items ---
         public ObservableCollection<MasterInventory> AllIngredients { get; set; }
         public ObservableCollection<PurchaseDetail> CartItems { get; set; }
 
-        // --- Computed Totals ---
         public decimal GrandTotal => CartItems.Sum(x => x.Subtotal);
 
-        // --- Commands ---
         public ICommand AddRowCommand { get; }
         public ICommand RemoveRowCommand { get; }
         public ICommand SaveCommand { get; }
 
-        public PurchaseViewModel()
+        // NEW: Constructor now accepts the pre-selected list
+        public PurchaseViewModel(List<MasterInventory> preSelectedItems = null)
         {
             _procurementRepo = new ProcurementRepository();
             _inventoryRepo = new InventoryRepository();
@@ -41,7 +41,24 @@ namespace SLICE_System.ViewModels
             RemoveRowCommand = new RelayCommand<PurchaseDetail>(RemoveRow);
             SaveCommand = new RelayCommand(SavePurchase);
 
-            AddRow(); // Start with one empty row
+            // PRE-FILL CART LOGIC
+            if (preSelectedItems != null && preSelectedItems.Count > 0)
+            {
+                foreach (var item in preSelectedItems)
+                {
+                    CartItems.Add(new PurchaseDetail
+                    {
+                        ItemID = item.ItemID,
+                        Quantity = 1,
+                        UnitPrice = 0
+                    });
+                }
+                OnPropertyChanged(nameof(GrandTotal));
+            }
+            else
+            {
+                AddRow(); // Default behavior: 1 empty row if nothing was selected
+            }
         }
 
         private void AddRow()
@@ -62,38 +79,34 @@ namespace SLICE_System.ViewModels
 
         private void SavePurchase()
         {
-            // 1. Validation (Branch validation removed)
             if (string.IsNullOrWhiteSpace(SupplierName))
             {
-                MessageBox.Show("Please enter a Supplier Name.");
+                MessageBox.Show("Please enter a Supplier Name.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             if (!CartItems.Any(x => x.ItemID > 0 && x.Quantity > 0))
             {
-                MessageBox.Show("Please add at least one valid item.");
+                MessageBox.Show("Please add at least one valid item.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             try
             {
-                // 2. Build Header
                 var header = new Purchase
                 {
                     Supplier = SupplierName,
                     TotalAmount = GrandTotal,
-                    BranchID = 1, // STRICT ENFORCEMENT: All purchases go to Head Office (Branch 1)
+                    BranchID = HEADQUARTERS_BRANCH_ID,
                     PurchaseDate = PurchaseDate,
-                    PurchasedBy = 1 // TODO: Bind to CurrentUser
+                    PurchasedBy = 1
                 };
 
                 var validDetails = CartItems.Where(x => x.ItemID > 0 && x.Quantity > 0).ToList();
 
-                // 3. Commit via Repository
                 _procurementRepo.ProcessPurchase(header, validDetails);
 
-                MessageBox.Show("Purchase Recorded Successfully!\nStock added to Head Office and Expense Logged.", "Success");
+                MessageBox.Show("Purchase Recorded Successfully!\nStock added to Central Warehouse.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
 
-                // Clear UI
                 CartItems.Clear();
                 SupplierName = "";
                 OnPropertyChanged(nameof(SupplierName));
@@ -102,7 +115,7 @@ namespace SLICE_System.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error recording purchase: {ex.Message}");
+                MessageBox.Show($"Error recording purchase: {ex.Message}", "Database Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

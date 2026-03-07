@@ -7,13 +7,10 @@ using SLICE_System.Models;
 
 namespace SLICE_System.Data
 {
-    /// <summary>
-    /// Handles the "Mesh Logistics" module.
-    /// Implements the Three-Way Handshake:
-    /// 1. RequestStock (Status: Pending) - Created by Requester
-    /// 2. ApproveRequest (Status: In-Transit) - Approved by Sender (Stock Deducted)
-    /// 3. ReceiveShipment (Status: Completed) - Confirmed by Receiver (Stock Added)
-    /// </summary>
+    // Handles the "Mesh Logistics" module.
+    // 1. RequestStock (Pending) 
+    // 2. ApproveRequest (In-Transit) -> Deducts sender stock
+    // 3. ReceiveShipment (Completed) -> Adds receiver stock
     public class LogisticsRepository
     {
         private readonly DatabaseService _dbService;
@@ -25,7 +22,6 @@ namespace SLICE_System.Data
 
         // =========================================================
         // HANDSHAKE STEP 1: CREATE REQUEST
-        // (A Branch asks another Branch for items)
         // =========================================================
 
         public void RequestStock(MeshLogistics header, List<WaybillDetail> items)
@@ -37,7 +33,7 @@ namespace SLICE_System.Data
                 {
                     try
                     {
-                        // 1. Create the Header (Status: Pending)
+                        // Insert Header as Pending
                         string sqlHeader = @"
                             INSERT INTO MeshLogistics (FromBranchID, ToBranchID, Status, ReceiverID, SentDate)
                             VALUES (@FromBranchID, @ToBranchID, 'Pending', @ReceiverID, GETDATE());
@@ -45,7 +41,7 @@ namespace SLICE_System.Data
 
                         int newTransferId = connection.ExecuteScalar<int>(sqlHeader, header, transaction);
 
-                        // 2. Insert the Details (Items requested)
+                        // Insert requested items
                         string sqlDetail = @"INSERT INTO WaybillDetails (TransferID, ItemID, Quantity) VALUES (@TransferID, @ItemID, @Quantity)";
 
                         foreach (var item in items)
@@ -67,13 +63,9 @@ namespace SLICE_System.Data
 
         // =========================================================
         // HANDSHAKE STEP 2: APPROVE & SHIP
-        // (The Sender approves the request and ships the items)
         // =========================================================
 
-        /// <summary>
-        /// Gets requests that are either Pending Action or currently In-Transit.
-        /// They only disappear when status is 'Completed'.
-        /// </summary>
+        // Gets requests (Pending or In-Transit)
         public List<MeshLogistics> GetPendingRequests(int myBranchId)
         {
             using (var connection = _dbService.GetConnection())
@@ -87,7 +79,7 @@ namespace SLICE_System.Data
                     WHERE m.FromBranchID = @BranchID 
                       AND m.Status IN ('Pending', 'In-Transit') 
                     ORDER BY 
-                        CASE WHEN m.Status = 'Pending' THEN 1 ELSE 2 END, -- Prioritize Pending items
+                        CASE WHEN m.Status = 'Pending' THEN 1 ELSE 2 END,
                         m.SentDate";
 
                 return connection.Query<MeshLogistics>(sql, new { BranchID = myBranchId }).ToList();
@@ -103,25 +95,22 @@ namespace SLICE_System.Data
                 {
                     try
                     {
-                        // 1. Get Header Info
+                        // Verify record
                         string sqlHeader = "SELECT * FROM MeshLogistics WHERE TransferID = @Id";
                         var header = connection.QuerySingleOrDefault<MeshLogistics>(sqlHeader, new { Id = transferId }, transaction);
 
                         if (header == null) throw new Exception("Transfer record not found.");
-                        // Allow re-approving only if it was pending (safety check)
                         if (header.Status != "Pending") throw new Exception("This request has already been processed.");
 
-                        // 2. Get Details (Items to ship)
                         string sqlDetails = "SELECT * FROM WaybillDetails WHERE TransferID = @Id";
                         var items = connection.Query<WaybillDetail>(sqlDetails, new { Id = transferId }, transaction).ToList();
 
-                        // 3. Validation & Deduction Loop
                         string sqlCheckStock = "SELECT CurrentQuantity FROM BranchInventory WHERE BranchID = @BranchID AND ItemID = @ItemID";
                         string sqlDeductStock = "UPDATE BranchInventory SET CurrentQuantity = CurrentQuantity - @Qty WHERE BranchID = @BranchID AND ItemID = @ItemID";
 
                         foreach (var item in items)
                         {
-                            // A. Check if Sender has enough stock
+                            // Block dispatch if stock is insufficient
                             decimal currentStock = connection.ExecuteScalar<decimal>(sqlCheckStock,
                                 new { BranchID = header.FromBranchID, ItemID = item.ItemID }, transaction);
 
@@ -130,12 +119,12 @@ namespace SLICE_System.Data
                                 throw new Exception($"Insufficient stock for Item ID {item.ItemID}. Available: {currentStock}, Requested: {item.Quantity}");
                             }
 
-                            // B. Deduct Stock (Inventory leaves the Sender)
+                            // Deduct from sender
                             connection.Execute(sqlDeductStock,
                                 new { BranchID = header.FromBranchID, ItemID = item.ItemID, Qty = item.Quantity }, transaction);
                         }
 
-                        // 4. Update Status to 'In-Transit'
+                        // Mark In-Transit
                         string sqlUpdateStatus = @"
                             UPDATE MeshLogistics 
                             SET Status = 'In-Transit', 
@@ -158,14 +147,12 @@ namespace SLICE_System.Data
 
         // =========================================================
         // HANDSHAKE STEP 3: RECEIVE SHIPMENT
-        // (The Requester receives the items and adds them to stock)
         // =========================================================
 
         public List<MeshLogistics> GetIncomingShipments(int myBranchId)
         {
             using (var connection = _dbService.GetConnection())
             {
-                // Receiver only sees items that are officially 'In-Transit'
                 string sql = @"
                     SELECT m.*, 
                            b.BranchName AS FromBranchName,
@@ -188,24 +175,32 @@ namespace SLICE_System.Data
                 {
                     try
                     {
-                        // 1. Get Items
                         var items = connection.Query<WaybillDetail>("SELECT * FROM WaybillDetails WHERE TransferID = @Id", new { Id = transferId }, transaction).ToList();
                         var header = connection.QuerySingle<MeshLogistics>("SELECT * FROM MeshLogistics WHERE TransferID = @Id", new { Id = transferId }, transaction);
 
                         if (header.Status != "In-Transit") throw new Exception("Shipment is not in transit or already received.");
 
-                        // 2. Add Stock to Receiver
+                        // FIX: Ensure inventory row exists before updating
+                        string sqlEnsureStock = @"
+                            IF NOT EXISTS (SELECT 1 FROM BranchInventory WHERE BranchID = @BranchID AND ItemID = @ItemID)
+                            BEGIN
+                                INSERT INTO BranchInventory (BranchID, ItemID, CurrentQuantity, LowStockThreshold)
+                                VALUES (@BranchID, @ItemID, 0, 10)
+                            END";
+
+                        // Safely add stock
                         string sqlAddStock = @"
                             UPDATE BranchInventory 
-                            SET CurrentQuantity = CurrentQuantity + @Qty
+                            SET CurrentQuantity = CurrentQuantity + @Qty, LastUpdated = GETDATE()
                             WHERE BranchID = @BranchID AND ItemID = @ItemID";
 
                         foreach (var item in items)
                         {
+                            connection.Execute(sqlEnsureStock, new { BranchID = header.ToBranchID, ItemID = item.ItemID }, transaction);
                             connection.Execute(sqlAddStock, new { Qty = item.Quantity, BranchID = header.ToBranchID, ItemID = item.ItemID }, transaction);
                         }
 
-                        // 3. Mark Completed (This is when it disappears from Pending Requests)
+                        // Mark as Completed
                         string sqlComplete = "UPDATE MeshLogistics SET Status = 'Completed', ReceivedDate = GETDATE() WHERE TransferID = @Id";
                         connection.Execute(sqlComplete, new { Id = transferId }, transaction);
 

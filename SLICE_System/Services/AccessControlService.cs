@@ -26,15 +26,18 @@ namespace SLICE_System.Services
         // Define which roles can access which modules
         private static readonly Dictionary<string, HashSet<Module>> _rolePermissions = new Dictionary<string, HashSet<Module>>(StringComparer.OrdinalIgnoreCase)
         {
-            // SUPER ADMIN: Strategic & Config focus (No POS/Daily Ops)
+            // SUPER ADMIN: Strategic & Config focus + Operational Auditing
             { "Super-Admin", new HashSet<Module> {
                 Module.Dashboard,
-                Module.ApproveRequests, // Can override approvals
+                Module.IncomingOrders,
+                Module.WasteTracker,
+                Module.MyInventory,
+                Module.ApproveRequests,
                 Module.MenuRegistry,
                 Module.GlobalInventory,
                 Module.UserAdmin,
                 Module.AuditLogs,
-                Module.Reconciliation   // Can audit stock
+                Module.Reconciliation
             }},
 
             // MANAGER: Operational control for their branch
@@ -43,11 +46,11 @@ namespace SLICE_System.Services
                 Module.IncomingOrders,
                 Module.MyInventory,
                 Module.RequestStock,
-                Module.SalesPOS,        // Managers often help during rush
-                Module.ApproveRequests, // Core duty
+                Module.SalesPOS,
+                Module.ApproveRequests,
                 Module.WasteTracker,
-                Module.Reconciliation,
-                Module.MenuRegistry     // Edit local availability/price
+                Module.Reconciliation
+                // FIX: Removed MenuRegistry. Managers cannot alter global pricing.
             }},
 
             // CLERK: Execution only
