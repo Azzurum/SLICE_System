@@ -175,58 +175,57 @@
 
         <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
 
-            <Border Width="420" Height="500" Background="Black" CornerRadius="20" Opacity="0.2" Margin="15,15,0,0">
-                <Border.RenderTransform>
-                    <TranslateTransform x:Name="ShadowSlide"/>
-                </Border.RenderTransform>
-            </Border>
-
-            <Border x:Name="LoginCard" Width="420" Background="White" CornerRadius="20" Padding="40"
-                    BorderBrush="Black" BorderThickness="4">
-                <Border.RenderTransform>
+            <Grid>
+                <Grid.RenderTransform>
                     <ScaleTransform x:Name="CardScale" ScaleX="0" ScaleY="0" CenterX="210" CenterY="250"/>
-                </Border.RenderTransform>
+                </Grid.RenderTransform>
 
-                <StackPanel>
-                    <Grid Height="150" Width="150" HorizontalAlignment="Center" Margin="0,0,0,10">
-                        <Grid.Triggers>
-                            <EventTrigger RoutedEvent="Grid.Loaded">
-                                <BeginStoryboard>
-                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
-                                        <DoubleAnimation Storyboard.TargetName="IconTrans" Storyboard.TargetProperty="Y" From="0" To="-10" Duration="0:0:1">
-                                            <DoubleAnimation.EasingFunction>
-                                                <SineEase EasingMode="EaseInOut"/>
-                                            </DoubleAnimation.EasingFunction>
-                                        </DoubleAnimation>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </EventTrigger>
-                        </Grid.Triggers>
+                <Border Background="Black" CornerRadius="20" Opacity="0.2" Margin="15,15,-15,-15"/>
 
-                        <Image Source="/Assets/Logo.png" Stretch="Uniform" Margin="0" RenderTransformOrigin="0.5,0.5">
-                            <Image.Effect>
-                                <DropShadowEffect Color="#FFD05B" BlurRadius="0" ShadowDepth="4" Direction="315" Opacity="0.5"/>
-                            </Image.Effect>
-                            <Image.RenderTransform>
-                                <TranslateTransform x:Name="IconTrans"/>
-                            </Image.RenderTransform>
-                        </Image>
-                    </Grid>
+                <Border x:Name="LoginCard" Width="420" Background="White" CornerRadius="20" Padding="40"
+                        BorderBrush="Black" BorderThickness="4">
 
-                    <TextBlock Text="READY TO COOK?" FontSize="28" Foreground="{StaticResource PopBlack}" HorizontalAlignment="Center" Margin="0,5,0,0"/>
-                    <TextBlock Text="Log in to start your shift!" FontFamily="Segoe UI Semibold" FontSize="14" Foreground="#9E9E9E" HorizontalAlignment="Center" Margin="0,5,0,30"/>
+                    <StackPanel>
+                        <Grid Height="150" Width="150" HorizontalAlignment="Center" Margin="0,0,0,10">
+                            <Grid.Triggers>
+                                <EventTrigger RoutedEvent="Grid.Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                            <DoubleAnimation Storyboard.TargetName="IconTrans" Storyboard.TargetProperty="Y" From="0" To="-10" Duration="0:0:1">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <SineEase EasingMode="EaseInOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Grid.Triggers>
 
-                    <TextBlock Text="USERNAME" FontFamily="Segoe UI Black" Foreground="#FF4757" FontSize="12" Margin="0,0,0,5"/>
-                    <TextBox x:Name="txtUsername" Height="50" Style="{StaticResource PopInputStyle}"/>
+                            <Image Source="/Assets/Logo.png" Stretch="Uniform" Margin="0" RenderTransformOrigin="0.5,0.5">
+                                <Image.Effect>
+                                    <DropShadowEffect Color="#FFD05B" BlurRadius="0" ShadowDepth="4" Direction="315" Opacity="0.5"/>
+                                </Image.Effect>
+                                <Image.RenderTransform>
+                                    <TranslateTransform x:Name="IconTrans"/>
+                                </Image.RenderTransform>
+                            </Image>
+                        </Grid>
 
-                    <TextBlock Text="PASSWORD" FontFamily="Segoe UI Black" Foreground="#FF4757" FontSize="12" Margin="0,20,0,5"/>
-                    <PasswordBox x:Name="txtPassword" Height="50" Style="{StaticResource PopInputStyle}"/>
+                        <TextBlock Text="READY TO COOK?" FontSize="28" Foreground="{StaticResource PopBlack}" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                        <TextBlock Text="Log in to start your shift!" FontFamily="Segoe UI Semibold" FontSize="14" Foreground="#9E9E9E" HorizontalAlignment="Center" Margin="0,5,0,30"/>
 
-                    <Button IsDefault="True" x:Name="btnLogin" Content="LET'S GO!" Click="btnLogin_Click"
-                            Height="60" Margin="0,40,0,0" Style="{StaticResource PopButtonStyle}" FontFamily="Segoe UI Black"/>
+                        <TextBlock Text="USERNAME" FontFamily="Segoe UI Black" Foreground="#FF4757" FontSize="12" Margin="0,0,0,5"/>
+                        <TextBox x:Name="txtUsername" Height="50" Style="{StaticResource PopInputStyle}"/>
 
-                </StackPanel>
-            </Border>
+                        <TextBlock Text="PASSWORD" FontFamily="Segoe UI Black" Foreground="#FF4757" FontSize="12" Margin="0,20,0,5"/>
+                        <PasswordBox x:Name="txtPassword" Height="50" Style="{StaticResource PopInputStyle}"/>
+
+                        <Button IsDefault="True" x:Name="btnLogin" Content="LET'S GO!" Click="btnLogin_Click"
+                                Height="60" Margin="0,40,0,0" Style="{StaticResource PopButtonStyle}" FontFamily="Segoe UI Black"/>
+
+                    </StackPanel>
+                </Border>
+            </Grid>
 
             <Grid.Triggers>
                 <EventTrigger RoutedEvent="Loaded">

@@ -1,0 +1,179 @@
+﻿<Window x:Class="SLICE_System.Views.Dialogs.UserManualWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
+        Title="User Manual" Height="650" Width="750"
+        MinWidth="700" MinHeight="500"
+        WindowStartupLocation="CenterScreen" 
+        WindowStyle="None" ResizeMode="CanResize"
+        AllowsTransparency="True" Background="Transparent"
+        FontFamily="Segoe UI" MouseDown="Window_MouseDown">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="60" ResizeBorderThickness="7" CornerRadius="0" GlassFrameThickness="0"/>
+    </WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <SolidColorBrush x:Key="TextDark" Color="#2C3E50"/>
+        <SolidColorBrush x:Key="TextLight" Color="#7F8C8D"/>
+        <SolidColorBrush x:Key="BrandOrange" Color="#E67E22"/>
+        <SolidColorBrush x:Key="BrandBlue" Color="#34495E"/>
+
+        <Style x:Key="ManualCard" TargetType="Border">
+            <Setter Property="Background" Value="#FAFCFC"/>
+            <Setter Property="BorderBrush" Value="#EAECEE"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Margin" Value="0,0,0,15"/>
+        </Style>
+
+        <Style x:Key="BulletText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#34495E"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+    </Window.Resources>
+
+    <Border CornerRadius="16" Background="White" Margin="15">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.2" Color="#2C3E50"/>
+        </Border.Effect>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Background="#2C3E50" CornerRadius="16,16,0,0" Padding="30,20">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                            <fa:ImageAwesome Icon="Book" Foreground="#E67E22" Height="22" Margin="0,0,12,0"/>
+                            <TextBlock Text="System Documentation" Foreground="White" FontSize="24" FontWeight="Black"/>
+                        </StackPanel>
+                        <TextBlock Text="Quick reference guide for operating S.L.I.C.E. Enterprise" Foreground="#95A5A6" FontSize="13" FontWeight="SemiBold"/>
+                    </StackPanel>
+
+                    <Button Grid.Column="1" Click="Close_Click" Background="Transparent" BorderThickness="0" Cursor="Hand" VerticalAlignment="Top" ToolTip="Close Manual" WindowChrome.IsHitTestVisibleInChrome="True">
+                        <fa:ImageAwesome Icon="Close" Height="16" Foreground="#BDC3C7"/>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="30,25,30,10">
+                <StackPanel>
+
+                    <Border Style="{StaticResource ManualCard}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                <Border Background="#E8F8F5" CornerRadius="6" Width="32" Height="32" Margin="0,0,10,0">
+                                    <fa:ImageAwesome Icon="Desktop" Foreground="#27AE60" Height="14"/>
+                                </Border>
+                                <TextBlock Text="Order Processing &amp; Sales Counter" FontSize="16" FontWeight="Black" Foreground="{StaticResource TextDark}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource BulletText}">
+                                <Run FontWeight="Bold" Foreground="{StaticResource BrandOrange}">1. Taking Orders:</Run> Navigate to the Counter. Click on menu items on the left to add them to the cart.
+                            </TextBlock>
+                            <TextBlock Style="{StaticResource BulletText}">
+                                <Run FontWeight="Bold" Foreground="{StaticResource BrandOrange}">2. Stock Depletion:</Run> Completing a sale automatically deducts the raw ingredients from your Branch Inventory based on the item's recipe. If an ingredient is out of stock, the system will prevent the sale.
+                            </TextBlock>
+                            <TextBlock Style="{StaticResource BulletText}">
+                                <Run FontWeight="Bold" Foreground="{StaticResource BrandOrange}">3. Applying Discounts:</Run> Click the 'Apply Discount' button in the cart to select an active promotional tier (e.g., Senior Citizen, PWD).
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource ManualCard}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                <Border Background="#EBF5FB" CornerRadius="6" Width="32" Height="32" Margin="0,0,10,0">
+                                    <fa:ImageAwesome Icon="Truck" Foreground="#2980B9" Height="14"/>
+                                </Border>
+                                <TextBlock Text="Inventory &amp; Logistics Workflow" FontSize="16" FontWeight="Black" Foreground="{StaticResource TextDark}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource BulletText}">
+                                <Run FontWeight="Bold" Foreground="{StaticResource BrandBlue}">1. Requesting (Branch):</Run> Use 'Request Stock' to ask the central warehouse for raw materials.
+                            </TextBlock>
+                            <TextBlock Style="{StaticResource BulletText}">
+                                <Run FontWeight="Bold" Foreground="{StaticResource BrandBlue}">2. Dispatching (Admin):</Run> Administrators review requests in 'Incoming Orders'. Once approved, the stock is deducted from Central Warehouse and placed 'In Transit'.
+                            </TextBlock>
+                            <TextBlock Style="{StaticResource BulletText}">
+                                <Run FontWeight="Bold" Foreground="{StaticResource BrandBlue}">3. Receiving (Branch):</Run> Once the delivery arrives, the branch must click 'Receive Shipment' to formally add the items to their local stock.
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource ManualCard}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                <Border Background="#FEF9E7" CornerRadius="6" Width="32" Height="32" Margin="0,0,10,0">
+                                    <fa:ImageAwesome Icon="Book" Foreground="#F39C12" Height="14"/>
+                                </Border>
+                                <TextBlock Text="Menu Registry &amp; Bill of Materials" FontSize="16" FontWeight="Black" Foreground="{StaticResource TextDark}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource BulletText}">
+                                <Run FontWeight="Bold" Foreground="#F39C12">Creating Items:</Run> Add a new product and assign its Base Price. Use the 'Upload Image' button to attach a display photo.
+                            </TextBlock>
+                            <TextBlock Style="{StaticResource BulletText}">
+                                <Run FontWeight="Bold" Foreground="#F39C12">Building Recipes:</Run> Select raw ingredients from the dropdown and assign the exact quantity required (e.g., 200g of Flour). This data powers the automated depletion engine.
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource ManualCard}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                <Border Background="#FDEDEC" CornerRadius="6" Width="32" Height="32" Margin="0,0,10,0">
+                                    <fa:ImageAwesome Icon="LineChart" Foreground="#E74C3C" Height="14"/>
+                                </Border>
+                                <TextBlock Text="Financial Ledger &amp; Auditing" FontSize="16" FontWeight="Black" Foreground="{StaticResource TextDark}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource BulletText}">
+                                <Run FontWeight="Bold" Foreground="#E74C3C">Net Profit Calculation:</Run> The Ledger automatically calculates [Total Revenue] minus [Total Expenses (Purchasing + Waste)].
+                            </TextBlock>
+                            <TextBlock Style="{StaticResource BulletText}">
+                                <Run FontWeight="Bold" Foreground="#E74C3C">Waste Tracking:</Run> Any spoiled items logged in the Waste Tracker are automatically converted to financial losses based on their purchase value and deducted from the Net Profit.
+                            </TextBlock>
+                            <TextBlock Style="{StaticResource BulletText}">
+                                <Run FontWeight="Bold" Foreground="#E74C3C">System Audits:</Run> Every login, dispatch, and purchase is recorded. Use the 'Export' button in the Audit Logs to generate a CSV for security compliance.
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+            </ScrollViewer>
+
+            <Border Grid.Row="2" Background="#F8F9F9" CornerRadius="0,0,16,16" Padding="30,15" BorderBrush="#EAECEE" BorderThickness="0,1,0,0">
+                <Grid>
+                    <TextBlock Text="Need deeper technical support? Contact the IT Administrator." Foreground="{StaticResource TextLight}" FontSize="12" VerticalAlignment="Center"/>
+                    <Button Content="GOT IT" Click="Close_Click" Width="100" Height="36" HorizontalAlignment="Right"
+                            Background="{StaticResource BrandOrange}" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"
+                            WindowChrome.IsHitTestVisibleInChrome="True">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="6"/>
+                            </Style>
+                        </Button.Resources>
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Opacity" Value="0.85"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</Window>
