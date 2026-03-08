@@ -1,15 +1,16 @@
 ﻿<Window x:Class="SLICE_System.Views.AboutView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="About S.L.I.C.E." Height="380" Width="600"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
+        Title="About S.L.I.C.E." SizeToContent="Height" Width="650"
         WindowStartupLocation="CenterScreen" 
         WindowStyle="None" ResizeMode="NoResize"
         AllowsTransparency="True" Background="Transparent"
-        FontFamily="Segoe UI">
+        FontFamily="Segoe UI" MouseDown="Window_MouseDown">
 
-    <Border CornerRadius="12" Background="White" Margin="20">
+    <Border CornerRadius="16" Background="White" Margin="25">
         <Border.Effect>
-            <DropShadowEffect BlurRadius="20" ShadowDepth="5" Opacity="0.3" Color="#2C3E50"/>
+            <DropShadowEffect BlurRadius="25" ShadowDepth="6" Opacity="0.25" Color="#2C3E50"/>
         </Border.Effect>
 
         <Grid>
@@ -18,15 +19,14 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Background="#2C3E50" CornerRadius="12,0,0,12">
+            <Border Grid.Column="0" Background="#2C3E50" CornerRadius="16,0,0,16">
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <Path Data="{StaticResource Icon_Pizza}" Fill="#E67E22" 
-                          Height="60" Width="60" Stretch="Uniform" Margin="0,0,0,20"/>
+                    <fa:ImageAwesome Icon="PieChart" Foreground="#E67E22" Height="60" Margin="0,0,0,20"/>
 
-                    <TextBlock Text="S.L.I.C.E." Foreground="White" FontSize="36" FontWeight="Bold" 
+                    <TextBlock Text="S.L.I.C.E." Foreground="White" FontSize="36" FontWeight="Black" 
                                HorizontalAlignment="Center"/>
 
-                    <TextBlock Text="ENTERPRISE" Foreground="#95A5A6" FontSize="12" FontWeight="Bold" 
+                    <TextBlock Text="ENTERPRISE" Foreground="#95A5A6" FontSize="12" FontWeight="Bold"
                                HorizontalAlignment="Center" Margin="0,5,0,0"/>
 
                     <Separator Width="40" Background="#E67E22" Height="3" Margin="0,30,0,0"/>
@@ -42,48 +42,69 @@
 
                 <StackPanel Grid.Row="0">
                     <TextBlock Text="SYSTEM INFORMATION" Foreground="#7F8C8D" FontSize="12" FontWeight="Bold"/>
-                    <TextBlock Text="Version 1.0.0 (RC)" Foreground="#2D3436" FontSize="24" FontWeight="Light" Margin="0,5,0,20"/>
+                    <TextBlock Text="Version 1.0.0 (RC)" Foreground="#2D3436" FontSize="26" FontWeight="Light" Margin="0,5,0,25"/>
                 </StackPanel>
 
                 <StackPanel Grid.Row="1" VerticalAlignment="Center">
-                    <Grid Margin="0,0,0,15">
+
+                    <Grid Margin="0,0,0,20">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="30"/>
+                            <ColumnDefinition Width="35"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Path Data="{StaticResource Icon_Users}" Fill="#E67E22" Height="16" Width="16" Stretch="Uniform" HorizontalAlignment="Left"/>
-                        <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                            <TextBlock Text="Lead Developer" Foreground="#95A5A6" FontSize="11"/>
-                            <TextBlock Text="Ken Arceno" Foreground="#2C3E50" FontSize="16" FontWeight="SemiBold"/>
+                        <fa:ImageAwesome Icon="Code" Foreground="#E67E22" Height="18" HorizontalAlignment="Left"/>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Developed By" Foreground="#95A5A6" FontSize="11" FontWeight="Bold"/>
+                            <TextBlock Text="S.L.I.C.E. Development Team" Foreground="#2C3E50" FontSize="16" FontWeight="Bold" Margin="0,2,0,0"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="35"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <fa:ImageAwesome Icon="GraduationCap" Foreground="#E67E22" Height="18" HorizontalAlignment="Left"/>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Project Context" Foreground="#95A5A6" FontSize="11" FontWeight="Bold"/>
+                            <TextBlock Text="BS Information Technology Project" Foreground="#2C3E50" FontSize="15" FontWeight="SemiBold" Margin="0,2,0,0"/>
                         </StackPanel>
                     </Grid>
 
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="30"/>
+                            <ColumnDefinition Width="35"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Path Data="{StaticResource Icon_Box}" Fill="#E67E22" Height="16" Width="16" Stretch="Uniform" HorizontalAlignment="Left"/>
-                        <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                            <TextBlock Text="Project Context" Foreground="#95A5A6" FontSize="11"/>
-                            <TextBlock Text="BS Information Technology Project" Foreground="#2C3E50" FontSize="14"/>
+                        <fa:ImageAwesome Icon="Institution" Foreground="#E67E22" Height="18" HorizontalAlignment="Left"/>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Institution" Foreground="#95A5A6" FontSize="11" FontWeight="Bold"/>
+                            <Viewbox StretchDirection="DownOnly" Stretch="Uniform" HorizontalAlignment="Left">
+                                <TextBlock Text="San Sebastian College-Recoletos de Cavite" 
+                                           Foreground="#2C3E50" FontSize="15" FontWeight="SemiBold" Margin="0,2,0,0"/>
+                            </Viewbox>
                         </StackPanel>
                     </Grid>
                 </StackPanel>
 
-                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <TextBlock Text="© 2026 S.L.I.C.E. Inc." Foreground="#BDC3C7" FontSize="11" VerticalAlignment="Center" Margin="0,0,20,0"/>
+                <Grid Grid.Row="2" Margin="0,25,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                    <Button Content="Close" Click="Close_Click" Width="100" Height="35"
+                    <TextBlock Grid.Column="0" Text="© 2026 S.L.I.C.E. Systems Inc." Foreground="#BDC3C7" FontSize="11" VerticalAlignment="Center"/>
+
+                    <Button Grid.Column="1" Content="Close" Click="Close_Click" Width="100" Height="38"
                             Background="#E67E22" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand">
                         <Button.Resources>
                             <Style TargetType="Border">
-                                <Setter Property="CornerRadius" Value="4"/>
+                                <Setter Property="CornerRadius" Value="6"/>
                             </Style>
                         </Button.Resources>
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
-                                <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="4">
+                                <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="6">
                                     <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <ControlTemplate.Triggers>
@@ -94,7 +115,7 @@
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
-                </StackPanel>
+                </Grid>
             </Grid>
         </Grid>
     </Border>

@@ -7,6 +7,9 @@
         // Unique identifier for the ingredient (Primary Key).
         public int ItemID { get; set; }
 
+        // A fake, perfectly sequential number just for the UI(1, 2, 3...)
+        public int DisplayNumber { get; set; }
+
         // The standard name of the ingredient (e.g., "High Gluten Flour").
         public string? ItemName { get; set; }
 
@@ -25,12 +28,22 @@
 
         public decimal TotalStock { get; set; }
 
-        // pictures
+        // This stores ONLY the filename (e.g., "flour.png") in the database
         public string ImagePath { get; set; }
 
         // ---------------------------------------------------------
         // HELPER PROPERTIES (Read-Only)
         // ---------------------------------------------------------
+
+        // Dynamically rebuilds the path for ingredients based on the computer running the app
+        public string FullImagePath
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(ImagePath)) return null;
+                return System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "Ingredients", ImagePath);
+            }
+        }
 
         // Returns a formatted string description of the item and its conversion logic.
         // Handles null values gracefully to prevent UI crashes.

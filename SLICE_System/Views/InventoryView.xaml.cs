@@ -13,6 +13,7 @@ namespace SLICE_System.Views
 
             this.DataContext = new InventoryViewModel();
 
+            // Enforce Role-Based Visibility
             if (currentUser.Role == "Owner" || currentUser.Role == "Super-Admin" || currentUser.Role == "Logistics Admin")
             {
                 btnDispatch.Visibility = Visibility.Visible;

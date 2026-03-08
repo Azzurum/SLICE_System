@@ -80,7 +80,13 @@ namespace SLICE_System.ViewModels
             {
                 var list = _repo.GetAllIngredients(SearchText ?? "");
                 Ingredients.Clear();
-                foreach (var item in list) Ingredients.Add(item);
+
+                int rowCount = 1; // Start counting at 1
+                foreach (var item in list)
+                {
+                    item.DisplayNumber = rowCount++; // Assign the number, then increase it
+                    Ingredients.Add(item);
+                }
             }
             catch (Exception ex)
             {

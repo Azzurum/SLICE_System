@@ -15,11 +15,13 @@ namespace SLICE_System.Views
             this.Close();
         }
 
-        // Allows dragging the borderless window
-        protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+        // Allows dragging the borderless window around the screen
+        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            base.OnMouseLeftButtonDown(e);
-            this.DragMove();
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                this.DragMove();
+            }
         }
     }
 }

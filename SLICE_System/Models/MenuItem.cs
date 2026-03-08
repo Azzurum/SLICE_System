@@ -9,6 +9,7 @@ namespace SLICE_System.Models
         private string _productName;
         private decimal _basePrice;
         private bool _isAvailable;
+        private string _imagePath;
 
         public int ProductID { get; set; }
 
@@ -39,9 +40,29 @@ namespace SLICE_System.Models
             }
         }
 
-        public string ImagePath { get; set; }
+        // This stores ONLY the filename (e.g., "pizza.png") in the database
+        public string ImagePath
+        {
+            get => _imagePath;
+            set
+            {
+                _imagePath = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(FullImagePath)); // Tells UI to reload the image
+            }
+        }
 
         // --- UI HELPERS ---
+
+        // Dynamically rebuilds the path based on the computer running the app
+        public string FullImagePath
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(ImagePath)) return null;
+                return System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "Menu", ImagePath);
+            }
+        }
 
         // Extract "Pizza" from "Pizza | Pepperoni"
         public string VirtualCategory
@@ -57,7 +78,6 @@ namespace SLICE_System.Models
 
         public string FormattedPrice => $"₱{BasePrice:N2}";
 
-        // --- UPDATED STATUS TEXT HERE ---
         public string StatusText => IsAvailable ? "Available" : "Unavailable";
 
         // Green for Available, Red/Gray for Unavailable

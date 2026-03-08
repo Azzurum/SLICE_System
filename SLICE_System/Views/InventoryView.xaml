@@ -165,6 +165,7 @@
             <DataGrid x:Name="GridIngredients"
                       ItemsSource="{Binding Ingredients}" 
                       SelectedItem="{Binding SelectedIngredient}"
+                      SelectionMode="Extended"
                       AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                       GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent" 
                       BorderThickness="0" RowHeight="60" VerticalScrollBarVisibility="Auto" Margin="15"
@@ -197,16 +198,24 @@
                 </DataGrid.Resources>
 
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="ID" Binding="{Binding ItemID}" Width="60" Foreground="{StaticResource TextLight}" FontWeight="SemiBold"/>
+                    <DataGridTextColumn Header="NO." Binding="{Binding DisplayNumber}" Width="60" Foreground="{StaticResource TextLight}" FontWeight="Black"/>
 
-                    <DataGridTextColumn Header="INGREDIENT" Binding="{Binding ItemName}" Width="*" FontWeight="Bold" Foreground="{StaticResource TextDark}">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="FontSize" Value="14"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                    <DataGridTemplateColumn Header="INGREDIENT" Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="5">
+                                    <Border Width="36" Height="36" CornerRadius="6" Background="#F4F6F7" BorderBrush="#EAECEE" BorderThickness="1" Margin="0,0,12,0" ClipToBounds="True">
+                                        <Image Source="{Binding FullImagePath, TargetNullValue='pack://application:,,,/Assets/Logo.png', FallbackValue='pack://application:,,,/Assets/Logo.png'}" Stretch="UniformToFill">
+                                            <Image.Clip>
+                                                <RectangleGeometry Rect="0,0,36,36" RadiusX="6" RadiusY="6"/>
+                                            </Image.Clip>
+                                        </Image>
+                                    </Border>
+                                    <TextBlock Text="{Binding ItemName}" VerticalAlignment="Center" FontWeight="Bold" FontSize="14" Foreground="{StaticResource TextDark}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
 
                     <DataGridTemplateColumn Header="CATEGORY" Width="140">
                         <DataGridTemplateColumn.CellTemplate>
@@ -246,7 +255,7 @@
                     <DataGridTemplateColumn x:Name="colActions" Header="ACTIONS" Width="100">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <StackPanel x:Name="spActions" Orientation="Horizontal" HorizontalAlignment="Center" Visibility="Collapsed">
+                                <StackPanel x:Name="spActions" Orientation="Horizontal" HorizontalAlignment="Center">
                                     <Button Style="{StaticResource RowIconButtonStyle}" 
                                             Command="{Binding DataContext.EditItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
                                             CommandParameter="{Binding}" ToolTip="Edit Ingredient">

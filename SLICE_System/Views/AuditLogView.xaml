@@ -8,6 +8,7 @@
         <SolidColorBrush x:Key="TextDark" Color="#2C3E50"/>
         <SolidColorBrush x:Key="TextLight" Color="#95A5A6"/>
         <SolidColorBrush x:Key="BrandBlue" Color="#2980B9"/>
+        <SolidColorBrush x:Key="BrandGreen" Color="#27AE60"/>
 
         <Style x:Key="CardStyle" TargetType="Border">
             <Setter Property="Background" Value="White"/>
@@ -15,6 +16,32 @@
             <Setter Property="Effect">
                 <Setter.Value>
                     <DropShadowEffect BlurRadius="15" Color="#BDC3C7" ShadowDepth="3" Opacity="0.2"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ActionButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="15,0"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bdr" Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bdr" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="bdr" Property="Background" Value="#BDC3C7"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
@@ -32,110 +59,142 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="0">
+            <StackPanel Grid.Column="0" VerticalAlignment="Center">
                 <TextBlock Text="System Audit Logs" FontSize="28" FontWeight="Black" Foreground="{StaticResource TextDark}"/>
-                <TextBlock Text="Track and monitor all system activities and security events." FontSize="14" Foreground="{StaticResource TextLight}"/>
+                <TextBlock Text="Track, monitor, and export security events and user actions." FontSize="14" Foreground="{StaticResource TextLight}"/>
             </StackPanel>
 
-            <Border Grid.Column="1" Background="White" CornerRadius="20" Height="40" Width="300" VerticalAlignment="Center">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="10" Color="#BDC3C7" ShadowDepth="2" Opacity="0.1"/>
-                </Border.Effect>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="40"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <fa:ImageAwesome Icon="Search" Height="14" Foreground="{StaticResource TextLight}" HorizontalAlignment="Center"/>
-                    <TextBox x:Name="txtSearch" Grid.Column="1" BorderThickness="0" Background="Transparent" 
-                             VerticalContentAlignment="Center" FontSize="14" Foreground="{StaticResource TextDark}"
-                             TextChanged="txtSearch_TextChanged"
-                             Tag="Search logs..."/>
-                    <TextBlock Grid.Column="1" Text="Search logs..." Foreground="#BDC3C7" VerticalAlignment="Center" IsHitTestVisible="False" Margin="2,0,0,0">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Visibility" Value="Collapsed"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Text, ElementName=txtSearch}" Value="">
-                                        <Setter Property="Visibility" Value="Visible"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-                </Grid>
-            </Border>
+            <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+
+                <Border Background="White" CornerRadius="8" Height="40" Padding="10,0" Margin="0,0,10,5">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="10" Color="#BDC3C7" ShadowDepth="1" Opacity="0.2"/>
+                    </Border.Effect>
+                    <StackPanel Orientation="Horizontal">
+                        <fa:ImageAwesome Icon="Calendar" Height="14" Foreground="{StaticResource TextLight}" Margin="0,0,10,0"/>
+                        <DatePicker SelectedDate="{Binding SelectedDate}" Width="110" BorderThickness="0" Background="Transparent" Foreground="{StaticResource TextDark}" VerticalContentAlignment="Center"/>
+                        <Button Command="{Binding ClearDateCommand}" Background="Transparent" BorderThickness="0" Cursor="Hand" Margin="5,0,0,0" ToolTip="Clear Date Filter">
+                            <fa:ImageAwesome Icon="Close" Height="10" Foreground="#E74C3C"/>
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="White" CornerRadius="20" Height="40" Width="260" Margin="0,0,10,5">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="10" Color="#BDC3C7" ShadowDepth="1" Opacity="0.2"/>
+                    </Border.Effect>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="40"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <fa:ImageAwesome Icon="Search" Height="13" Foreground="{StaticResource TextLight}" HorizontalAlignment="Center"/>
+                        <TextBox x:Name="txtSearch" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" BorderThickness="0" Background="Transparent" 
+                                 VerticalContentAlignment="Center" FontSize="14" Foreground="{StaticResource TextDark}" Margin="0,0,15,0"/>
+                        <TextBlock Grid.Column="1" Text="Search logs..." Foreground="#BDC3C7" VerticalAlignment="Center" IsHitTestVisible="False" Margin="2,0,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Text, ElementName=txtSearch}" Value="">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                </Border>
+
+                <Button Command="{Binding RefreshCommand}" Background="White" Width="40" Margin="0,0,10,5" ToolTip="Refresh Data" Style="{StaticResource ActionButtonStyle}">
+                    <Button.Foreground>
+                        <SolidColorBrush Color="#95A5A6"/>
+                    </Button.Foreground>
+                    <Button.Effect>
+                        <DropShadowEffect BlurRadius="10" Color="#BDC3C7" ShadowDepth="1" Opacity="0.2"/>
+                    </Button.Effect>
+                    <fa:ImageAwesome Icon="Refresh" Height="14"/>
+                </Button>
+
+                <Button Command="{Binding ExportCommand}" Background="{StaticResource BrandGreen}" Margin="0,0,0,5" Style="{StaticResource ActionButtonStyle}" ToolTip="Export to CSV">
+                    <StackPanel Orientation="Horizontal">
+                        <fa:ImageAwesome Icon="FileExcelOutline" Height="14" Foreground="White" Margin="0,0,8,0"/>
+                        <TextBlock Text="EXPORT"/>
+                    </StackPanel>
+                </Button>
+            </WrapPanel>
         </Grid>
 
         <Border Grid.Row="1" Style="{StaticResource CardStyle}">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+            <DataGrid ItemsSource="{Binding AuditLogs}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" 
+                      GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent" BorderThickness="0"
+                      RowHeight="55" VerticalScrollBarVisibility="Auto" Margin="10" AlternatingRowBackground="#FAFCFC">
 
-                <DataGrid x:Name="dgAudit" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" 
-                          GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent" BorderThickness="0"
-                          RowHeight="50" VerticalScrollBarVisibility="Auto" Margin="10">
-
-                    <DataGrid.Resources>
-                        <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="Background" Value="Transparent"/>
-                            <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
-                            <Setter Property="FontWeight" Value="SemiBold"/>
-                            <Setter Property="Padding" Value="15,10"/>
-                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                            <Setter Property="BorderBrush" Value="#EEE"/>
-                        </Style>
-                        <Style TargetType="DataGridCell">
-                            <Setter Property="BorderThickness" Value="0"/>
-                            <Setter Property="Padding" Value="10,0"/>
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="DataGridCell">
-                                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
-                                            <ContentPresenter VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
-                                        </Border>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                            <Style.Triggers>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="#F0F8FF"/>
-                                    <Setter Property="Foreground" Value="{StaticResource TextDark}"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DataGrid.Resources>
-
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="TIME" Binding="{Binding Timestamp, StringFormat='MMM dd, HH:mm'}" Width="140" Foreground="{StaticResource TextLight}"/>
-
-                        <DataGridTemplateColumn Header="ACTION" Width="140">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Border CornerRadius="4" Padding="8,4" HorizontalAlignment="Left" Background="White" BorderThickness="1" BorderBrush="{Binding BadgeColor}">
-                                        <TextBlock Text="{Binding ActionType}" Foreground="{Binding BadgeColor}" FontSize="11" FontWeight="Bold"/>
+                <DataGrid.Resources>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Foreground" Value="{StaticResource TextLight}"/>
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="FontSize" Value="11"/>
+                        <Setter Property="Padding" Value="15,10"/>
+                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                        <Setter Property="BorderBrush" Value="#EAECEE"/>
+                    </Style>
+                    <Style TargetType="DataGridCell">
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Padding" Value="10,0"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="DataGridCell">
+                                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                                        <ContentPresenter VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
                                     </Border>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#F0F8FF"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextDark}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.Resources>
 
-                        <DataGridTemplateColumn Header="USER" Width="200">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding PerformedBy}" FontWeight="SemiBold" Foreground="{StaticResource TextDark}"/>
-                                        <TextBlock Text="{Binding BranchName}" FontSize="11" Foreground="{StaticResource TextLight}"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="TIME" Binding="{Binding Timestamp, StringFormat='MMM dd, HH:mm'}" Width="120" Foreground="{StaticResource TextLight}" FontWeight="SemiBold"/>
 
-                        <DataGridTextColumn Header="DETAILS" Binding="{Binding Description}" Width="*" Foreground="{StaticResource TextDark}"/>
-                    </DataGrid.Columns>
-                </DataGrid>
-            </Grid>
+                    <DataGridTemplateColumn Header="ACTION" Width="140">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="6" Padding="10,4" HorizontalAlignment="Left" Background="#FAFCFC" BorderThickness="1.5" BorderBrush="{Binding BadgeColor}">
+                                    <TextBlock Text="{Binding ActionType}" Foreground="{Binding BadgeColor}" FontSize="11" FontWeight="Black"/>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="USER" Width="200">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding PerformedBy}" FontWeight="Bold" FontSize="14" Foreground="{StaticResource TextDark}"/>
+                                    <TextBlock Text="{Binding BranchName}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource BrandBlue}" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTextColumn Header="DETAILS" Binding="{Binding Description}" Width="*" Foreground="{StaticResource TextDark}">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="TextWrapping" Value="Wrap"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                </DataGrid.Columns>
+            </DataGrid>
         </Border>
     </Grid>
 </UserControl>

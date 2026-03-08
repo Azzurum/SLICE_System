@@ -141,7 +141,7 @@
                         <Border Width="120" Height="120" Background="#F4F6F7" CornerRadius="12" BorderBrush="#BDC3C7" BorderThickness="1">
                             <Grid>
                                 <fa:ImageAwesome Icon="Image" Foreground="#BDC3C7" Height="30" VerticalAlignment="Center"/>
-                                <Image Source="{Binding SelectedMenuItem.ImagePath}" Stretch="UniformToFill">
+                                <Image Source="{Binding SelectedMenuItem.FullImagePath, TargetNullValue='pack://application:,,,/Assets/Logo.png', FallbackValue='pack://application:,,,/Assets/Logo.png'}" Stretch="UniformToFill">
                                     <Image.Clip>
                                         <RectangleGeometry Rect="0,0,120,120" RadiusX="12" RadiusY="12"/>
                                     </Image.Clip>

@@ -84,8 +84,6 @@ namespace SLICE_System.ViewModels
         public ICommand RemoveIngredientCommand { get; }
         public ICommand SaveMenuCommand { get; }
         public ICommand AddNewMenuCommand { get; }
-
-        // NEW: Image and Deletion Commands
         public ICommand UploadImageCommand { get; }
         public ICommand DeleteMenuCommand { get; }
 
@@ -103,7 +101,6 @@ namespace SLICE_System.ViewModels
             SaveMenuCommand = new RelayCommand(SaveMenu, CanSaveMenu);
             AddNewMenuCommand = new RelayCommand(AddNewMenu);
 
-            // NEW: Initialize Image & Delete commands
             UploadImageCommand = new RelayCommand(UploadImage, () => SelectedMenuItem != null);
             DeleteMenuCommand = new RelayCommand(DeleteSelectedMenu, () => SelectedMenuItem != null && SelectedMenuItem.ProductID > 0);
 
@@ -226,7 +223,7 @@ namespace SLICE_System.ViewModels
             }
         }
 
-        // --- NEW: IMAGE UPLOAD METHOD ---
+        // --- PORTABLE IMAGE UPLOAD METHOD ---
         private void UploadImage()
         {
             OpenFileDialog dlg = new OpenFileDialog
@@ -237,22 +234,25 @@ namespace SLICE_System.ViewModels
 
             if (dlg.ShowDialog() == true)
             {
-                // Create a local directory in the app folder to store images permanently
-                string targetDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "MenuImages");
+                // 1. Point to the dynamic runtime directory (portable across computers)
+                string targetDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "Menu");
                 if (!Directory.Exists(targetDir)) Directory.CreateDirectory(targetDir);
 
-                // Generate a unique filename so images don't overwrite each other
+                // 2. Generate a unique filename so images don't overwrite each other
                 string fileName = Guid.NewGuid().ToString() + Path.GetExtension(dlg.FileName);
                 string targetPath = Path.Combine(targetDir, fileName);
 
-                File.Copy(dlg.FileName, targetPath);
+                // 3. Physically copy the image into the system's local sandbox
+                File.Copy(dlg.FileName, targetPath, true);
 
-                SelectedMenuItem.ImagePath = targetPath;
-                OnPropertyChanged(nameof(SelectedMenuItem)); // Force UI to refresh to show new image
+                // 4. Save ONLY the filename to the database model
+                SelectedMenuItem.ImagePath = fileName;
+
+                // Force UI to refresh to show new image
+                OnPropertyChanged(nameof(SelectedMenuItem));
             }
         }
 
-        // --- NEW: DELETE MENU ITEM METHOD ---
         private void DeleteSelectedMenu()
         {
             if (MessageBox.Show($"Are you sure you want to permanently delete {SelectedMenuItem.ProductName}?\n\nThis cannot be undone.",
