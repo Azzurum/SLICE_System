@@ -15,11 +15,14 @@ namespace SLICE_System.Views
 {
     public partial class RequestStockView : UserControl, INotifyPropertyChanged
     {
-        public ObservableCollection<MarketItem> MarketItems { get; set; } = new ObservableCollection<MarketItem>();
+        public ObservableCollection<MarketItem> AllMarketItems { get; set; } = new ObservableCollection<MarketItem>();
+        public ObservableCollection<MarketItem> FilteredItems { get; set; } = new ObservableCollection<MarketItem>();
+        public ObservableCollection<MarketItem> UrgentItems { get; set; } = new ObservableCollection<MarketItem>();
         public ObservableCollection<MarketItem> CartItems { get; set; } = new ObservableCollection<MarketItem>();
 
-        private const int HEADQUARTERS_BRANCH_ID = 4;
+        public bool HasUrgentItems => UrgentItems.Any();
 
+        private const int HEADQUARTERS_BRANCH_ID = 4;
         private User _currentUser;
         private InventoryRepository _invRepo = new InventoryRepository();
         private LogisticsRepository _logRepo = new LogisticsRepository();
@@ -36,28 +39,64 @@ namespace SLICE_System.Views
 
         private void LoadData()
         {
-            // Instead of populating a dropdown, we immediately load the inventory available at Headquarters
-            LoadMarketItems(HEADQUARTERS_BRANCH_ID);
-        }
+            AllMarketItems.Clear();
+            UrgentItems.Clear();
 
-        private void LoadMarketItems(int branchId)
-        {
-            MarketItems.Clear();
+            // 1. Get what HQ has available to order
+            var hqStock = _invRepo.GetStockForBranch(HEADQUARTERS_BRANCH_ID);
 
-            // Fetch inventory strictly from the Headquarters branch
-            var stocks = _invRepo.GetStockForBranch(branchId);
+            // 2. Get my branch's stock to check what I am currently lacking
+            var myStock = _invRepo.GetStockForBranch(_currentUser.BranchID.Value);
 
-            foreach (var s in stocks)
+            foreach (var s in hqStock)
             {
-                MarketItems.Add(new MarketItem
+                var myBranchItem = myStock.FirstOrDefault(x => x.ItemID == s.ItemID);
+                decimal myQty = myBranchItem != null ? myBranchItem.CurrentQuantity : 0;
+                decimal threshold = myBranchItem != null ? myBranchItem.LowStockThreshold : 10;
+
+                var item = new MarketItem
                 {
                     ItemID = s.ItemID,
                     Name = s.ItemName,
                     Unit = s.BaseUnit,
+                    Category = DetermineCategory(s.ItemName),
                     Icon = GetIconForIngredient(s.ItemName),
-                    CurrentStock = s.CurrentQuantity, // Shows exactly what HQ currently has
+                    CurrentStock = s.CurrentQuantity, // HQ's supply limit
+                    MyBranchStock = myQty,            // My actual inventory level
+                    IsUrgent = myQty <= threshold,    // Triggers the Urgent UI section
                     ImagePath = s.ImagePath
-                });
+                };
+
+                AllMarketItems.Add(item);
+                if (item.IsUrgent) UrgentItems.Add(item);
+            }
+
+            FilterByCategory("All");
+            OnPropertyChanged(nameof(HasUrgentItems));
+        }
+
+        private string DetermineCategory(string name)
+        {
+            name = name.ToLower();
+            if (name.Contains("cheese") || name.Contains("meat") || name.Contains("pepperoni") || name.Contains("bacon")) return "Perishables";
+            if (name.Contains("box") || name.Contains("packaging")) return "Packaging";
+            if (name.Contains("dough") || name.Contains("flour")) return "Dough & Flour";
+            return "Dry Goods";
+        }
+
+        private void Category_Checked(object sender, RoutedEventArgs e)
+        {
+            if (sender is RadioButton rb && rb.Content != null)
+                FilterByCategory(rb.Content.ToString());
+        }
+
+        private void FilterByCategory(string category)
+        {
+            FilteredItems.Clear();
+            foreach (var item in AllMarketItems)
+            {
+                if (category == "All" || item.Category == category)
+                    FilteredItems.Add(item);
             }
         }
 
@@ -65,7 +104,6 @@ namespace SLICE_System.Views
         {
             if (sender is Border b && b.DataContext is MarketItem item)
             {
-                // Click Animation
                 ScaleTransform scale = new ScaleTransform(1.0, 1.0);
                 b.RenderTransform = scale;
                 b.RenderTransformOrigin = new Point(0.5, 0.5);
@@ -83,14 +121,7 @@ namespace SLICE_System.Views
             if (existing != null) existing.RequestQty++;
             else
             {
-                CartItems.Add(new MarketItem
-                {
-                    ItemID = item.ItemID,
-                    Name = item.Name,
-                    Unit = item.Unit,
-                    RequestQty = 1,
-                    Icon = item.Icon
-                });
+                CartItems.Add(new MarketItem { ItemID = item.ItemID, Name = item.Name, Unit = item.Unit, RequestQty = 1, Icon = item.Icon });
             }
             UpdateTotals();
         }
@@ -106,108 +137,63 @@ namespace SLICE_System.Views
 
         private async void Submit_Click(object sender, RoutedEventArgs e)
         {
-            if (CartItems.Count == 0)
-            {
-                MessageBox.Show("Your request ticket is empty. Please add items to request.", "Empty Ticket", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
+            if (CartItems.Count == 0) return;
             try
             {
                 MeshLogistics header = new MeshLogistics
                 {
-                    FromBranchID = HEADQUARTERS_BRANCH_ID, // ALWAYS request from HQ
-                    ToBranchID = _currentUser.BranchID.Value, // To this specific branch
+                    FromBranchID = HEADQUARTERS_BRANCH_ID,
+                    ToBranchID = _currentUser.BranchID.Value,
                     ReceiverID = _currentUser.UserID
                 };
 
-                List<WaybillDetail> details = CartItems.Select(x => new WaybillDetail
-                {
-                    ItemID = x.ItemID,
-                    Quantity = x.RequestQty
-                }).ToList();
-
+                var details = CartItems.Select(x => new WaybillDetail { ItemID = x.ItemID, Quantity = x.RequestQty }).ToList();
                 _logRepo.RequestStock(header, details);
 
-                // --- PLAY ANIMATION ---
                 await PlayTicketAnimation();
-
-                // Clear Cart AFTER animation starts to look like a fresh ticket
                 CartItems.Clear();
                 UpdateTotals();
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error submitting request: " + ex.Message, "Database Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
         }
 
-        // --- REPLAYABLE ANIMATION LOGIC ---
         private async Task PlayTicketAnimation()
         {
-            // 1. TICKET SNAP (Lift off paper)
             DoubleAnimation snapUp = new DoubleAnimation(0, -20, TimeSpan.FromMilliseconds(150));
             TicketTranslate.BeginAnimation(TranslateTransform.YProperty, snapUp);
             await Task.Delay(150);
 
-            // 2. SLIDE RIGHT (Along the rail)
-            DoubleAnimation slideRight = new DoubleAnimation(0, 800, TimeSpan.FromMilliseconds(400))
-            {
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
-            };
+            DoubleAnimation slideRight = new DoubleAnimation(0, 800, TimeSpan.FromMilliseconds(400)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn } };
             TicketTranslate.BeginAnimation(TranslateTransform.XProperty, slideRight);
-
-            // 3. TILT (As it moves)
-            DoubleAnimation tilt = new DoubleAnimation(0, 5, TimeSpan.FromMilliseconds(400));
-            TicketRotate.BeginAnimation(RotateTransform.AngleProperty, tilt);
-
-            // 4. FADE OUT
-            DoubleAnimation fade = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(300));
-            TicketPanel.BeginAnimation(OpacityProperty, fade);
+            TicketRotate.BeginAnimation(RotateTransform.AngleProperty, new DoubleAnimation(0, 5, TimeSpan.FromMilliseconds(400)));
+            TicketPanel.BeginAnimation(OpacityProperty, new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(300)));
 
             await Task.Delay(400);
 
-            // --- RESET STATE (Invisible) ---
             TicketTranslate.BeginAnimation(TranslateTransform.XProperty, null);
             TicketTranslate.BeginAnimation(TranslateTransform.YProperty, null);
             TicketRotate.BeginAnimation(RotateTransform.AngleProperty, null);
             TicketPanel.BeginAnimation(OpacityProperty, null);
+            TicketTranslate.X = -500; TicketTranslate.Y = 0; TicketRotate.Angle = 0; TicketPanel.Opacity = 0;
 
-            // Move to Start Position (Hidden Left)
-            TicketTranslate.X = -500;
-            TicketTranslate.Y = 0;
-            TicketRotate.Angle = 0;
-            TicketPanel.Opacity = 0;
-
-            // --- SLIDE IN NEW TICKET (Entrance) ---
-            DoubleAnimation slideIn = new DoubleAnimation(-500, 0, TimeSpan.FromMilliseconds(500))
-            {
-                EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.5 }
-            };
-            DoubleAnimation fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(300));
-
-            TicketPanel.BeginAnimation(OpacityProperty, fadeIn);
+            DoubleAnimation slideIn = new DoubleAnimation(-500, 0, TimeSpan.FromMilliseconds(500)) { EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.5 } };
+            TicketPanel.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(300)));
             TicketTranslate.BeginAnimation(TranslateTransform.XProperty, slideIn);
 
             await Task.Delay(500);
         }
 
-        private void UpdateTotals()
-        {
-            if (txtTotalUnits != null) txtTotalUnits.Text = $"{CartItems.Sum(x => x.RequestQty):N0}";
-        }
+        private void UpdateTotals() { if (txtTotalUnits != null) txtTotalUnits.Text = $"{CartItems.Sum(x => x.RequestQty):N0}"; }
 
         private FontAwesomeIcon GetIconForIngredient(string name)
         {
             if (string.IsNullOrEmpty(name)) return FontAwesomeIcon.Leaf;
-
             name = name.ToLower();
             if (name.Contains("cheese")) return FontAwesomeIcon.DotCircleOutline;
             if (name.Contains("dough") || name.Contains("flour")) return FontAwesomeIcon.Cloud;
             if (name.Contains("sauce") || name.Contains("tomato")) return FontAwesomeIcon.Tint;
             if (name.Contains("meat") || name.Contains("pepperoni") || name.Contains("bacon")) return FontAwesomeIcon.Cutlery;
             if (name.Contains("box") || name.Contains("packaging")) return FontAwesomeIcon.Cube;
-
             return FontAwesomeIcon.Leaf;
         }
 
@@ -219,26 +205,11 @@ namespace SLICE_System.Views
                 while (true)
                 {
                     if (this.Visibility != Visibility.Visible || AnimCanvas == null) { await Task.Delay(1000); continue; }
-                    ImageAwesome icon = new ImageAwesome
-                    {
-                        Icon = FontAwesomeIcon.PieChart,
-                        Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FAD7A0")),
-                        Width = rnd.Next(20, 50),
-                        Opacity = 0.2
-                    };
-                    Canvas.SetLeft(icon, rnd.Next(0, (int)ActualWidth));
-                    Canvas.SetTop(icon, ActualHeight + 50);
+                    ImageAwesome icon = new ImageAwesome { Icon = FontAwesomeIcon.PieChart, Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FAD7A0")), Width = rnd.Next(20, 50), Opacity = 0.2 };
+                    Canvas.SetLeft(icon, rnd.Next(0, (int)ActualWidth)); Canvas.SetTop(icon, ActualHeight + 50);
                     AnimCanvas.Children.Add(icon);
-
-                    DoubleAnimation flyUp = new DoubleAnimation
-                    {
-                        From = ActualHeight + 50,
-                        To = -100,
-                        Duration = TimeSpan.FromSeconds(rnd.Next(10, 20))
-                    };
-                    DoubleAnimation fade = new DoubleAnimation(0.2, 0, TimeSpan.FromSeconds(5)) { BeginTime = TimeSpan.FromSeconds(5) };
-                    icon.BeginAnimation(Canvas.TopProperty, flyUp);
-                    icon.BeginAnimation(OpacityProperty, fade);
+                    icon.BeginAnimation(Canvas.TopProperty, new DoubleAnimation { From = ActualHeight + 50, To = -100, Duration = TimeSpan.FromSeconds(rnd.Next(10, 20)) });
+                    icon.BeginAnimation(OpacityProperty, new DoubleAnimation(0.2, 0, TimeSpan.FromSeconds(5)) { BeginTime = TimeSpan.FromSeconds(5) });
                     await Task.Delay(2000);
                 }
             });
@@ -254,9 +225,12 @@ namespace SLICE_System.Views
         public string Name { get; set; }
         public string Category { get; set; }
         public string Unit { get; set; }
-        public decimal CurrentStock { get; set; }
-        public FontAwesomeIcon Icon { get; set; }
 
+        public decimal CurrentStock { get; set; } // HQ Stock
+        public decimal MyBranchStock { get; set; } // Branch's Actual Stock
+        public bool IsUrgent { get; set; }
+
+        public FontAwesomeIcon Icon { get; set; }
         public string ImagePath { get; set; }
         public bool HasImage => !string.IsNullOrEmpty(ImagePath);
 

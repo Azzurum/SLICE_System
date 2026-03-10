@@ -42,9 +42,10 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <ComboBox x:Name="cmbBranches" Width="150" Height="35" Margin="0,0,10,0" Padding="10,5" DisplayMemberPath="BranchName" SelectedValuePath="BranchID" SelectionChanged="cmbBranches_SelectionChanged" Background="White" BorderBrush="#EAECEE"/>
                     <ComboBox x:Name="cmbDateRange" Width="130" Height="35" Margin="0,0,10,0" Padding="10,5" SelectionChanged="cmbDateRange_SelectionChanged" Background="White" BorderBrush="#EAECEE">
-                        <ComboBoxItem Content="Today" IsSelected="True"/>
-                        <ComboBoxItem Content="Yesterday"/>
-                        <ComboBoxItem Content="Last 7 Days"/>
+                        <ComboBoxItem Content="Today"/>
+                        <ComboBoxItem Content="This Month" IsSelected="True"/>
+                        <ComboBoxItem Content="This Quarter"/>
+                        <ComboBoxItem Content="This Year"/>
                         <ComboBoxItem Content="Last 30 Days"/>
                         <ComboBoxItem Content="Custom Range"/>
                     </ComboBox>

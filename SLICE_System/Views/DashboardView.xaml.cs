@@ -118,12 +118,38 @@ namespace SLICE_System.Views
 
             switch (selected)
             {
-                case "Today": dpStart.SelectedDate = today; dpEnd.SelectedDate = today; pnlCustomDate.Visibility = Visibility.Collapsed; break;
-                case "Yesterday": dpStart.SelectedDate = today.AddDays(-1); dpEnd.SelectedDate = today.AddDays(-1); pnlCustomDate.Visibility = Visibility.Collapsed; break;
-                case "Last 7 Days": dpStart.SelectedDate = today.AddDays(-7); dpEnd.SelectedDate = today; pnlCustomDate.Visibility = Visibility.Collapsed; break;
-                case "Last 30 Days": dpStart.SelectedDate = today.AddDays(-30); dpEnd.SelectedDate = today; pnlCustomDate.Visibility = Visibility.Collapsed; break;
-                case "Custom Range": pnlCustomDate.Visibility = Visibility.Visible; break;
+                case "Today":
+                    dpStart.SelectedDate = today;
+                    dpEnd.SelectedDate = today;
+                    pnlCustomDate.Visibility = Visibility.Collapsed;
+                    break;
+                case "This Month":
+                    dpStart.SelectedDate = new DateTime(today.Year, today.Month, 1);
+                    dpEnd.SelectedDate = new DateTime(today.Year, today.Month, DateTime.DaysInMonth(today.Year, today.Month));
+                    pnlCustomDate.Visibility = Visibility.Collapsed;
+                    break;
+                case "This Quarter":
+                    int quarter = (today.Month - 1) / 3 + 1;
+                    DateTime startOfQuarter = new DateTime(today.Year, (quarter - 1) * 3 + 1, 1);
+                    dpStart.SelectedDate = startOfQuarter;
+                    dpEnd.SelectedDate = startOfQuarter.AddMonths(3).AddDays(-1);
+                    pnlCustomDate.Visibility = Visibility.Collapsed;
+                    break;
+                case "This Year":
+                    dpStart.SelectedDate = new DateTime(today.Year, 1, 1);
+                    dpEnd.SelectedDate = new DateTime(today.Year, 12, 31);
+                    pnlCustomDate.Visibility = Visibility.Collapsed;
+                    break;
+                case "Last 30 Days":
+                    dpStart.SelectedDate = today.AddDays(-30);
+                    dpEnd.SelectedDate = today;
+                    pnlCustomDate.Visibility = Visibility.Collapsed;
+                    break;
+                case "Custom Range":
+                    pnlCustomDate.Visibility = Visibility.Visible;
+                    break;
             }
+
             if (selected != "Custom Range") LoadDashboard();
         }
 

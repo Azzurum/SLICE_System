@@ -16,7 +16,7 @@ namespace SLICE_System.Data
         {
             using (var connection = _dbService.GetConnection())
             {
-                return connection.Query<Branch>("SELECT BranchID, BranchName FROM Branches").ToList();
+                    return connection.Query<Branch>("SELECT BranchID, BranchName FROM Branches").ToList();
             }
         }
 
