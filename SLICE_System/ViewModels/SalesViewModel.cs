@@ -356,60 +356,104 @@ namespace SLICE_System.ViewModels
             }
         }
 
+        // =========================================================
+        // UPDATED: PAYMENT GATEWAY & RECEIPT INTEGRATION
+        // =========================================================
         private async void ExecuteCheckout()
         {
             if (CartItems.Count == 0) return;
-            IsCooking = true;
 
-            bool success = false;
-            string errorMessage = "";
+            // 1. Launch the realistic Payment Gateway Simulator overlay
+            var paymentWindow = new Views.Dialogs.PaymentGatewayWindow(GrandTotal);
+            paymentWindow.Owner = Application.Current.MainWindow; // Darkens the background smoothly
 
-            // Capture thread-safe variables for the background task
-            var currentDiscount = ActiveDiscount;
-            var currentDiscountAmount = DiscountAmount;
+            // .ShowDialog() pauses execution here until the payment window is closed
+            bool? transactionResult = paymentWindow.ShowDialog();
 
-            await Task.Run(() =>
+            // 2. Only proceed if payment was officially approved by the gateway
+            if (transactionResult == true && paymentWindow.PaymentResult != null && paymentWindow.PaymentResult.IsSuccess)
             {
-                try
-                {
-                    // 1. Process standard item sales and deduct recipe stock
-                    foreach (var item in CartItems)
-                        _repo.ProcessSale(_branchId, item.ProductID, item.Qty, _userId);
+                string payMethod = paymentWindow.PaymentResult.PaymentMethod;
+                string refNum = paymentWindow.PaymentResult.ReferenceNumber;
 
-                    // 2. Log Applied Discount (Offsets Gross Income in Financial Ledger)
-                    if (currentDiscount != null && currentDiscountAmount > 0)
+                IsCooking = true; // Triggers the animated cooking screen
+                bool success = false;
+                string errorMessage = "";
+
+                // Capture thread-safe variables for the background task
+                var currentDiscount = ActiveDiscount;
+                var currentDiscountAmount = DiscountAmount;
+
+                // Map CartItemVM to the raw CartItem model expected by SalesRepository.CompleteSale
+                var cartSnapshot = CartItems.Select(c => new CartItem
+                {
+                    ProductID = c.ProductID,
+                    ProductName = c.RawName,
+                    Qty = c.Qty,
+                    Price = c.BasePrice
+                }).ToList();
+
+                await Task.Run(() =>
+                {
+                    try
                     {
-                        _discountRepo.LogAppliedDiscount(
-                            _branchId,
-                            currentDiscount.DiscountID,
-                            _userId,
-                            currentDiscountAmount,
-                            currentDiscount.ReferenceID,
-                            currentDiscount.Reason);
+                        // 3. Process entire cart as a single unified transaction with payment details
+                        success = _repo.CompleteSale(_branchId, _userId, cartSnapshot, payMethod, refNum, out errorMessage);
+
+                        // 4. Log Applied Discount (Offsets Gross Income in Financial Ledger)
+                        if (success && currentDiscount != null && currentDiscountAmount > 0)
+                        {
+                            _discountRepo.LogAppliedDiscount(
+                                _branchId,
+                                currentDiscount.DiscountID,
+                                _userId,
+                                currentDiscountAmount,
+                                currentDiscount.ReferenceID,
+                                currentDiscount.Reason);
+                        }
                     }
+                    catch (Exception ex)
+                    {
+                        success = false;
+                        errorMessage = ex.Message;
+                    }
+                });
 
-                    success = true;
-                }
-                catch (Exception ex)
+                if (success)
                 {
-                    success = false;
-                    errorMessage = ex.Message;
+                    await Task.Delay(5500); // Display the POS cooking/receipt animation for realism
+                    IsCooking = false;
+
+                    // --- NEW: LAUNCH THE RECEIPT WINDOW ---
+                    // We must invoke this on the main UI thread
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        var receiptWindow = new Views.Dialogs.ReceiptWindow(
+                            CartItems,
+                            SubTotal,
+                            DiscountAmount,
+                            GrandTotal,
+                            payMethod,
+                            refNum
+                        );
+                        receiptWindow.Owner = Application.Current.MainWindow;
+                        receiptWindow.ShowDialog();
+                    });
+
+                    // Clear the cart ONLY after the receipt is closed
+                    ClearCart();
+
+                    // Force refresh to recalculate new MaxCookable stock limits
+                    LoadData();
                 }
-            });
-
-            if (success)
-            {
-                await Task.Delay(5500); // Display the POS cooking/receipt animation
-                ClearCart();
-                IsCooking = false;
-
-                LoadData(); // Force refresh to recalculate new MaxCookable stock limits
+                else
+                {
+                    IsCooking = false;
+                    // Extremely realistic edge-case handling: Payment captured but DB failed
+                    MessageBox.Show($"CRITICAL: Payment approved (Ref: {refNum}) but system failed to record sale.\nError: {errorMessage}", "Database Sync Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
-            else
-            {
-                IsCooking = false;
-                MessageBox.Show($"Transaction Failed: {errorMessage}", "Checkout Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            // If transactionResult == false, they cancelled or failed the payment, so we do nothing (cart remains intact).
         }
     }
 }

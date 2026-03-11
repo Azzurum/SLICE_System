@@ -9,6 +9,7 @@
         <SolidColorBrush x:Key="TextLight" Color="#95A5A6"/>
         <SolidColorBrush x:Key="BrandBlue" Color="#2980B9"/>
         <SolidColorBrush x:Key="BrandGreen" Color="#27AE60"/>
+        <SolidColorBrush x:Key="ReferenceBlue" Color="#3498DB"/>
 
         <Style x:Key="CardStyle" TargetType="Border">
             <Setter Property="Background" Value="White"/>
@@ -61,11 +62,10 @@
 
             <StackPanel Grid.Column="0" VerticalAlignment="Center">
                 <TextBlock Text="System Audit Logs" FontSize="28" FontWeight="Black" Foreground="{StaticResource TextDark}"/>
-                <TextBlock Text="Track, monitor, and export security events and user actions." FontSize="14" Foreground="{StaticResource TextLight}"/>
+                <TextBlock Text="Track, monitor, and trace every payment reference and user action." FontSize="14" Foreground="{StaticResource TextLight}"/>
             </StackPanel>
 
             <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-
                 <Border Background="White" CornerRadius="8" Height="40" Padding="10,0" Margin="0,0,10,5">
                     <Border.Effect>
                         <DropShadowEffect BlurRadius="10" Color="#BDC3C7" ShadowDepth="1" Opacity="0.2"/>
@@ -91,7 +91,7 @@
                         <fa:ImageAwesome Icon="Search" Height="13" Foreground="{StaticResource TextLight}" HorizontalAlignment="Center"/>
                         <TextBox x:Name="txtSearch" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" BorderThickness="0" Background="Transparent" 
                                  VerticalContentAlignment="Center" FontSize="14" Foreground="{StaticResource TextDark}" Margin="0,0,15,0"/>
-                        <TextBlock Grid.Column="1" Text="Search logs..." Foreground="#BDC3C7" VerticalAlignment="Center" IsHitTestVisible="False" Margin="2,0,0,0">
+                        <TextBlock Grid.Column="1" Text="Search by Reference or User..." Foreground="#BDC3C7" VerticalAlignment="Center" IsHitTestVisible="False" Margin="2,0,0,0">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Visibility" Value="Collapsed"/>
@@ -116,7 +116,7 @@
                     <fa:ImageAwesome Icon="Refresh" Height="14"/>
                 </Button>
 
-                <Button Command="{Binding ExportCommand}" Background="{StaticResource BrandGreen}" Margin="0,0,0,5" Style="{StaticResource ActionButtonStyle}" ToolTip="Export to CSV">
+                <Button Command="{Binding ExportCommand}" Background="{StaticResource BrandGreen}" Margin="0,0,0,5" Style="{StaticResource ActionButtonStyle}" ToolTip="Export Audit Trail">
                     <StackPanel Orientation="Horizontal">
                         <fa:ImageAwesome Icon="FileExcelOutline" Height="14" Foreground="White" Margin="0,0,8,0"/>
                         <TextBlock Text="EXPORT"/>
@@ -128,7 +128,7 @@
         <Border Grid.Row="1" Style="{StaticResource CardStyle}">
             <DataGrid ItemsSource="{Binding AuditLogs}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" 
                       GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent" BorderThickness="0"
-                      RowHeight="55" VerticalScrollBarVisibility="Auto" Margin="10" AlternatingRowBackground="#FAFCFC">
+                      RowHeight="65" VerticalScrollBarVisibility="Auto" Margin="10" AlternatingRowBackground="#FAFCFC">
 
                 <DataGrid.Resources>
                     <Style TargetType="DataGridColumnHeader">
@@ -174,7 +174,7 @@
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
-                    <DataGridTemplateColumn Header="USER" Width="200">
+                    <DataGridTemplateColumn Header="PERFORMED BY" Width="200">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel VerticalAlignment="Center">
@@ -185,7 +185,29 @@
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
-                    <DataGridTextColumn Header="DETAILS" Binding="{Binding Description}" Width="*" Foreground="{StaticResource TextDark}">
+                    <DataGridTemplateColumn Header="REFERENCE ID" Width="180">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock x:Name="txtRef" Text="{Binding ReferenceNumber}" Foreground="{StaticResource ReferenceBlue}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding ReferenceNumber}" Value="{x:Null}">
+                                        <Setter TargetName="txtRef" Property="Text" Value="SYSTEM_LOG"/>
+                                        <Setter TargetName="txtRef" Property="Foreground" Value="#BDC3C7"/>
+                                        <Setter TargetName="txtRef" Property="FontStyle" Value="Italic"/>
+                                        <Setter TargetName="txtRef" Property="FontWeight" Value="Normal"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding ReferenceNumber}" Value="">
+                                        <Setter TargetName="txtRef" Property="Text" Value="SYSTEM_LOG"/>
+                                        <Setter TargetName="txtRef" Property="Foreground" Value="#BDC3C7"/>
+                                        <Setter TargetName="txtRef" Property="FontStyle" Value="Italic"/>
+                                        <Setter TargetName="txtRef" Property="FontWeight" Value="Normal"/>
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTextColumn Header="LOG DESCRIPTION" Binding="{Binding Description}" Width="*" Foreground="{StaticResource TextDark}">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="TextWrapping" Value="Wrap"/>

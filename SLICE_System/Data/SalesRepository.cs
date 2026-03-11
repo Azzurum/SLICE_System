@@ -25,116 +25,147 @@ namespace SLICE_System.Data
             {
                 // Calculates the maximum portions that can be made based on the limiting ingredient.
                 string sql = @"
-            SELECT 
-                m.ProductID, 
-                m.ProductName, 
-                m.BasePrice, 
-                m.ImagePath, -- FETCH THE IMAGE PATH
-                'General' as Category,
-                CAST(ISNULL(
-                    MIN(
-                        FLOOR(ISNULL(bi.CurrentQuantity, 0) / NULLIF(bom.RequiredQty, 0))
-                    ), 999
-                ) AS INT) AS MaxCookable
-            FROM MenuItems m
-            LEFT JOIN BillOfMaterials bom ON m.ProductID = bom.ProductID
-            LEFT JOIN BranchInventory bi ON bom.ItemID = bi.ItemID AND bi.BranchID = @BranchID
-            WHERE m.IsAvailable = 1
-            GROUP BY m.ProductID, m.ProductName, m.BasePrice, m.ImagePath";
+                SELECT 
+                    m.ProductID, 
+                    m.ProductName, 
+                    m.BasePrice, 
+                    m.ImagePath,
+                    'General' as Category,
+                    CAST(ISNULL(
+                        MIN(
+                            FLOOR(ISNULL(bi.CurrentQuantity, 0) / NULLIF(bom.RequiredQty, 0))
+                        ), 999
+                    ) AS INT) AS MaxCookable
+                FROM MenuItems m
+                LEFT JOIN BillOfMaterials bom ON m.ProductID = bom.ProductID
+                LEFT JOIN BranchInventory bi ON bom.ItemID = bi.ItemID AND bi.BranchID = @BranchID
+                WHERE m.IsAvailable = 1
+                GROUP BY m.ProductID, m.ProductName, m.BasePrice, m.ImagePath";
 
                 return connection.Query<MenuProduct>(sql, new { BranchID = branchId }).ToList();
             }
         }
 
         // =========================================================
-        // 2. PROCESS SALE (Transaction + P&L Integration)
+        // 2. COMPLETE SALE (Entire Cart + Audit/Payment Integration)
         // =========================================================
-        public void ProcessSale(int branchId, int productId, int quantitySold, int userId)
+        public bool CompleteSale(int branchId, int userId, List<CartItem> cart, string paymentMethod, string referenceNumber, out string errorMessage)
         {
+            errorMessage = string.Empty;
+
             using (var connection = _dbService.GetConnection())
             {
                 connection.Open();
 
+                // Start a transaction so the whole cart succeeds or fails together (Atomic Transaction)
                 using (var transaction = connection.BeginTransaction())
                 {
                     try
                     {
-                        // --- STEP 1: GET PRODUCT PRICE SNAPSHOT ---
-                        string sqlGetProduct = "SELECT ProductID, ProductName, BasePrice FROM MenuItems WHERE ProductID = @Id";
-                        // FIX: Strongly typed to MenuItem to prevent dynamic runtime crashes
-                        var product = connection.QuerySingleOrDefault<MenuItem>(sqlGetProduct, new { Id = productId }, transaction);
+                        decimal totalCartRevenue = 0;
 
-                        if (product == null) throw new Exception("Product not found or invalid.");
-
-                        decimal unitPrice = product.BasePrice;
-                        decimal totalRevenue = unitPrice * quantitySold;
-                        string productName = product.ProductName;
-
-                        // --- STEP 2: CALCULATE INGREDIENTS (Bill of Materials) ---
-                        string sqlGetRecipe = "SELECT ProductID, ItemID as IngredientID, RequiredQty FROM BillOfMaterials WHERE ProductID = @ProductID";
-                        var ingredients = connection.Query<Recipe>(sqlGetRecipe, new { ProductID = productId }, transaction).AsList();
-
-                        // --- STEP 3: DEDUCT STOCK (With Negative Stock Prevention) ---
-                        if (ingredients.Any())
+                        // Loop through every item in the shopping cart
+                        foreach (var item in cart)
                         {
-                            string sqlDeduct = @"
-                                UPDATE BranchInventory 
-                                SET CurrentQuantity = CurrentQuantity - @AmountToDeduct
-                                WHERE BranchID = @BranchID AND ItemID = @ItemID 
-                                AND CurrentQuantity >= @AmountToDeduct"; // Safety check to prevent negative inventory
+                            // --- STEP 1: GET PRODUCT PRICE SNAPSHOT ---
+                            string sqlGetProduct = "SELECT ProductID, ProductName, BasePrice FROM MenuItems WHERE ProductID = @Id";
+                            var product = connection.QuerySingleOrDefault<MenuItem>(sqlGetProduct, new { Id = item.ProductID }, transaction);
 
-                            foreach (var ing in ingredients)
+                            if (product == null) throw new Exception($"Product '{item.ProductName}' not found or invalid.");
+
+                            decimal unitPrice = product.BasePrice;
+                            decimal itemTotalRevenue = unitPrice * item.Qty;
+                            totalCartRevenue += itemTotalRevenue;
+
+                            // --- STEP 2: CALCULATE INGREDIENTS (Bill of Materials) ---
+                            string sqlGetRecipe = "SELECT ProductID, ItemID as IngredientID, RequiredQty FROM BillOfMaterials WHERE ProductID = @ProductID";
+                            var ingredients = connection.Query<Recipe>(sqlGetRecipe, new { ProductID = item.ProductID }, transaction).AsList();
+
+                            // --- STEP 3: DEDUCT STOCK (With Negative Stock Prevention) ---
+                            if (ingredients.Any())
                             {
-                                decimal totalNeeded = ing.RequiredQty * quantitySold;
+                                string sqlDeduct = @"
+                                    UPDATE BranchInventory 
+                                    SET CurrentQuantity = CurrentQuantity - @AmountToDeduct
+                                    WHERE BranchID = @BranchID AND ItemID = @ItemID 
+                                    AND CurrentQuantity >= @AmountToDeduct"; // Safety check
 
-                                int rowsAffected = connection.Execute(sqlDeduct, new
+                                foreach (var ing in ingredients)
                                 {
-                                    AmountToDeduct = totalNeeded,
-                                    BranchID = branchId,
-                                    ItemID = ing.IngredientID
-                                }, transaction);
+                                    decimal totalNeeded = ing.RequiredQty * item.Qty;
 
-                                // If 0 rows were updated, it means stock was insufficient
-                                if (rowsAffected == 0)
-                                {
-                                    throw new Exception($"Transaction blocked: Insufficient stock for an ingredient required to make {productName}.");
+                                    int rowsAffected = connection.Execute(sqlDeduct, new
+                                    {
+                                        AmountToDeduct = totalNeeded,
+                                        BranchID = branchId,
+                                        ItemID = ing.IngredientID
+                                    }, transaction);
+
+                                    // If 0 rows were updated, it means stock was insufficient
+                                    if (rowsAffected == 0)
+                                    {
+                                        throw new Exception($"Transaction blocked: Insufficient stock for an ingredient required to make {product.ProductName}.");
+                                    }
                                 }
                             }
+
+                            // --- STEP 4: RECORD THE SALE (Updated for Audit Traceability) ---
+                            string sqlRecord = @"
+                                INSERT INTO SalesTransactions 
+                                (BranchID, UserID, ProductID, QuantitySold, UnitPrice, TransactionDate, PaymentMethod, ReferenceNumber, TransactionStatus)
+                                VALUES 
+                                (@BranchID, @UserID, @ProductID, @Qty, @Price, GETDATE(), @PayMethod, @RefNum, 'Completed')";
+
+                            connection.Execute(sqlRecord, new
+                            {
+                                BranchID = branchId,
+                                UserID = userId,
+                                ProductID = item.ProductID,
+                                Qty = item.Qty,
+                                Price = unitPrice,
+                                PayMethod = paymentMethod,
+                                RefNum = referenceNumber,
+                                Status = "Completed"
+                            }, transaction);
                         }
 
-                        // --- STEP 4: RECORD THE SALE (With Price) ---
-                        string sqlRecord = @"
-                            INSERT INTO SalesTransactions (BranchID, ProductID, QuantitySold, UnitPrice, TransactionDate)
-                            VALUES (@BranchID, @ProductID, @Qty, @Price, GETDATE());
-                            SELECT SCOPE_IDENTITY();";
-
-                        int newSaleId = connection.ExecuteScalar<int>(sqlRecord, new
-                        {
-                            BranchID = branchId,
-                            ProductID = productId,
-                            Qty = quantitySold,
-                            Price = unitPrice
-                        }, transaction);
-
-                        // --- STEP 5: FINANCIAL LEDGER (The P&L Entry) ---
+                        // --- STEP 5: FINANCIAL LEDGER (Centralized Income Tracking) ---
                         string sqlLedger = @"
-                            INSERT INTO FinancialLedger (TransactionDate, BranchID, Type, Category, Amount, Description, ReferenceID)
-                            VALUES (GETDATE(), @BranchID, 'Income', 'Sales', @Amount, @Desc, @RefID)";
+                            INSERT INTO FinancialLedger (TransactionDate, BranchID, Type, Category, Amount, Description, PaymentMethod, ReferenceNumber)
+                            VALUES (GETDATE(), @BranchID, 'Income', 'Sales', @Amount, @Desc, @PayMethod, @RefNum)";
 
                         connection.Execute(sqlLedger, new
                         {
                             BranchID = branchId,
-                            Amount = totalRevenue,
-                            Desc = $"Sale: {productName} (x{quantitySold})",
-                            RefID = newSaleId
+                            Amount = totalCartRevenue,
+                            Desc = $"POS Sale ({cart.Count} items)",
+                            PayMethod = paymentMethod,
+                            RefNum = referenceNumber
                         }, transaction);
 
+                        // --- STEP 6: WRITE DIRECTLY TO AUDIT LOG ---
+                        // This fixes the "SYSTEM_LOG" issue by capturing the Reference Number immediately.
+                        string sqlAudit = @"
+                            INSERT INTO AuditLogs (UserID, ActionType, AffectedTable, NewValue, Timestamp, ReferenceNumber)
+                            VALUES (@UserID, 'Sale Completed', 'SalesTransactions', @Desc, GETDATE(), @RefNum)";
+
+                        connection.Execute(sqlAudit, new
+                        {
+                            UserID = userId,
+                            Desc = $"Processed sale for {cart.Count} items. Gateway: {paymentMethod.ToUpper()} - Total: ₱{totalCartRevenue:N2}",
+                            RefNum = referenceNumber
+                        }, transaction);
+
+                        // Success! Everything commits to the DB at once.
                         transaction.Commit();
+                        return true;
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        // Rollback ensures that if one item fails, NO ingredients are deducted and NO sale is recorded.
                         transaction.Rollback();
-                        throw;
+                        errorMessage = ex.Message;
+                        return false;
                     }
                 }
             }

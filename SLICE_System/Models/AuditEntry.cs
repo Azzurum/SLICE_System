@@ -10,6 +10,8 @@ namespace SLICE_System.Models
         public string BranchName { get; set; }
         public string PerformedBy { get; set; }
 
+        public string ReferenceNumber { get; set; }
+
         // --- UI Helper for XAML Binding ---
         // This calculates the color based on the ActivityType
         public string BadgeColor

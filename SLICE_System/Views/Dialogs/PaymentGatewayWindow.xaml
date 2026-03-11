@@ -1,0 +1,198 @@
+﻿<Window x:Class="SLICE_System.Views.Dialogs.PaymentGatewayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
+        Title="Secure Payment Gateway" Height="580" Width="780"
+        WindowStyle="None" AllowsTransparency="True" Background="#90000000"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" FontFamily="Segoe UI">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <Style x:Key="PaymentMethodBtn" TargetType="Button">
+            <Setter Property="Background" Value="#FDFDFD"/>
+            <Setter Property="BorderBrush" Value="#E0E6ED"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Height" Value="60"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="#2C3E50"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="12">
+                            <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="25,0"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#F0F8FF"/>
+                    <Setter Property="BorderBrush" Value="#3498DB"/>
+                    <Setter Property="Foreground" Value="#2980B9"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="PrimaryActionBtn" TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Height" Value="50"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Opacity" Value="0.9"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Border Background="White" Width="720" Height="520" CornerRadius="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="40" ShadowDepth="15" Opacity="0.3" Color="#000000"/>
+            </Border.Effect>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="260"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Background="#1A252F" CornerRadius="20,0,0,20" Padding="35">
+                    <StackPanel VerticalAlignment="Center">
+                        <Border Background="#2C3E50" Width="60" Height="60" CornerRadius="30" Margin="0,0,0,25" HorizontalAlignment="Left">
+                            <fa:ImageAwesome Icon="Lock" Height="24" Foreground="#ecf0f1"/>
+                        </Border>
+                        <TextBlock Text="Total to Pay" Foreground="#95A5A6" FontSize="14" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding TotalAmount, StringFormat='₱{0:N2}'}" Foreground="White" FontSize="42" FontWeight="Black" Margin="0,5,0,30"/>
+                        <Separator Background="#34495E" Margin="0,0,0,30" Height="1"/>
+                        <TextBlock Text="S.L.I.C.E. Enterprise" Foreground="#BDC3C7" FontSize="13" FontWeight="Bold"/>
+                        <TextBlock Text="Point of Sale System" Foreground="#7F8C8D" FontSize="11" Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Grid Grid.Column="1" Margin="40">
+                    <Button Command="{Binding CloseCommand}" HorizontalAlignment="Right" VerticalAlignment="Top" Background="Transparent" BorderThickness="0" Cursor="Hand" Margin="0,-10,-10,0">
+                        <fa:ImageAwesome Icon="Times" Height="18" Foreground="#BDC3C7"/>
+                    </Button>
+
+                    <StackPanel Visibility="{Binding SelectionVis}" VerticalAlignment="Center">
+                        <TextBlock Text="Payment Method" FontSize="22" FontWeight="Black" Foreground="#2C3E50" Margin="0,0,0,25"/>
+
+                        <Button Command="{Binding SelectMethodCommand}" CommandParameter="Cash" Style="{StaticResource PaymentMethodBtn}">
+                            <StackPanel Orientation="Horizontal">
+                                <fa:ImageAwesome Icon="Money" Height="24" Foreground="#27AE60" Margin="0,0,20,0"/>
+                                <TextBlock Text="Physical Cash" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding SelectMethodCommand}" CommandParameter="Credit / Debit Card" Style="{StaticResource PaymentMethodBtn}">
+                            <StackPanel Orientation="Horizontal">
+                                <fa:ImageAwesome Icon="CreditCard" Height="22" Foreground="#2980B9" Margin="0,0,20,0"/>
+                                <TextBlock Text="Credit / Debit Card" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding SelectMethodCommand}" CommandParameter="GCash" Style="{StaticResource PaymentMethodBtn}">
+                            <StackPanel Orientation="Horizontal">
+                                <fa:ImageAwesome Icon="MobilePhone" Height="28" Foreground="#3498DB" Margin="0,0,22,0"/>
+                                <TextBlock Text="GCash e-Wallet" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding SelectMethodCommand}" CommandParameter="Maya" Style="{StaticResource PaymentMethodBtn}">
+                            <StackPanel Orientation="Horizontal">
+                                <fa:ImageAwesome Icon="CheckCircle" Height="22" Foreground="#27AE60" Margin="0,0,20,0"/>
+                                <TextBlock Text="Maya" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <StackPanel Visibility="{Binding InputVis}" VerticalAlignment="Center">
+
+                        <Button Command="{Binding BackCommand}" HorizontalAlignment="Left" Background="Transparent" BorderThickness="0" Cursor="Hand" Margin="-5,0,0,20">
+                            <StackPanel Orientation="Horizontal">
+                                <fa:ImageAwesome Icon="AngleLeft" Height="16" Foreground="#7F8C8D" Margin="0,0,8,0"/>
+                                <TextBlock Text="Back to methods" Foreground="#7F8C8D" FontWeight="Bold" FontSize="13"/>
+                            </StackPanel>
+                        </Button>
+
+                        <TextBlock Text="{Binding SelectedMethod}" FontSize="22" FontWeight="Black" Foreground="#2C3E50" Margin="0,0,0,25"/>
+
+                        <StackPanel Visibility="{Binding IsCardPayment, Converter={StaticResource BoolToVis}}">
+                            <Border Background="#F8F9FA" BorderBrush="#E0E6ED" BorderThickness="1" CornerRadius="12" Padding="20" Margin="0,0,0,20">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <fa:ImageAwesome Icon="CreditCardAlt" Height="40" Foreground="#34495E" Margin="0,0,0,15"/>
+                                    <TextBlock Text="AWAITING CARD TERMINAL" FontSize="14" FontWeight="Black" Foreground="#2C3E50" TextAlignment="Center" Margin="0,0,0,5"/>
+                                    <TextBlock Text="Please ask the customer to tap or insert their card on the physical terminal." FontSize="12" Foreground="#7F8C8D" TextAlignment="Center" TextWrapping="Wrap" Width="250"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Visibility="{Binding IsEwalletPayment, Converter={StaticResource BoolToVis}}">
+                            <Border Background="#F8F9FA" BorderBrush="#E0E6ED" BorderThickness="1" CornerRadius="12" Padding="20" Margin="0,0,0,20">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <Image Source="{Binding QrCodeImage}" Width="150" Height="150" Margin="0,0,0,15" RenderOptions.BitmapScalingMode="HighQuality"/>
+
+                                    <TextBlock Text="AWAITING CUSTOMER SCAN" FontSize="14" FontWeight="Black" Foreground="#2C3E50" TextAlignment="Center" Margin="0,0,0,5"/>
+                                    <TextBlock Text="Please ask the customer to scan this QR code using their app to complete the payment." FontSize="12" Foreground="#7F8C8D" TextAlignment="Center" TextWrapping="Wrap" Width="250"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Visibility="{Binding IsCashPayment, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="AMOUNT TENDERED (₱)" FontSize="11" FontWeight="Bold" Foreground="#95A5A6" Margin="0,0,0,8"/>
+                            <Border Background="#F8F9FA" BorderBrush="#E0E6ED" BorderThickness="1" CornerRadius="8" Margin="0,0,0,20" Height="50">
+                                <TextBox Text="{Binding AmountTenderedStr, UpdateSourceTrigger=PropertyChanged}" FontSize="24" FontWeight="Bold" Foreground="#27AE60" Padding="15,0" Background="Transparent" BorderThickness="0" VerticalContentAlignment="Center"/>
+                            </Border>
+
+                            <TextBlock Text="CHANGE DUE" FontSize="11" FontWeight="Bold" Foreground="#95A5A6" Margin="0,0,0,8"/>
+                            <TextBlock Text="{Binding ChangeAmount, StringFormat='₱{0:N2}'}" FontSize="32" FontWeight="Black" Foreground="#2C3E50" Margin="0,0,0,10"/>
+                        </StackPanel>
+
+                        <Button Command="{Binding ProcessCommand}" Content="CONFIRM &amp; PROCESS" Background="#27AE60" Style="{StaticResource PrimaryActionBtn}" Margin="0,20,0,0">
+                            <Button.Effect>
+                                <DropShadowEffect BlurRadius="15" ShadowDepth="4" Opacity="0.3" Color="#27AE60"/>
+                            </Button.Effect>
+                        </Button>
+                    </StackPanel>
+
+                    <StackPanel Visibility="{Binding ProcessingVis}" VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <fa:ImageAwesome Icon="Spinner" Spin="True" SpinDuration="2" Height="65" Foreground="#3498DB" Margin="0,0,0,25"/>
+                        <TextBlock Text="{Binding ProcessingMessage}" FontSize="18" FontWeight="Bold" Foreground="#2C3E50" TextAlignment="Center"/>
+                        <TextBlock Text="Please do not close this window." FontSize="13" Foreground="#95A5A6" TextAlignment="Center" Margin="0,10,0,0"/>
+                    </StackPanel>
+
+                    <StackPanel Visibility="{Binding ResultVis}" VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <Grid Height="90" Width="90" Margin="0,0,0,25">
+                            <fa:ImageAwesome Icon="CheckCircle" Foreground="#27AE60" Visibility="{Binding IsSuccessResult, Converter={StaticResource BoolToVis}}"/>
+                            <fa:ImageAwesome Icon="TimesCircle" Foreground="#E74C3C" Visibility="{Binding IsFailedResult, Converter={StaticResource BoolToVis}}"/>
+                        </Grid>
+
+                        <TextBlock Text="{Binding ResultMessage}" FontSize="20" FontWeight="Black" Foreground="#2C3E50" TextAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                        <TextBlock Text="{Binding ReferenceNumber, StringFormat='Ref: {0}'}" FontSize="14" FontWeight="Bold" Foreground="#7F8C8D" TextAlignment="Center" Visibility="{Binding IsSuccessResult, Converter={StaticResource BoolToVis}}"/>
+
+                        <Button Command="{Binding BackCommand}" Content="TRY AGAIN" Width="180" Background="#E74C3C" Style="{StaticResource PrimaryActionBtn}" Margin="0,30,0,0" Visibility="{Binding IsFailedResult, Converter={StaticResource BoolToVis}}">
+                            <Button.Effect>
+                                <DropShadowEffect BlurRadius="15" ShadowDepth="4" Opacity="0.3" Color="#E74C3C"/>
+                            </Button.Effect>
+                        </Button>
+                    </StackPanel>
+
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

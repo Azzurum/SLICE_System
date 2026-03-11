@@ -132,13 +132,16 @@ namespace SLICE_System.ViewModels
                 try
                 {
                     var csv = new StringBuilder();
-                    csv.AppendLine("Timestamp,Action Type,User,Branch,Details");
+                    // NEW: Added Reference Column to the CSV Header
+                    csv.AppendLine("Timestamp,Action Type,Reference,User,Branch,Details");
 
                     foreach (var log in AuditLogs)
                     {
                         // Wrap description in quotes to prevent commas from breaking the CSV columns
                         string safeDescription = $"\"{log.Description?.Replace("\"", "\"\"")}\"";
-                        csv.AppendLine($"{log.Timestamp:yyyy-MM-dd HH:mm:ss},{log.ActionType},{log.PerformedBy},{log.BranchName},{safeDescription}");
+
+                        // NEW: Added log.ReferenceNumber to the row output
+                        csv.AppendLine($"{log.Timestamp:yyyy-MM-dd HH:mm:ss},{log.ActionType},{log.ReferenceNumber},{log.PerformedBy},{log.BranchName},{safeDescription}");
                     }
 
                     File.WriteAllText(dialog.FileName, csv.ToString(), Encoding.UTF8);

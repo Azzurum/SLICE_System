@@ -1,0 +1,107 @@
+﻿<Window x:Class="SLICE_System.Views.Dialogs.ReceiptWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Transaction Receipt" Height="650" Width="450"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" Background="#ECF0F1" FontFamily="Consolas">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <Border x:Name="PrintableReceipt" Background="White" Width="350" Padding="20" HorizontalAlignment="Center">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.1"/>
+                </Border.Effect>
+
+                <StackPanel>
+                    <TextBlock Text="S.L.I.C.E. ENTERPRISE" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="txtBranch" Text="Branch Location" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                    <TextBlock Text="VAT REG TIN: 123-456-789-000" FontSize="10" HorizontalAlignment="Center"/>
+                    <TextBlock Text="--------------------------------" HorizontalAlignment="Center" Margin="0,10"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock x:Name="txtDate" Text="Date: " FontSize="12"/>
+                            <TextBlock x:Name="txtCashier" Text="Cashier: " FontSize="12"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                            <TextBlock x:Name="txtRef" Text="Ref: " FontSize="12"/>
+                        </StackPanel>
+                    </Grid>
+                    <TextBlock Text="--------------------------------" HorizontalAlignment="Center" Margin="0,10"/>
+
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="QTY" FontWeight="Bold" Width="40"/>
+                        <TextBlock Grid.Column="1" Text="ITEM" FontWeight="Bold"/>
+                        <TextBlock Grid.Column="2" Text="AMOUNT" FontWeight="Bold"/>
+                    </Grid>
+
+                    <ItemsControl x:Name="ReceiptItemsControl">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,3">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding Qty}" Width="40"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding DisplayName}" TextWrapping="Wrap"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding TotalPrice, StringFormat='₱{0:N2}'}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBlock Text="--------------------------------" HorizontalAlignment="Center" Margin="0,10"/>
+
+                    <Grid Margin="0,2">
+                        <TextBlock Text="SUBTOTAL:" HorizontalAlignment="Left"/>
+                        <TextBlock x:Name="txtSubTotal" Text="₱0.00" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <Grid Margin="0,2">
+                        <TextBlock Text="DISCOUNT:" HorizontalAlignment="Left"/>
+                        <TextBlock x:Name="txtDiscount" Text="-₱0.00" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <Grid Margin="0,10">
+                        <TextBlock Text="GRAND TOTAL:" FontSize="16" FontWeight="Bold" HorizontalAlignment="Left"/>
+                        <TextBlock x:Name="txtTotal" Text="₱0.00" FontSize="16" FontWeight="Bold" HorizontalAlignment="Right"/>
+                    </Grid>
+
+                    <TextBlock Text="--------------------------------" HorizontalAlignment="Center" Margin="0,10"/>
+                    <Grid Margin="0,2">
+                        <TextBlock Text="PAYMENT METHOD:" HorizontalAlignment="Left"/>
+                        <TextBlock x:Name="txtMethod" Text="Cash" HorizontalAlignment="Right"/>
+                    </Grid>
+
+                    <TextBlock Text="--------------------------------" HorizontalAlignment="Center" Margin="0,10"/>
+                    <TextBlock Text="THANK YOU FOR YOUR BUSINESS!" HorizontalAlignment="Center" FontWeight="Bold" Margin="0,20,0,0"/>
+                    <TextBlock Text="Please keep this receipt for" HorizontalAlignment="Center" FontSize="10"/>
+                    <TextBlock Text="returns and exchanges." HorizontalAlignment="Center" FontSize="10"/>
+                </StackPanel>
+            </Border>
+        </ScrollViewer>
+
+        <Grid Grid.Row="1" Margin="0,20,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Content="PRINT RECEIPT" Background="#2C3E50" Foreground="White" FontWeight="Bold" Height="45" Cursor="Hand" Click="Print_Click"/>
+            <Button Grid.Column="2" Content="CLOSE" Background="#95A5A6" Foreground="White" FontWeight="Bold" Height="45" Cursor="Hand" Click="Close_Click"/>
+        </Grid>
+    </Grid>
+</Window>

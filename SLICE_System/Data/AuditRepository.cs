@@ -11,13 +11,11 @@ namespace SLICE_System.Data
 
         public AuditRepository() => _dbService = new DatabaseService();
 
-        // FIXED: Now accepts a search parameter (defaults to empty string)
+        // FIXED: Now fetches the ReferenceNumber and actual Cashier Name
         public List<AuditEntry> GetSystemHistory(string search = "")
         {
             using (var connection = _dbService.GetConnection())
             {
-                // We wrap the UNION in a CTE (Common Table Expression) or Subquery
-                // to allow filtering the combined results easily.
                 string sql = @"
                     SELECT * FROM 
                     (
@@ -27,11 +25,13 @@ namespace SLICE_System.Data
                             'SALE' as ActivityType, 
                             'Sold ' + CAST(ISNULL(s.QuantitySold, 1) AS VARCHAR) + 'x ' + ISNULL(m.ProductName, 'Unknown Item') as Description,
                             ISNULL(b.BranchName, 'Unknown Branch') as BranchName, 
-                            'Store Staff' as PerformedBy
+                            ISNULL(u.FullName, 'Store Staff') as PerformedBy,
+                            s.ReferenceNumber -- <--- NEW: Grab the actual QR Code / Transaction ID
                         FROM SalesTransactions s
                         LEFT JOIN Branches b ON s.BranchID = b.BranchID
                         LEFT JOIN MenuItems m ON s.ProductID = m.ProductID
-            
+                        LEFT JOIN Users u ON s.UserID = u.UserID -- <--- NEW: Get the real cashier's name
+
                         UNION ALL
 
                         -- 2. WASTE
@@ -40,7 +40,8 @@ namespace SLICE_System.Data
                             'WASTE' as ActivityType, 
                             'Reason: ' + Reason as Description, 
                             b.BranchName, 
-                            u.FullName as PerformedBy
+                            u.FullName as PerformedBy,
+                            NULL as ReferenceNumber -- <--- NEW: Placeholders required for UNION ALL
                         FROM WasteTracker w
                         JOIN Branches b ON w.BranchID = b.BranchID
                         JOIN Users u ON w.RecordedBy = u.UserID
@@ -53,7 +54,8 @@ namespace SLICE_System.Data
                             'SHIPMENT' as ActivityType, 
                             'Transfer #' + CAST(TransferID AS VARCHAR) as Description, 
                             b.BranchName, 
-                            u.FullName as PerformedBy
+                            u.FullName as PerformedBy,
+                            NULL as ReferenceNumber -- <--- NEW: Placeholders required for UNION ALL
                         FROM MeshLogistics m
                         JOIN Branches b ON m.FromBranchID = b.BranchID
                         JOIN Users u ON m.SenderID = u.UserID
@@ -61,7 +63,8 @@ namespace SLICE_System.Data
                     WHERE (@SearchStr = '' 
                            OR Description LIKE @SearchStr 
                            OR BranchName LIKE @SearchStr 
-                           OR PerformedBy LIKE @SearchStr)
+                           OR PerformedBy LIKE @SearchStr
+                           OR ReferenceNumber LIKE @SearchStr) -- <--- NEW: Allows searching by TXN ID
                     ORDER BY Timestamp DESC";
 
                 // Pass the search term with wildcards for SQL LIKE
