@@ -170,5 +170,21 @@ namespace SLICE_System.Data
                 }
             }
         }
+        // Fetches only CASH sales for the logged-in user for today
+        public decimal GetTodayExpectedCash(int userId)
+        {
+            using (var connection = _dbService.GetConnection())
+            {
+                string sql = @"
+            SELECT ISNULL(SUM(QuantitySold * UnitPrice), 0) 
+            FROM SalesTransactions 
+            WHERE UserID = @UserID 
+            AND PaymentMethod = 'Cash' 
+            AND TransactionStatus = 'Completed'
+            AND CAST(TransactionDate AS DATE) = CAST(GETDATE() AS DATE)";
+
+                return connection.ExecuteScalar<decimal>(sql, new { UserID = userId });
+            }
+        }
     }
 }

@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using Dapper; // NEW: Added to allow fast querying for the receipt data
 
 namespace SLICE_System.ViewModels
 {
@@ -380,6 +381,12 @@ namespace SLICE_System.ViewModels
                 bool success = false;
                 string errorMessage = "";
 
+                // NEW: Variables to hold our receipt header details
+                string branchName = "S.L.I.C.E. ENTERPRISE";
+                string branchAddress = "Branch Location";
+                string branchContact = "N/A";
+                string cashierName = "Store Staff";
+
                 // Capture thread-safe variables for the background task
                 var currentDiscount = ActiveDiscount;
                 var currentDiscountAmount = DiscountAmount;
@@ -399,6 +406,24 @@ namespace SLICE_System.ViewModels
                     {
                         // 3. Process entire cart as a single unified transaction with payment details
                         success = _repo.CompleteSale(_branchId, _userId, cartSnapshot, payMethod, refNum, out errorMessage);
+
+                        // 3.5 NEW: Fetch the exact Branch Details and User Name for the printed receipt
+                        using (var db = new DatabaseService().GetConnection())
+                        {
+                            var branchInfo = db.QueryFirstOrDefault("SELECT BranchName, Location, ContactNumber FROM Branches WHERE BranchID = @Id", new { Id = _branchId });
+                            if (branchInfo != null)
+                            {
+                                branchName = branchInfo.BranchName;
+                                branchAddress = branchInfo.Location;
+                                branchContact = branchInfo.ContactNumber;
+                            }
+
+                            var userFullName = db.QueryFirstOrDefault<string>("SELECT FullName FROM Users WHERE UserID = @Id", new { Id = _userId });
+                            if (!string.IsNullOrEmpty(userFullName))
+                            {
+                                cashierName = userFullName;
+                            }
+                        }
 
                         // 4. Log Applied Discount (Offsets Gross Income in Financial Ledger)
                         if (success && currentDiscount != null && currentDiscountAmount > 0)
@@ -424,7 +449,7 @@ namespace SLICE_System.ViewModels
                     await Task.Delay(5500); // Display the POS cooking/receipt animation for realism
                     IsCooking = false;
 
-                    // --- NEW: LAUNCH THE RECEIPT WINDOW ---
+                    // --- NEW: LAUNCH THE RECEIPT WINDOW WITH BRANCH DATA ---
                     // We must invoke this on the main UI thread
                     Application.Current.Dispatcher.Invoke(() =>
                     {
@@ -434,7 +459,11 @@ namespace SLICE_System.ViewModels
                             DiscountAmount,
                             GrandTotal,
                             payMethod,
-                            refNum
+                            refNum,
+                            branchName,       // Fetched from DB
+                            branchAddress,    // Fetched from DB
+                            branchContact,    // Fetched from DB
+                            cashierName       // Fetched from DB
                         );
                         receiptWindow.Owner = Application.Current.MainWindow;
                         receiptWindow.ShowDialog();

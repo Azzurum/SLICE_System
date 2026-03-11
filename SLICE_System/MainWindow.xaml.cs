@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Controls;
+using System.Windows.Threading; // NEW: Required for the Auto-Logout Timer
 using SLICE_System.Models;
 using SLICE_System.Services;
 using SLICE_System.ViewModels;
@@ -11,6 +12,7 @@ namespace SLICE_System
     public partial class MainWindow : Window
     {
         private User _currentUser;
+        private DispatcherTimer _idleTimer; // NEW: Timer for session security
 
         public MainWindow(User user)
         {
@@ -29,9 +31,42 @@ namespace SLICE_System
                 Nav_Dashboard_Click(null, null);
             else
                 Nav_MyStock_Click(null, null);
+
+            // 4. NEW: Setup Auto-Logout Timer (3 Minutes of inactivity)
+            _idleTimer = new DispatcherTimer();
+            _idleTimer.Interval = TimeSpan.FromMinutes(3);
+            _idleTimer.Tick += IdleTimer_Tick;
+            _idleTimer.Start();
+
+            // Listen to ALL mouse and keyboard events across the whole application
+            InputManager.Current.PreProcessInput += OnUserActivity;
         }
 
-        // --- NEW: BRANDING CLICK HANDLER (System Metadata) ---
+        // --- NEW: AUTO-LOGOUT SECURITY LOGIC ---
+        private void OnUserActivity(object sender, PreProcessInputEventArgs e)
+        {
+            // If the user moves the mouse or types, reset the 3-minute countdown
+            if (e.StagingItem.Input is MouseEventArgs || e.StagingItem.Input is KeyboardEventArgs)
+            {
+                _idleTimer.Stop();
+                _idleTimer.Start();
+            }
+        }
+
+        private void IdleTimer_Tick(object sender, EventArgs e)
+        {
+            // Stop the timer and unhook the listener to prevent memory leaks
+            _idleTimer.Stop();
+            InputManager.Current.PreProcessInput -= OnUserActivity;
+
+            MessageBox.Show("For your security, your session has timed out due to inactivity.", "Session Expired", MessageBoxButton.OK, MessageBoxImage.Warning);
+
+            // Force logout (We skip Z-Reading here since the cashier is physically away from the computer)
+            new Views.LoginView().Show();
+            this.Close();
+        }
+
+        // --- BRANDING & HELP ---
         private void Nav_About_Click(object sender, RoutedEventArgs e)
         {
             Views.AboutView about = new Views.AboutView();
@@ -39,15 +74,14 @@ namespace SLICE_System
             about.ShowDialog();
         }
 
-        // --- UPDATED: HELP CLICK HANDLER (User Instructions) ---
         private void Help_Click(object sender, RoutedEventArgs e)
         {
-            // Opens the new User Manual Window
             var manualWindow = new Views.Dialogs.UserManualWindow();
             manualWindow.Owner = this;
-            manualWindow.Show(); // .Show() allows them to keep it open while using the app
+            manualWindow.Show();
         }
 
+        // --- ROLE-BASED ACCESS CONTROL ---
         private void ApplyPermissions()
         {
             string r = _currentUser.Role;
@@ -83,7 +117,7 @@ namespace SLICE_System
 
         private void Toggle(UIElement element, bool canAccess) => element.Visibility = canAccess ? Visibility.Visible : Visibility.Collapsed;
 
-        // Navigation Handlers
+        // --- NAVIGATION HANDLERS ---
         public void Nav_Dashboard_Click(object sender, RoutedEventArgs e) => LoadView("Executive Dashboard", new Views.DashboardView(_currentUser));
         private void Nav_Incoming_Click(object sender, RoutedEventArgs e) => LoadView("Incoming Deliveries", new Views.ReceiveShipmentView(_currentUser));
         private void Nav_MyStock_Click(object sender, RoutedEventArgs e) => LoadView("My Branch Inventory", new Views.BranchStockView(_currentUser.BranchID ?? 0));
@@ -109,10 +143,30 @@ namespace SLICE_System
 
         private void Minimize_Click(object sender, RoutedEventArgs e) => this.WindowState = WindowState.Minimized;
         private void Close_Click(object sender, RoutedEventArgs e) => Application.Current.Shutdown();
+
+        // --- UPDATED: LOGOUT WITH Z-READING ---
         private void Logout_Click(object sender, RoutedEventArgs e)
         {
             if (MessageBox.Show("Are you sure you want to sign out?", "Logout", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
+                // Check if the user is a Cashier/Manager who uses the POS
+                if (AccessControlService.CanAccess(_currentUser.Role, AccessControlService.Module.SalesPOS))
+                {
+                    // Force the Z-Reading process
+                    var zReading = new Views.Dialogs.ZReadingWindow(_currentUser.UserID);
+                    zReading.Owner = this;
+
+                    // If they close the Z-Reading window without submitting (DialogResult != true), abort the logout!
+                    if (zReading.ShowDialog() != true)
+                    {
+                        return;
+                    }
+                }
+
+                // Unhook the idle timer to prevent memory leaks when returning to the login screen
+                _idleTimer.Stop();
+                InputManager.Current.PreProcessInput -= OnUserActivity;
+
                 new Views.LoginView().Show();
                 this.Close();
             }

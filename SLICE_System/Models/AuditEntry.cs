@@ -22,8 +22,12 @@ namespace SLICE_System.Models
                 {
                     case "SALE":
                     case "SHIPMENT":
-                    case "TRANSFER":
                         return "#27AE60"; // Green
+
+                    // Add this right here! 
+                    case "Z-READING":
+                        return "#8E44AD"; // Professional Purple
+
                     case "WASTE":
                     case "DELETE":
                         return "#C0392B"; // Red

@@ -11,7 +11,6 @@ namespace SLICE_System.Data
 
         public AuditRepository() => _dbService = new DatabaseService();
 
-        // FIXED: Now fetches the ReferenceNumber and actual Cashier Name
         public List<AuditEntry> GetSystemHistory(string search = "")
         {
             using (var connection = _dbService.GetConnection())
@@ -26,22 +25,22 @@ namespace SLICE_System.Data
                             'Sold ' + CAST(ISNULL(s.QuantitySold, 1) AS VARCHAR) + 'x ' + ISNULL(m.ProductName, 'Unknown Item') as Description,
                             ISNULL(b.BranchName, 'Unknown Branch') as BranchName, 
                             ISNULL(u.FullName, 'Store Staff') as PerformedBy,
-                            s.ReferenceNumber -- <--- NEW: Grab the actual QR Code / Transaction ID
+                            s.ReferenceNumber 
                         FROM SalesTransactions s
                         LEFT JOIN Branches b ON s.BranchID = b.BranchID
                         LEFT JOIN MenuItems m ON s.ProductID = m.ProductID
-                        LEFT JOIN Users u ON s.UserID = u.UserID -- <--- NEW: Get the real cashier's name
+                        LEFT JOIN Users u ON s.UserID = u.UserID 
 
                         UNION ALL
 
                         -- 2. WASTE
                         SELECT 
-                            DateRecorded as Timestamp, 
+                            w.DateRecorded as Timestamp, 
                             'WASTE' as ActivityType, 
-                            'Reason: ' + Reason as Description, 
+                            'Reason: ' + w.Reason as Description, 
                             b.BranchName, 
                             u.FullName as PerformedBy,
-                            NULL as ReferenceNumber -- <--- NEW: Placeholders required for UNION ALL
+                            NULL as ReferenceNumber 
                         FROM WasteTracker w
                         JOIN Branches b ON w.BranchID = b.BranchID
                         JOIN Users u ON w.RecordedBy = u.UserID
@@ -50,21 +49,36 @@ namespace SLICE_System.Data
 
                         -- 3. LOGISTICS
                         SELECT 
-                            SentDate as Timestamp, 
+                            m.SentDate as Timestamp, 
                             'SHIPMENT' as ActivityType, 
-                            'Transfer #' + CAST(TransferID AS VARCHAR) as Description, 
+                            'Transfer #' + CAST(m.TransferID AS VARCHAR) as Description, 
                             b.BranchName, 
                             u.FullName as PerformedBy,
-                            NULL as ReferenceNumber -- <--- NEW: Placeholders required for UNION ALL
+                            NULL as ReferenceNumber 
                         FROM MeshLogistics m
                         JOIN Branches b ON m.FromBranchID = b.BranchID
                         JOIN Users u ON m.SenderID = u.UserID
+
+                        UNION ALL
+
+                        -- 4. NEW: DIRECT AUDIT LOGS (Z-Readings, etc.)
+                        SELECT 
+                            a.Timestamp,
+                            UPPER(a.ActionType) as ActivityType,
+                            a.NewValue as Description,
+                            ISNULL(b.BranchName, 'System') as BranchName,
+                            ISNULL(u.FullName, 'System User') as PerformedBy,
+                            a.ReferenceNumber
+                        FROM AuditLogs a
+                        LEFT JOIN Users u ON a.UserID = u.UserID
+                        LEFT JOIN Branches b ON u.BranchID = b.BranchID
+                        WHERE a.ActionType != 'Sale Completed' -- Prevents duplicating sales from block 1
                     ) AS AllActivity
                     WHERE (@SearchStr = '' 
                            OR Description LIKE @SearchStr 
                            OR BranchName LIKE @SearchStr 
                            OR PerformedBy LIKE @SearchStr
-                           OR ReferenceNumber LIKE @SearchStr) -- <--- NEW: Allows searching by TXN ID
+                           OR ReferenceNumber LIKE @SearchStr) 
                     ORDER BY Timestamp DESC";
 
                 // Pass the search term with wildcards for SQL LIKE
