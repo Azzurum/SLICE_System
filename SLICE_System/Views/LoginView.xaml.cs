@@ -52,5 +52,11 @@ namespace SLICE_System.Views
                 MessageBox.Show($"Server Error: {ex.Message}", "Connection Failed", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+        private void ForgotPassword_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            var forgotPassWindow = new SLICE_System.Views.Dialogs.ForgotPasswordWindow();
+            forgotPassWindow.Owner = System.Windows.Application.Current.MainWindow;
+            forgotPassWindow.ShowDialog();
+        }
     }
 }

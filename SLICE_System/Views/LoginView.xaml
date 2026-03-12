@@ -220,6 +220,25 @@
                         <TextBlock Text="PASSWORD" FontFamily="Segoe UI Black" Foreground="#FF4757" FontSize="12" Margin="0,20,0,5"/>
                         <PasswordBox x:Name="txtPassword" Height="50" Style="{StaticResource PopInputStyle}"/>
 
+                        <Button Content="Forgot Password?" Background="Transparent" Foreground="#3498DB" FontSize="12" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Right" Margin="0,5,0,0" Click="ForgotPassword_Click">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <TextBlock Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="TextDecorations" Value="Underline"/>
+                                                        <Setter Property="Foreground" Value="#2980B9"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+
                         <Button IsDefault="True" x:Name="btnLogin" Content="LET'S GO!" Click="btnLogin_Click"
                                 Height="60" Margin="0,40,0,0" Style="{StaticResource PopButtonStyle}" FontFamily="Segoe UI Black"/>
 

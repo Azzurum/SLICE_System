@@ -12,6 +12,9 @@ namespace SLICE_System.Models
         public int? BranchID { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
+        public string? Email { get; set; }
+        public string? ResetCode { get; set; }
+        public DateTime? ResetCodeExpiry { get; set; }
 
         // --- JOINED DATA ---
         public string? BranchName { get; set; }

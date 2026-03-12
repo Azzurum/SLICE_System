@@ -17,15 +17,16 @@ namespace SLICE_System.Views
             LoadBranches();
         }
 
-        // 2. CONSTRUCTOR FOR EDITING EXISTING USER (Fixes the CS1729 Error)
-        public AddUserWindow(User userToEdit) : this() // Calls the first constructor to load branches
+        // 2. CONSTRUCTOR FOR EDITING EXISTING USER
+        public AddUserWindow(User userToEdit) : this()
         {
             _existingUser = userToEdit;
 
-            // Populate the textboxes with the existing data so the owner can see/edit them
+            // Populate the textboxes with the existing data
             txtName.Text = _existingUser.FullName;
+            txtEmail.Text = _existingUser.Email; // NEW: Bind Email
             txtUser.Text = _existingUser.Username;
-            txtPass.Text = _existingUser.PasswordHash; // The owner can see and edit the password
+            txtPass.Text = _existingUser.PasswordHash;
 
             // Match the Role Dropdown
             foreach (ComboBoxItem item in cmbRole.Items)
@@ -64,10 +65,9 @@ namespace SLICE_System.Views
             }
         }
 
-        // --- NEW: UX SAFEGUARD FOR LOGISTICS ADMIN ---
+        // UX SAFEGUARD FOR LOGISTICS ADMIN
         private void cmbRole_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // Safety check to ensure the UI is fully loaded
             if (cmbRole == null || cmbBranch == null) return;
 
             var selectedItem = cmbRole.SelectedItem as ComboBoxItem;
@@ -77,32 +77,29 @@ namespace SLICE_System.Views
 
             if (selectedRole == "Logistics Admin")
             {
-                // Loop through your loaded branches to find the HQ
                 foreach (Branch b in cmbBranch.Items)
                 {
-                    // Look for a branch that has "HQ", "Headquarters", or "Main" in the name
                     if (b.BranchName.Contains("Headquarters") || b.BranchName.Contains("HQ") || b.BranchName.Contains("Main"))
                     {
                         cmbBranch.SelectedValue = b.BranchID;
                         break;
                     }
                 }
-
-                // Lock the dropdown so the Owner cannot accidentally change it
                 cmbBranch.IsEnabled = false;
             }
             else
             {
-                // If it is a Clerk, Manager, or Super-Admin, unlock the dropdown
                 cmbBranch.IsEnabled = true;
             }
         }
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(txtName.Text) || string.IsNullOrWhiteSpace(txtUser.Text) || string.IsNullOrWhiteSpace(txtPass.Text))
+            // Validate all fields including Email
+            if (string.IsNullOrWhiteSpace(txtName.Text) || string.IsNullOrWhiteSpace(txtUser.Text) ||
+                string.IsNullOrWhiteSpace(txtPass.Text) || string.IsNullOrWhiteSpace(txtEmail.Text))
             {
-                MessageBox.Show("Please fill in all required fields (Name, Username, Password).", "Missing Information", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Please fill in all required fields (Name, Email, Username, Password).", "Missing Information", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -124,6 +121,7 @@ namespace SLICE_System.Views
                     User newUser = new User
                     {
                         FullName = txtName.Text.Trim(),
+                        Email = txtEmail.Text.Trim(), // Include Email
                         Username = txtUser.Text.Trim(),
                         PasswordHash = txtPass.Text,
                         Role = selectedRole,
@@ -137,8 +135,9 @@ namespace SLICE_System.Views
                 {
                     // --- UPDATE EXISTING USER ---
                     _existingUser.FullName = txtName.Text.Trim();
+                    _existingUser.Email = txtEmail.Text.Trim(); // Include Email
                     _existingUser.Username = txtUser.Text.Trim();
-                    _existingUser.PasswordHash = txtPass.Text; // Update to the new password
+                    _existingUser.PasswordHash = txtPass.Text;
                     _existingUser.Role = selectedRole;
                     _existingUser.BranchID = selectedBranch;
 

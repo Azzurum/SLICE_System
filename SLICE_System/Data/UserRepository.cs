@@ -42,22 +42,22 @@ namespace SLICE_System.Data
             }
         }
 
-        // --- 3. CREATE USER ---
+        // --- 3. CREATE USER (UPDATED TO INCLUDE EMAIL) ---
         // Inserts a newly registered employee into the system (defaults to Active = 1)
         public void AddUser(User user)
         {
             using (var connection = _dbService.GetConnection())
             {
                 string sql = @"
-                    INSERT INTO Users (Username, PasswordHash, FullName, Role, BranchID, IsActive)
-                    VALUES (@Username, @PasswordHash, @FullName, @Role, @BranchID, 1)";
+                    INSERT INTO Users (Username, PasswordHash, FullName, Email, Role, BranchID, IsActive)
+                    VALUES (@Username, @PasswordHash, @FullName, @Email, @Role, @BranchID, 1)";
 
                 connection.Execute(sql, user);
             }
         }
 
-        // --- 4. UPDATE USER ---
-        // Modifies an existing employee's details, role, branch assignment, or password
+        // --- 4. UPDATE USER (UPDATED TO INCLUDE EMAIL) ---
+        // Modifies an existing employee's details, role, branch assignment, password, or email
         public void UpdateUser(User user)
         {
             using (var connection = _dbService.GetConnection())
@@ -67,6 +67,7 @@ namespace SLICE_System.Data
                     SET Username = @Username, 
                         PasswordHash = @PasswordHash, 
                         FullName = @FullName, 
+                        Email = @Email,
                         Role = @Role, 
                         BranchID = @BranchID
                     WHERE UserID = @UserID";
@@ -94,6 +95,47 @@ namespace SLICE_System.Data
             {
                 string sql = "UPDATE Users SET IsActive = 1 WHERE UserID = @UserID";
                 connection.Execute(sql, new { UserID = userId });
+            }
+        }
+
+        // ==========================================
+        // --- 7. FORGOT PASSWORD METHODS ---
+        // ==========================================
+
+        public User? GetUserByEmail(string email)
+        {
+            using (var connection = _dbService.GetConnection())
+            {
+                return connection.QuerySingleOrDefault<User>("SELECT * FROM Users WHERE Email = @Email AND IsActive = 1", new { Email = email });
+            }
+        }
+
+        public void SaveResetCode(int userId, string code, System.DateTime expiry)
+        {
+            using (var connection = _dbService.GetConnection())
+            {
+                string sql = "UPDATE Users SET ResetCode = @Code, ResetCodeExpiry = @Expiry WHERE UserID = @UserID";
+                connection.Execute(sql, new { Code = code, Expiry = expiry, UserID = userId });
+            }
+        }
+
+        public bool VerifyResetCode(string email, string code)
+        {
+            using (var connection = _dbService.GetConnection())
+            {
+                // Change GETDATE() to GETUTCDATE() to match the C# change
+                string sql = "SELECT COUNT(1) FROM Users WHERE Email = @Email AND ResetCode = @Code AND ResetCodeExpiry > GETUTCDATE()";
+                return connection.ExecuteScalar<int>(sql, new { Email = email, Code = code }) > 0;
+            }
+        }
+
+        public void UpdatePassword(string email, string newPassword)
+        {
+            using (var connection = _dbService.GetConnection())
+            {
+                // Clears the reset code after successful password change for security
+                string sql = "UPDATE Users SET PasswordHash = @Password, ResetCode = NULL, ResetCodeExpiry = NULL WHERE Email = @Email";
+                connection.Execute(sql, new { Password = newPassword, Email = email });
             }
         }
     }
