@@ -16,10 +16,29 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Margin="0,0,0,25">
-            <TextBlock Text="Profit &amp; Loss Ledger" FontSize="28" FontWeight="Black" Foreground="#2C3E50"/>
-            <TextBlock Text="Consolidated Financial Performance &amp; Expense Tracking" FontSize="14" Foreground="#7F8C8D" Margin="0,2,0,0"/>
-        </StackPanel>
+        <Grid Grid.Row="0" Margin="0,0,0,25">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel>
+                <TextBlock Text="Profit &amp; Loss Ledger" FontSize="28" FontWeight="Black" Foreground="#2C3E50"/>
+                <TextBlock Text="Consolidated Financial Performance &amp; Expense Tracking" FontSize="14" Foreground="#7F8C8D" Margin="0,2,0,0"/>
+            </StackPanel>
+
+            <Button Grid.Column="1" Command="{Binding BackupDatabaseCommand}" HorizontalAlignment="Right" VerticalAlignment="Center" Background="#2980B9" Foreground="White" FontWeight="Bold" Padding="15,10" BorderThickness="0" Cursor="Hand" ToolTip="Create a .bak file of the entire system">
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Database" Height="14" Foreground="White" Margin="0,0,8,0"/>
+                    <TextBlock Text="BACKUP DATABASE"/>
+                </StackPanel>
+                <Button.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="6"/>
+                    </Style>
+                </Button.Resources>
+            </Button>
+        </Grid>
 
         <Grid Grid.Row="1" Margin="0,0,0,25">
             <Grid.ColumnDefinitions>

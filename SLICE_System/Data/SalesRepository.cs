@@ -186,5 +186,84 @@ namespace SLICE_System.Data
                 return connection.ExecuteScalar<decimal>(sql, new { UserID = userId });
             }
         }
+
+        // =========================================================
+        // 3. FETCH TODAY'S COMPLETED SALES (For Voiding)
+        // =========================================================
+        public List<SaleRecord> GetTodaySales(int branchId)
+        {
+            using (var connection = _dbService.GetConnection())
+            {
+                string sql = @"
+                    SELECT s.SaleID, m.ProductName, s.QuantitySold, 
+                           (s.QuantitySold * s.UnitPrice) as TotalAmount, 
+                           s.ReferenceNumber, s.PaymentMethod, s.TransactionDate, s.TransactionStatus
+                    FROM SalesTransactions s
+                    JOIN MenuItems m ON s.ProductID = m.ProductID
+                    WHERE s.BranchID = @BranchId 
+                      AND s.TransactionStatus = 'Completed' 
+                      AND CAST(s.TransactionDate AS DATE) = CAST(GETDATE() AS DATE)
+                    ORDER BY s.TransactionDate DESC";
+
+                return connection.Query<SaleRecord>(sql, new { BranchId = branchId }).ToList();
+            }
+        }
+
+        // =========================================================
+        // 4. VOID TRANSACTION (Atomic Reversal)
+        // =========================================================
+        public bool VoidSale(int saleId, int managerId, string reason, out string errorMessage)
+        {
+            errorMessage = string.Empty;
+            using (var connection = _dbService.GetConnection())
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        // 1. Get original sale details
+                        var sale = connection.QuerySingleOrDefault<dynamic>(
+                            "SELECT BranchID, ProductID, QuantitySold, (QuantitySold * UnitPrice) as TotalAmount, ReferenceNumber, PaymentMethod FROM SalesTransactions WHERE SaleID = @SaleID",
+                            new { SaleID = saleId }, transaction);
+
+                        if (sale == null) throw new Exception("Transaction not found.");
+
+                        // 2. Mark as Voided
+                        connection.Execute("UPDATE SalesTransactions SET TransactionStatus = 'Cancelled' WHERE SaleID = @SaleID", new { SaleID = saleId }, transaction);
+
+                        // 3. Return Ingredients to Inventory
+                        var ingredients = connection.Query<Recipe>("SELECT ItemID as IngredientID, RequiredQty FROM BillOfMaterials WHERE ProductID = @ProductID", new { ProductID = sale.ProductID }, transaction).AsList();
+                        foreach (var ing in ingredients)
+                        {
+                            connection.Execute(
+                                "UPDATE BranchInventory SET CurrentQuantity = CurrentQuantity + @AmountToAdd WHERE BranchID = @BranchID AND ItemID = @ItemID",
+                                new { AmountToAdd = (ing.RequiredQty * sale.QuantitySold), BranchID = sale.BranchID, ItemID = ing.IngredientID }, transaction);
+                        }
+
+                        // 4. Issue a Refund in the Financial Ledger
+                        connection.Execute(@"
+                            INSERT INTO FinancialLedger (TransactionDate, BranchID, Type, Category, Amount, Description, PaymentMethod, ReferenceNumber)
+                            VALUES (GETDATE(), @BranchID, 'Expense', 'Refund', @Amount, @Desc, @PayMethod, @RefNum)",
+                            new { BranchID = sale.BranchID, Amount = sale.TotalAmount, Desc = $"VOIDED SALE: {reason}", PayMethod = sale.PaymentMethod, RefNum = sale.ReferenceNumber }, transaction);
+
+                        // 5. Log the Manager Override
+                        connection.Execute(@"
+                            INSERT INTO AuditLogs (UserID, ActionType, AffectedTable, NewValue, Timestamp, ReferenceNumber)
+                            VALUES (@UserID, 'MANAGER OVERRIDE: VOID', 'SalesTransactions', @Desc, GETDATE(), @RefNum)",
+                            new { UserID = managerId, Desc = $"Voided Sale #{saleId}. Reason: {reason}. Refunded ₱{sale.TotalAmount:N2}", RefNum = sale.ReferenceNumber }, transaction);
+
+                        transaction.Commit();
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        errorMessage = ex.Message;
+                        return false;
+                    }
+                }
+            }
+        }
     }
 }

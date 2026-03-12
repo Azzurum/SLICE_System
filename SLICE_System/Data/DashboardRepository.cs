@@ -123,5 +123,21 @@ namespace SLICE_System.Data
                 return connection.Query<RecentTransaction>(sql, p).AsList();
             }
         }
+
+        public List<string> GetLowStockAlerts(int branchId)
+        {
+            using (var connection = _dbService.GetConnection())
+            {
+                string sql = @"
+            SELECT mi.ItemName + ' (Only ' + CAST(bi.CurrentQuantity AS VARCHAR) + ' left! Threshold: ' + CAST(bi.LowStockThreshold AS VARCHAR) + ')'
+            FROM BranchInventory bi
+            JOIN MasterInventory mi ON bi.ItemID = mi.ItemID
+            WHERE bi.CurrentQuantity <= bi.LowStockThreshold 
+            AND bi.BranchID = @BranchId
+            ORDER BY bi.CurrentQuantity ASC";
+
+                return connection.Query<string>(sql, new { BranchId = branchId }).AsList();
+            }
+        }
     }
 }

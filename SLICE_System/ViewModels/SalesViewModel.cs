@@ -9,13 +9,11 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using Dapper; // NEW: Added to allow fast querying for the receipt data
+using Dapper;
 
 namespace SLICE_System.ViewModels
 {
-    // =========================================================
-    // CART ITEM MODEL: Represents a line item in the current order
-    // =========================================================
+    // CART ITEM MODEL: Line item in the current order
     public class CartItemVM : INotifyPropertyChanged
     {
         private int _qty;
@@ -23,7 +21,7 @@ namespace SLICE_System.ViewModels
         public string RawName { get; set; }
         public decimal BasePrice { get; set; }
 
-        // Strips the category prefix for a cleaner receipt/cart display
+        // Strips category prefix for clean display
         public string DisplayName => RawName.Contains("|") ? RawName.Split('|')[1].Trim() : RawName;
 
         public int Qty
@@ -47,9 +45,7 @@ namespace SLICE_System.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 
-    // =========================================================
-    // PRODUCT DISPLAY MODEL: Represents the menu cards in the POS
-    // =========================================================
+    // PRODUCT DISPLAY MODEL: Menu cards in the POS
     public class ProductDisplay
     {
         public int ProductID { get; set; }
@@ -64,10 +60,10 @@ namespace SLICE_System.ViewModels
         public int MaxCookable { get; set; }
         public bool IsInStock => MaxCookable > 0;
 
-        // Auto-categorization based on the pipe '|' delimiter in DB
+        // Auto-categorization based on pipe '|' delimiter
         public string Category => RawName.Contains("|") ? RawName.Split('|')[0].Trim() : "Others";
 
-        // Extracts just the base product name (e.g., "Classic Pepperoni")
+        // Extracts base product name
         public string DisplayName
         {
             get
@@ -77,7 +73,7 @@ namespace SLICE_System.ViewModels
             }
         }
 
-        // Extracts the size variant for the UI Badge (e.g., "Large")
+        // Extracts size variant for UI Badge
         public string SizeText
         {
             get
@@ -88,7 +84,7 @@ namespace SLICE_System.ViewModels
                     int length = RawName.IndexOf(")") - start;
                     return RawName.Substring(start, length).Trim();
                 }
-                return ""; // Returns empty if no size is specified (e.g., Drinks)
+                return ""; // Returns empty if no size
             }
         }
 
@@ -96,9 +92,7 @@ namespace SLICE_System.ViewModels
         public string FormattedPrice => $"₱{BasePrice:N0}";
     }
 
-    // =========================================================
-    // MAIN SALES VIEWMODEL: Handles POS logic, cart math, and checkout
-    // =========================================================
+    // MAIN SALES VIEWMODEL: Handles POS logic, cart, and checkout
     public class SalesViewModel : ViewModelBase
     {
         private int _branchId;
@@ -111,9 +105,9 @@ namespace SLICE_System.ViewModels
 
         private string _selectedCategory;
         private string _searchText;
-        private List<ProductDisplay> _allProducts; // Master cache of all loaded products
+        private List<ProductDisplay> _allProducts; // Master cache of all products
 
-        // --- DISCOUNT & TOTAL PROPERTIES ---
+        // DISCOUNT & TOTAL PROPERTIES
         private Discount _activeDiscount;
         public Discount ActiveDiscount
         {
@@ -122,7 +116,7 @@ namespace SLICE_System.ViewModels
             {
                 if (SetProperty(ref _activeDiscount, value))
                 {
-                    CalculateTotal(); // Re-run math immediately when a discount is applied/removed
+                    CalculateTotal(); // Re-run math when discount changes
                     OnPropertyChanged(nameof(HasDiscount));
                 }
             }
@@ -154,7 +148,7 @@ namespace SLICE_System.ViewModels
         public ObservableCollection<CartItemVM> CartItems { get; set; }
         public ObservableCollection<string> Categories { get; set; }
 
-        // Triggers UI filtering when category tabs are clicked
+        // Filter triggers
         public string SelectedCategory
         {
             get => _selectedCategory;
@@ -165,7 +159,6 @@ namespace SLICE_System.ViewModels
             }
         }
 
-        // Triggers live UI filtering as the user types in the search bar
         public string SearchText
         {
             get => _searchText;
@@ -176,7 +169,7 @@ namespace SLICE_System.ViewModels
             }
         }
 
-        // --- COMMANDS ---
+        // COMMANDS
         public ICommand AddToCartCommand { get; }
         public ICommand CheckoutCommand { get; }
         public ICommand ClearCartCommand { get; }
@@ -184,6 +177,7 @@ namespace SLICE_System.ViewModels
         public ICommand DecreaseQtyCommand { get; }
         public ICommand OpenDiscountCommand { get; }
         public ICommand RemoveDiscountCommand { get; }
+        public ICommand OpenVoidWindowCommand { get; } // NEW: Void Command
 
         public SalesViewModel(int branchId, int userId, string userRole = "Clerk")
         {
@@ -206,6 +200,7 @@ namespace SLICE_System.ViewModels
 
             OpenDiscountCommand = new RelayCommand(OpenDiscountDialog);
             RemoveDiscountCommand = new RelayCommand(() => ActiveDiscount = null);
+            OpenVoidWindowCommand = new RelayCommand(OpenVoidWindow); // NEW: Bind the Void logic
 
             LoadData();
         }
@@ -214,7 +209,7 @@ namespace SLICE_System.ViewModels
         {
             var rawList = _repo.GetMenu(_branchId);
 
-            // Map DB models to UI Display models (including ImagePath and Inventory Limits)
+            // Map DB models to UI Display models
             _allProducts = rawList.Select(x => new ProductDisplay
             {
                 ProductID = x.ProductID,
@@ -233,7 +228,7 @@ namespace SLICE_System.ViewModels
             SelectedCategory = "All";
         }
 
-        // Combined Filter: Handles both Category Tabs and the Search Bar simultaneously
+        // Combined Filter: Category Tabs + Search Bar
         private void FilterList()
         {
             if (_allProducts == null) return;
@@ -257,7 +252,7 @@ namespace SLICE_System.ViewModels
             var existing = CartItems.FirstOrDefault(c => c.ProductID == product.ProductID);
             int currentQty = existing != null ? existing.Qty : 0;
 
-            // PREVENT OVER-SELLING: Block adding to cart if recipe ingredients are depleted
+            // PREVENT OVER-SELLING: Block if recipe ingredients are depleted
             if (currentQty + 1 > product.MaxCookable)
             {
                 MessageBox.Show($"Not enough ingredients! You can only make {product.MaxCookable} portions of {product.DisplayName}.", "Stock Warning");
@@ -307,7 +302,7 @@ namespace SLICE_System.ViewModels
             }
         }
 
-        // Calculates Subtotal, applies Fixed or Percentage discounts, and sets Grand Total
+        // Calculates Subtotal, applies discounts, sets Grand Total
         private void CalculateTotal()
         {
             SubTotal = CartItems.Sum(x => x.TotalPrice);
@@ -319,7 +314,7 @@ namespace SLICE_System.ViewModels
                 else
                     DiscountAmount = ActiveDiscount.DiscountValue;
 
-                // Safety net: Prevent discounts from exceeding the total order value
+                // Safety net: Prevent discounts from exceeding total order value
                 if (DiscountAmount > SubTotal) DiscountAmount = SubTotal;
                 ActiveDiscount.CalculatedAmount = DiscountAmount;
             }
@@ -347,7 +342,7 @@ namespace SLICE_System.ViewModels
                 return;
             }
 
-            // Fetches strictly the discounts allowed for the current user's role
+            // Fetches discounts allowed for user's role
             var available = _discountRepo.GetAvailableDiscounts(_currentUserRole);
             var dialog = new Views.Dialogs.ApplyDiscountWindow(available);
 
@@ -357,41 +352,49 @@ namespace SLICE_System.ViewModels
             }
         }
 
-        // =========================================================
-        // UPDATED: PAYMENT GATEWAY & RECEIPT INTEGRATION
-        // =========================================================
+        // Opens the Void Transaction window
+        private void OpenVoidWindow()
+        {
+            var voidWindow = new Views.Dialogs.VoidSaleWindow(_branchId) { Owner = Application.Current.MainWindow };
+            voidWindow.ShowDialog();
+
+            // Refresh menu to show restored inventory
+            LoadData();
+        }
+
+        // PAYMENT GATEWAY & RECEIPT INTEGRATION
         private async void ExecuteCheckout()
         {
             if (CartItems.Count == 0) return;
 
-            // 1. Launch the realistic Payment Gateway Simulator overlay
+            // 1. Launch Payment Gateway Simulator
             var paymentWindow = new Views.Dialogs.PaymentGatewayWindow(GrandTotal);
-            paymentWindow.Owner = Application.Current.MainWindow; // Darkens the background smoothly
+            paymentWindow.Owner = Application.Current.MainWindow;
 
-            // .ShowDialog() pauses execution here until the payment window is closed
+            // .ShowDialog() pauses execution until window is closed
             bool? transactionResult = paymentWindow.ShowDialog();
 
-            // 2. Only proceed if payment was officially approved by the gateway
+            // 2. Proceed only if payment was approved
             if (transactionResult == true && paymentWindow.PaymentResult != null && paymentWindow.PaymentResult.IsSuccess)
             {
                 string payMethod = paymentWindow.PaymentResult.PaymentMethod;
                 string refNum = paymentWindow.PaymentResult.ReferenceNumber;
 
-                IsCooking = true; // Triggers the animated cooking screen
+                IsCooking = true; // Triggers animated cooking screen
                 bool success = false;
                 string errorMessage = "";
 
-                // NEW: Variables to hold our receipt header details
+                // Receipt header variables
                 string branchName = "S.L.I.C.E. ENTERPRISE";
                 string branchAddress = "Branch Location";
                 string branchContact = "N/A";
                 string cashierName = "Store Staff";
 
-                // Capture thread-safe variables for the background task
+                // Capture thread-safe variables
                 var currentDiscount = ActiveDiscount;
                 var currentDiscountAmount = DiscountAmount;
 
-                // Map CartItemVM to the raw CartItem model expected by SalesRepository.CompleteSale
+                // Map CartItemVM to raw CartItem model
                 var cartSnapshot = CartItems.Select(c => new CartItem
                 {
                     ProductID = c.ProductID,
@@ -404,10 +407,10 @@ namespace SLICE_System.ViewModels
                 {
                     try
                     {
-                        // 3. Process entire cart as a single unified transaction with payment details
+                        // 3. Process entire cart as unified transaction
                         success = _repo.CompleteSale(_branchId, _userId, cartSnapshot, payMethod, refNum, out errorMessage);
 
-                        // 3.5 NEW: Fetch the exact Branch Details and User Name for the printed receipt
+                        // Fetch Branch Details and User Name for receipt
                         using (var db = new DatabaseService().GetConnection())
                         {
                             var branchInfo = db.QueryFirstOrDefault("SELECT BranchName, Location, ContactNumber FROM Branches WHERE BranchID = @Id", new { Id = _branchId });
@@ -425,7 +428,7 @@ namespace SLICE_System.ViewModels
                             }
                         }
 
-                        // 4. Log Applied Discount (Offsets Gross Income in Financial Ledger)
+                        // 4. Log Applied Discount
                         if (success && currentDiscount != null && currentDiscountAmount > 0)
                         {
                             _discountRepo.LogAppliedDiscount(
@@ -446,11 +449,11 @@ namespace SLICE_System.ViewModels
 
                 if (success)
                 {
-                    await Task.Delay(5500); // Display the POS cooking/receipt animation for realism
+                    await Task.Delay(5500); // Display POS cooking/receipt animation
                     IsCooking = false;
 
-                    // --- NEW: LAUNCH THE RECEIPT WINDOW WITH BRANCH DATA ---
-                    // We must invoke this on the main UI thread
+                    // LAUNCH RECEIPT WINDOW
+                    // Must invoke on main UI thread
                     Application.Current.Dispatcher.Invoke(() =>
                     {
                         var receiptWindow = new Views.Dialogs.ReceiptWindow(
@@ -460,29 +463,29 @@ namespace SLICE_System.ViewModels
                             GrandTotal,
                             payMethod,
                             refNum,
-                            branchName,       // Fetched from DB
-                            branchAddress,    // Fetched from DB
-                            branchContact,    // Fetched from DB
-                            cashierName       // Fetched from DB
+                            branchName,
+                            branchAddress,
+                            branchContact,
+                            cashierName
                         );
                         receiptWindow.Owner = Application.Current.MainWindow;
                         receiptWindow.ShowDialog();
                     });
 
-                    // Clear the cart ONLY after the receipt is closed
+                    // Clear cart after receipt is closed
                     ClearCart();
 
-                    // Force refresh to recalculate new MaxCookable stock limits
+                    // Force refresh for new MaxCookable stock limits
                     LoadData();
                 }
                 else
                 {
                     IsCooking = false;
-                    // Extremely realistic edge-case handling: Payment captured but DB failed
+                    // Payment captured but DB failed
                     MessageBox.Show($"CRITICAL: Payment approved (Ref: {refNum}) but system failed to record sale.\nError: {errorMessage}", "Database Sync Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
-            // If transactionResult == false, they cancelled or failed the payment, so we do nothing (cart remains intact).
+            // Cancelled/failed payment: do nothing
         }
     }
 }

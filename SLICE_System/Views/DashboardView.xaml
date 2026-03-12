@@ -25,6 +25,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="350"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
@@ -65,7 +66,34 @@
                 </StackPanel>
             </Grid>
 
-            <Grid Grid.Row="1" Margin="0,0,0,25">
+            <Border x:Name="AlertsPanel" Grid.Row="1" Background="#FDECEA" BorderBrush="#E74C3C" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,0,0,20" Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <fa:ImageAwesome Grid.Column="0" Icon="ExclamationTriangle" Height="24" Foreground="#E74C3C" VerticalAlignment="Top" Margin="0,2,15,0"/>
+
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="CRITICAL INVENTORY WARNING" FontWeight="Black" Foreground="#C0392B" FontSize="14" Margin="0,0,0,5"/>
+                        <TextBlock Text="The following items have fallen below your required safety stock threshold. Please restock immediately:" Foreground="#E74C3C" FontSize="12" Margin="0,0,0,10"/>
+
+                        <ItemsControl x:Name="AlertsList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                                        <TextBlock Text="• " Foreground="#C0392B" FontWeight="Bold"/>
+                                        <TextBlock Text="{Binding}" Foreground="#C0392B" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="2" Margin="0,0,0,25">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
@@ -126,7 +154,7 @@
                 </Border>
             </Grid>
 
-            <Grid Grid.Row="2" Margin="0,0,0,25">
+            <Grid Grid.Row="3" Margin="0,0,0,25">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="2*"/>
                     <ColumnDefinition Width="1*"/>
@@ -174,44 +202,15 @@
                 </Border>
             </Grid>
 
-            <Grid Grid.Row="3">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1*"/>
-                    <ColumnDefinition Width="1.5*"/>
-                </Grid.ColumnDefinitions>
-
-                <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0,0,20,0" Padding="20">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        <TextBlock Text="Low Stock Alerts" FontSize="16" FontWeight="Black" Foreground="#E67E22" Margin="0,0,0,15"/>
-                        <DataGrid Grid.Row="1" ItemsSource="{Binding Metrics.Alerts}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="None" Background="Transparent" BorderThickness="0" RowHeight="45" GridLinesVisibility="None">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Binding="{Binding BranchName}" Width="*" FontWeight="Bold" Foreground="{StaticResource TextDark}"/>
-                                <DataGridTextColumn Binding="{Binding ItemName}" Width="*" Foreground="{StaticResource TextLight}"/>
-                                <DataGridTemplateColumn Width="70">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Border Background="#FDEDEC" CornerRadius="4" Padding="5,2" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                <TextBlock Text="CRITICAL" Foreground="#C0392B" FontSize="10" FontWeight="Bold"/>
-                                            </Border>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </Grid>
-                </Border>
-
-                <Border Grid.Column="1" Style="{StaticResource CardStyle}" Padding="20">
+            <Grid Grid.Row="4">
+                <Border Style="{StaticResource CardStyle}" Padding="20">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         <TextBlock Text="Recent Transactions" FontSize="16" FontWeight="Black" Foreground="{StaticResource TextDark}" Margin="0,0,0,15"/>
+
                         <DataGrid Grid.Row="1" ItemsSource="{Binding Metrics.RecentActivity}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" Background="Transparent" BorderThickness="0" RowHeight="40" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#EAECEE">
                             <DataGrid.ColumnHeaderStyle>
                                 <Style TargetType="DataGridColumnHeader">
@@ -231,13 +230,14 @@
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Time" Binding="{Binding TimeAgo}" Width="100" Foreground="{StaticResource TextLight}"/>
                                 <DataGridTextColumn Header="Branch" Binding="{Binding BranchName}" Width="*" FontWeight="Bold" Foreground="{StaticResource TextDark}" Visibility="{Binding DataContext.AdminOnlyVisibility, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
-                                <DataGridTextColumn Header="Product" Binding="{Binding ProductName}" Width="1.5*"/>
-                                <DataGridTextColumn Header="Amount" Binding="{Binding TotalAmount, StringFormat=₱{0:N2}}" Width="100" FontWeight="Black" Foreground="#27AE60"/>
+                                <DataGridTextColumn Header="Product" Binding="{Binding ProductName}" Width="2*"/>
+                                <DataGridTextColumn Header="Amount" Binding="{Binding TotalAmount, StringFormat=₱{0:N2}}" Width="120" FontWeight="Black" Foreground="#27AE60"/>
                             </DataGrid.Columns>
                         </DataGrid>
                     </Grid>
                 </Border>
             </Grid>
+
         </Grid>
     </ScrollViewer>
 </UserControl>

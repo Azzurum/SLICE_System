@@ -22,4 +22,16 @@
         public int Qty { get; set; }
         public decimal TotalPrice => Price * Qty;
     }
+
+    public class SaleRecord
+    {
+        public int SaleID { get; set; }
+        public string ProductName { get; set; }
+        public int QuantitySold { get; set; }
+        public decimal TotalAmount { get; set; }
+        public string ReferenceNumber { get; set; }
+        public string PaymentMethod { get; set; }
+        public DateTime TransactionDate { get; set; }
+        public string TransactionStatus { get; set; }
+    }
 }

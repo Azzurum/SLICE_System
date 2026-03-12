@@ -33,6 +33,9 @@ namespace SLICE_System.Views
             set { _currentMetrics = value; OnPropertyChanged(nameof(Metrics)); }
         }
 
+        // NEW: Property for the red alert banner
+        public System.Collections.ObjectModel.ObservableCollection<string> StockAlerts { get; set; } = new System.Collections.ObjectModel.ObservableCollection<string>();
+
         public DashboardView(User currentUser)
         {
             InitializeComponent();
@@ -107,7 +110,29 @@ namespace SLICE_System.Views
                 c++;
             }
 
+            LoadAlerts(); // NEW: Triggers the red banner population
             OnPropertyChanged(null); // Force UI refresh
+        }
+
+        // NEW: Method to populate the red alert banner
+        private void LoadAlerts()
+        {
+            // Safety check to ensure UI has loaded
+            if (_repo == null || _currentUser == null || AlertsList == null || AlertsPanel == null) return;
+
+            var alerts = _repo.GetLowStockAlerts(_currentUser.BranchID ?? 1); // Defaults to branch 1 for Super Admin
+
+            StockAlerts.Clear();
+            foreach (var alert in alerts)
+            {
+                StockAlerts.Add(alert);
+            }
+
+            // Bind the Alerts UI to this list
+            AlertsList.ItemsSource = StockAlerts;
+
+            // Hide the entire alert panel if there are no warnings!
+            AlertsPanel.Visibility = StockAlerts.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void cmbDateRange_SelectionChanged(object sender, SelectionChangedEventArgs e)

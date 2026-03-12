@@ -8,7 +8,6 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-
         <SolidColorBrush x:Key="BrandOrange" Color="#E67E22"/>
         <SolidColorBrush x:Key="TextDark" Color="#2C3E50"/>
         <SolidColorBrush x:Key="TextLight" Color="#95A5A6"/>
@@ -76,7 +75,6 @@
                                     <Border Grid.Row="0" CornerRadius="16,16,0,0" Background="White" ClipToBounds="True" BorderBrush="#F0F3F4" BorderThickness="0,0,0,1">
                                         <Grid>
                                             <fa:ImageAwesome Icon="Cutlery" Foreground="#F5CBA7" Height="40" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-
                                             <Image Source="{Binding ImagePath}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10">
                                                 <Image.Style>
                                                     <Style TargetType="Image">
@@ -98,8 +96,8 @@
                                                    Height="40" VerticalAlignment="Top"/>
 
                                         <TextBlock Text="{Binding SizeText}" FontSize="12" FontWeight="Black" Foreground="#95A5A6" 
-                                                    HorizontalAlignment="Center" Margin="0,-5,0,5" 
-                                                    Visibility="{Binding HasSize, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                   HorizontalAlignment="Center" Margin="0,-5,0,5" 
+                                                   Visibility="{Binding HasSize, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
                                         <Border Background="{StaticResource BrandOrange}" CornerRadius="8" HorizontalAlignment="Center" Padding="15,5" Margin="0,0,0,0">
                                             <TextBlock Text="{Binding FormattedPrice}" Foreground="White" FontWeight="Bold" FontSize="14"/>
@@ -352,12 +350,21 @@
                         </Button>
                     </Grid>
 
-                    <Button Command="{Binding ClearCartCommand}" Margin="0,15,0,0" Background="Transparent" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Center">
-                        <StackPanel Orientation="Horizontal">
-                            <fa:ImageAwesome Icon="Trash" Foreground="#E74C3C" Height="12" Margin="0,0,8,0"/>
-                            <TextBlock Text="Clear Order" Foreground="#E74C3C" FontWeight="SemiBold"/>
-                        </StackPanel>
-                    </Button>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+                        <Button Command="{Binding ClearCartCommand}" Background="Transparent" BorderThickness="0" Cursor="Hand" Margin="0,0,20,0">
+                            <StackPanel Orientation="Horizontal">
+                                <fa:ImageAwesome Icon="Trash" Foreground="#E74C3C" Height="12" Margin="0,0,8,0"/>
+                                <TextBlock Text="Clear Order" Foreground="#E74C3C" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding OpenVoidWindowCommand}" Background="Transparent" BorderThickness="0" Cursor="Hand">
+                            <StackPanel Orientation="Horizontal">
+                                <fa:ImageAwesome Icon="History" Foreground="#2980B9" Height="12" Margin="0,0,8,0"/>
+                                <TextBlock Text="Void Transaction" Foreground="#2980B9" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
                 </StackPanel>
             </Grid>
         </Border>
