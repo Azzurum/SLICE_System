@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.Windows.Input; // Required for MouseButtonEventArgs and DragMove
 using SLICE_System.Data;
 using SLICE_System.Models;
 
@@ -43,6 +44,7 @@ namespace SLICE_System.Views.Dialogs
                     if (success)
                     {
                         MessageBox.Show("Transaction successfully voided. Inventory and financial ledgers have been updated.", "Void Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                        txtReason.Clear(); // Clear the textbox after success
                         LoadSales(); // Refresh the list
                     }
                     else
@@ -54,6 +56,21 @@ namespace SLICE_System.Views.Dialogs
             else
             {
                 MessageBox.Show("Please select a transaction to void.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        // --- BORDERLESS WINDOW UI HANDLERS ---
+
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                DragMove();
             }
         }
     }

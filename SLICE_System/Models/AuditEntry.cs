@@ -5,6 +5,10 @@ namespace SLICE_System.Models
     public class AuditEntry
     {
         public DateTime Timestamp { get; set; }
+
+        // FIX: Automatically converts Azure UTC to Philippine Time (UTC+8)
+        public DateTime LocalTimestamp => Timestamp.AddHours(8);
+
         public string ActivityType { get; set; } // e.g., "SALE", "WASTE"
         public string Description { get; set; }
         public string BranchName { get; set; }
@@ -24,16 +28,20 @@ namespace SLICE_System.Models
                     case "SHIPMENT":
                         return "#27AE60"; // Green
 
-                    // Add this right here! 
                     case "Z-READING":
                         return "#8E44AD"; // Professional Purple
+
+                    case "SECURITY":
+                        return "#F39C12"; // Golden Orange (For Password Resets)
 
                     case "WASTE":
                     case "DELETE":
                         return "#C0392B"; // Red
+
                     case "LOGIN":
                     case "UPDATE":
                         return "#2980B9"; // Blue
+
                     default:
                         return "#95A5A6"; // Gray
                 }

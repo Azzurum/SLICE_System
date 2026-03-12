@@ -31,7 +31,13 @@
         public decimal TotalAmount { get; set; }
         public string ReferenceNumber { get; set; }
         public string PaymentMethod { get; set; }
+
+        // The raw time from the Azure SQL Database (UTC)
         public DateTime TransactionDate { get; set; }
+
+        // FIX: Automatically converts Azure UTC to Philippine Time (UTC+8)
+        public DateTime LocalTransactionDate => TransactionDate.AddHours(8);
+
         public string TransactionStatus { get; set; }
     }
 }

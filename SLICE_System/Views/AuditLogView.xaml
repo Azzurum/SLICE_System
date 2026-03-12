@@ -162,7 +162,7 @@
                 </DataGrid.Resources>
 
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="TIME" Binding="{Binding Timestamp, StringFormat='MMM dd, HH:mm'}" Width="120" Foreground="{StaticResource TextLight}" FontWeight="SemiBold"/>
+                    <DataGridTextColumn Header="TIME" Binding="{Binding LocalTimestamp, StringFormat='MMM dd, hh:mm tt'}" Width="130" Foreground="{StaticResource TextLight}" FontWeight="SemiBold"/>
 
                     <DataGridTemplateColumn Header="ACTION" Width="140">
                         <DataGridTemplateColumn.CellTemplate>

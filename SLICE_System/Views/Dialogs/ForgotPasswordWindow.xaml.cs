@@ -10,6 +10,7 @@ namespace SLICE_System.Views.Dialogs
     {
         private UserRepository _userRepo;
         private EmailService _emailService;
+        private AuditRepository _auditRepo;
         private string _verifiedEmail = "";
 
         public ForgotPasswordWindow()
@@ -17,6 +18,7 @@ namespace SLICE_System.Views.Dialogs
             InitializeComponent();
             _userRepo = new UserRepository();
             _emailService = new EmailService();
+            _auditRepo = new AuditRepository();
         }
 
         private void SendCode_Click(object sender, RoutedEventArgs e)
@@ -75,7 +77,19 @@ namespace SLICE_System.Views.Dialogs
                 return;
             }
 
+            // 1. Get the user's ID before we close out
+            var user = _userRepo.GetUserByEmail(_verifiedEmail);
+
+            // 2. Update the password
             _userRepo.UpdatePassword(_verifiedEmail, newPass);
+
+            // 3. LOG IT TO THE AUDIT TRAIL
+            if (user != null)
+            {
+                // Note: Adjust the method name to whatever you named it in your AuditRepository.cs
+                _auditRepo.LogAction(user.UserID, "Security", $"User reset their password via email verification.");
+            }
+
             MessageBox.Show("Password successfully updated! You can now log in.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             this.Close();
         }

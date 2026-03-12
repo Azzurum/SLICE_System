@@ -85,5 +85,24 @@ namespace SLICE_System.Data
                 return connection.Query<AuditEntry>(sql, new { SearchStr = "%" + search + "%" }).AsList();
             }
         }
+
+        // Writes security, system, and financial events directly to the database
+        public void LogAction(int userId, string actionType, string description, string referenceNumber = null)
+        {
+            using (var connection = _dbService.GetConnection())
+            {
+                string sql = @"
+                    INSERT INTO AuditLogs (UserID, ActionType, NewValue, ReferenceNumber, Timestamp)
+                    VALUES (@UserID, @ActionType, @Description, @ReferenceNumber, GETUTCDATE())";
+
+                connection.Execute(sql, new
+                {
+                    UserID = userId,
+                    ActionType = actionType,
+                    Description = description,
+                    ReferenceNumber = referenceNumber
+                });
+            }
+        }
     }
 }
