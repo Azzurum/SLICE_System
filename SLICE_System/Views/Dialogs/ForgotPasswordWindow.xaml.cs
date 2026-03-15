@@ -1,8 +1,9 @@
-﻿using System;
+﻿using SLICE_System.Data;
+using SLICE_System.Services;
+using System;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
-using SLICE_System.Data;
-using SLICE_System.Services;
 
 namespace SLICE_System.Views.Dialogs
 {
@@ -71,9 +72,15 @@ namespace SLICE_System.Views.Dialogs
         private void ResetPassword_Click(object sender, RoutedEventArgs e)
         {
             string newPass = txtNewPassword.Password;
-            if (newPass.Length < 4)
+
+            // --- NEW: Enterprise Password Complexity Regex ---
+            // Requires: Min 8 chars, 1 uppercase, 1 lowercase, 1 number
+            var passwordRegex = new Regex(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$");
+
+            if (!passwordRegex.IsMatch(newPass))
             {
-                MessageBox.Show("Password must be at least 4 characters.", "Weak Password", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.",
+                                "Weak Password", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -86,8 +93,7 @@ namespace SLICE_System.Views.Dialogs
             // 3. LOG IT TO THE AUDIT TRAIL
             if (user != null)
             {
-                // Note: Adjust the method name to whatever you named it in your AuditRepository.cs
-                _auditRepo.LogAction(user.UserID, "Security", $"User reset their password via email verification.");
+                _auditRepo.LogAction(user.UserID, "SECURITY", $"User reset their password via email verification.");
             }
 
             MessageBox.Show("Password successfully updated! You can now log in.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);

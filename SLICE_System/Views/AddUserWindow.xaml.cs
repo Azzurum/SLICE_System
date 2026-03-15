@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Text.RegularExpressions; // Required for Enterprise Password Regex
 using SLICE_System.Data;
 using SLICE_System.Models;
 
@@ -101,6 +102,21 @@ namespace SLICE_System.Views
             {
                 MessageBox.Show("Please fill in all required fields (Name, Email, Username, Password).", "Missing Information", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
+            }
+
+            // --- NEW: Enterprise Password Complexity Check ---
+            // We only check complexity if it's a new user, OR if the admin is actively typing a new password for an existing user
+            bool isPasswordChanged = _existingUser == null || txtPass.Text != _existingUser.PasswordHash;
+
+            if (isPasswordChanged)
+            {
+                var passwordRegex = new Regex(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$");
+                if (!passwordRegex.IsMatch(txtPass.Text))
+                {
+                    MessageBox.Show("Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.",
+                                    "Weak Password Requirement", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
             }
 
             if (cmbRole.SelectedItem == null)

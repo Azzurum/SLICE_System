@@ -1,7 +1,8 @@
-﻿using System.Windows;
-using System.Windows.Input;
-using SLICE_System.Data;
+﻿using SLICE_System.Data;
 using SLICE_System.Models;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace SLICE_System.Views
 {
@@ -57,6 +58,50 @@ namespace SLICE_System.Views
             var forgotPassWindow = new SLICE_System.Views.Dialogs.ForgotPasswordWindow();
             forgotPassWindow.Owner = System.Windows.Application.Current.MainWindow;
             forgotPassWindow.ShowDialog();
+        }
+
+        // Flag to prevent infinite looping between Text and Password updates
+        private bool _isPasswordSyncing = false;
+
+        private void btnTogglePassword_Click(object sender, RoutedEventArgs e)
+        {
+            if (btnTogglePassword.IsChecked == true)
+            {
+                // Show Plain Text
+                txtPasswordVisible.Text = txtPassword.Password;
+                txtPassword.Visibility = Visibility.Collapsed;
+                txtPasswordVisible.Visibility = Visibility.Visible;
+                txtPasswordVisible.Focus();
+                txtPasswordVisible.CaretIndex = txtPasswordVisible.Text.Length;
+            }
+            else
+            {
+                // Hide Plain Text (Show Dots)
+                txtPassword.Password = txtPasswordVisible.Text;
+                txtPasswordVisible.Visibility = Visibility.Collapsed;
+                txtPassword.Visibility = Visibility.Visible;
+                txtPassword.Focus();
+            }
+        }
+
+        private void txtPassword_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            if (!_isPasswordSyncing)
+            {
+                _isPasswordSyncing = true;
+                txtPasswordVisible.Text = txtPassword.Password;
+                _isPasswordSyncing = false;
+            }
+        }
+
+        private void txtPasswordVisible_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (!_isPasswordSyncing)
+            {
+                _isPasswordSyncing = true;
+                txtPassword.Password = txtPasswordVisible.Text;
+                _isPasswordSyncing = false;
+            }
         }
     }
 }

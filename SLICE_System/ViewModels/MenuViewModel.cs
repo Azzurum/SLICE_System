@@ -134,21 +134,33 @@ namespace SLICE_System.ViewModels
         {
             if (SelectedMenuItem == null) return;
 
+            // FIX: Instead of creating a new ObservableCollection (which breaks WPF XAML bindings),
+            // we ensure one exists, clear it, and add the items to it.
+            if (SelectedMenuItem.Recipe == null)
+            {
+                SelectedMenuItem.Recipe = new ObservableCollection<RecipeItemVM>();
+            }
+            else
+            {
+                SelectedMenuItem.Recipe.Clear();
+            }
+
             // If it's an existing product (ID > 0), fetch its recipe from the DB
             if (SelectedMenuItem.ProductID > 0)
             {
                 var recipe = _menuRepo.GetRecipeForProduct(SelectedMenuItem.ProductID);
-                SelectedMenuItem.Recipe = new ObservableCollection<RecipeItemVM>(recipe);
-            }
-            else
-            {
-                // If it's a brand new item, start with an empty list
-                SelectedMenuItem.Recipe = new ObservableCollection<RecipeItemVM>();
+                foreach (var item in recipe)
+                {
+                    SelectedMenuItem.Recipe.Add(item); // Add items one by one to notify the UI
+                }
             }
 
             // Clear the input fields ready for the next ingredient
             SelectedIngredient = null;
             IngredientQuantity = 0;
+
+            // Force the UI to acknowledge the update immediately
+            OnPropertyChanged(nameof(SelectedMenuItem));
         }
 
         private bool CanAddIngredient() => SelectedMenuItem != null && SelectedIngredient != null && IngredientQuantity > 0;
@@ -193,7 +205,7 @@ namespace SLICE_System.ViewModels
                 ProductName = "New Item",
                 BasePrice = 0,
                 IsAvailable = true,
-                Recipe = new ObservableCollection<RecipeItemVM>()
+                Recipe = new ObservableCollection<RecipeItemVM>() // Initialize it here safely
             };
         }
 
