@@ -21,6 +21,10 @@ namespace SLICE_System.ViewModels
         public string RawName { get; set; }
         public decimal BasePrice { get; set; }
 
+        // NEW: Properties to handle smart manual input limits and total updates
+        public int MaxCookable { get; set; }
+        public Action UpdateCartTotals { get; set; }
+
         // Strips category prefix for clean display
         public string DisplayName => RawName.Contains("|") ? RawName.Split('|')[1].Trim() : RawName;
 
@@ -29,11 +33,26 @@ namespace SLICE_System.ViewModels
             get => _qty;
             set
             {
-                if (_qty != value)
+                int newVal = value;
+
+                // Validation 1: Prevent negative numbers or zeros
+                if (newVal < 1) newVal = 1;
+
+                // Validation 2: Prevent ordering more than inventory allows
+                if (newVal > MaxCookable)
                 {
-                    _qty = value;
+                    MessageBox.Show($"Not enough ingredients! Maximum available is {MaxCookable}.", "Stock Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    newVal = MaxCookable; // Auto-corrects to the maximum possible amount
+                }
+
+                if (_qty != newVal)
+                {
+                    _qty = newVal;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(TotalPrice)); // Auto-update total when qty changes
+
+                    // Trigger the Grand Total recalculation in the main ViewModel
+                    UpdateCartTotals?.Invoke();
                 }
             }
         }
@@ -56,7 +75,7 @@ namespace SLICE_System.ViewModels
         public string ImagePath { get; set; }
         public bool HasImage => !string.IsNullOrEmpty(ImagePath);
 
-        // FIX: Added FullImagePath so the Counter knows exactly where the picture is!
+        // Added FullImagePath so the Counter knows exactly where the picture is
         public string FullImagePath
         {
             get
@@ -187,7 +206,7 @@ namespace SLICE_System.ViewModels
         public ICommand DecreaseQtyCommand { get; }
         public ICommand OpenDiscountCommand { get; }
         public ICommand RemoveDiscountCommand { get; }
-        public ICommand OpenVoidWindowCommand { get; } // NEW: Void Command
+        public ICommand OpenVoidWindowCommand { get; } // Void Command
 
         public SalesViewModel(int branchId, int userId, string userRole = "Clerk")
         {
@@ -210,7 +229,7 @@ namespace SLICE_System.ViewModels
 
             OpenDiscountCommand = new RelayCommand(OpenDiscountDialog);
             RemoveDiscountCommand = new RelayCommand(() => ActiveDiscount = null);
-            OpenVoidWindowCommand = new RelayCommand(OpenVoidWindow); // NEW: Bind the Void logic
+            OpenVoidWindowCommand = new RelayCommand(OpenVoidWindow);
 
             LoadData();
         }
@@ -265,12 +284,12 @@ namespace SLICE_System.ViewModels
             // PREVENT OVER-SELLING: Block if recipe ingredients are depleted
             if (currentQty + 1 > product.MaxCookable)
             {
-                MessageBox.Show($"Not enough ingredients! You can only make {product.MaxCookable} portions of {product.DisplayName}.", "Stock Warning");
+                MessageBox.Show($"Not enough ingredients! You can only make {product.MaxCookable} portions of {product.DisplayName}.", "Stock Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (existing != null)
-                existing.Qty++;
+                existing.Qty++; // Automatically handles clamping via the setter
             else
             {
                 CartItems.Add(new CartItemVM
@@ -278,7 +297,9 @@ namespace SLICE_System.ViewModels
                     ProductID = product.ProductID,
                     RawName = product.RawName,
                     BasePrice = product.BasePrice,
-                    Qty = 1
+                    MaxCookable = product.MaxCookable,      // <--- MUST LOAD LIMIT FIRST
+                    UpdateCartTotals = CalculateTotal,      // <--- MUST LOAD METHODS NEXT
+                    Qty = 1                                 // <--- SET QTY LAST to trigger the safe math
                 });
             }
             CalculateTotal();
@@ -289,15 +310,7 @@ namespace SLICE_System.ViewModels
         {
             if (parameter is CartItemVM item)
             {
-                var product = _allProducts.FirstOrDefault(p => p.ProductID == item.ProductID);
-
-                if (product != null && item.Qty + 1 > product.MaxCookable)
-                {
-                    MessageBox.Show($"Not enough ingredients! You can only make {product.MaxCookable} portions of {product.DisplayName}.", "Stock Warning");
-                    return;
-                }
-                item.Qty++;
-                CalculateTotal();
+                item.Qty++; // The Qty setter automatically handles limits and total updates!
             }
         }
 
@@ -305,10 +318,16 @@ namespace SLICE_System.ViewModels
         {
             if (parameter is CartItemVM item)
             {
-                item.Qty--;
-                if (item.Qty <= 0) CartItems.Remove(item);
-                CalculateTotal();
-                CommandManager.InvalidateRequerySuggested();
+                if (item.Qty == 1)
+                {
+                    CartItems.Remove(item);
+                    CalculateTotal();
+                    CommandManager.InvalidateRequerySuggested();
+                }
+                else
+                {
+                    item.Qty--; // The Qty setter automatically handles limits and total updates!
+                }
             }
         }
 

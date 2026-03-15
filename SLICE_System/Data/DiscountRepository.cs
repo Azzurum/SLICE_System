@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Dapper;
 using SLICE_System.Models;
@@ -14,20 +15,30 @@ namespace SLICE_System.Data
         {
             using (var conn = _db.GetConnection())
             {
+                // UPDATED SQL: Added a 1-hour buffer (DATEADD) to StartDate.
+                // This ensures that if the Azure Server clock is slightly behind your local time, 
+                // a promo set to start "now" will still show up immediately.
                 string sql = @"
                     SELECT * FROM Discounts 
                     WHERE IsActive = 1 
                     AND (EndDate IS NULL OR EndDate >= GETDATE())
-                    AND (StartDate IS NULL OR StartDate <= GETDATE())";
+                    AND (StartDate IS NULL OR StartDate <= DATEADD(hour, 1, GETDATE()))";
 
                 var allDiscounts = conn.Query<Discount>(sql).ToList();
 
-                // Simple Role Filtering: If Clerk, remove Manager/Super-Admin discounts
-                if (userRole == "Clerk")
+                // Robust Role Filtering:
+                // If the user is a Clerk, we filter the list to only show Clerk-appropriate discounts.
+                // If the user is a Manager, Owner, or Admin, we skip this filter so they see EVERYTHING.
+                if (!string.IsNullOrEmpty(userRole) && userRole.Equals("Clerk", StringComparison.OrdinalIgnoreCase))
                 {
-                    return allDiscounts.Where(d => d.RequiredRole == "Clerk").ToList();
+                    return allDiscounts.Where(d =>
+                        !string.IsNullOrEmpty(d.RequiredRole) &&
+                        d.RequiredRole.Equals("Clerk", StringComparison.OrdinalIgnoreCase)
+                    ).ToList();
                 }
-                return allDiscounts; // Managers and Super-Admins see everything
+
+                // Managers and Admins see the full list of active promos
+                return allDiscounts;
             }
         }
 

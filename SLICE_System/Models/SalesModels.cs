@@ -9,13 +9,13 @@ namespace SLICE_System.Models
         public decimal BasePrice { get; set; }
         public string Category { get; set; }
 
-        // NEW: Smart POS Depletion Tracking
+        // Smart POS Depletion Tracking
         public int MaxCookable { get; set; }
         public bool IsInStock => MaxCookable > 0;
 
         public string ImagePath { get; set; }
 
-        // FIX: Dynamically builds the exact location on ANY computer
+        // Dynamically builds the exact location on ANY computer
         public string FullImagePath
         {
             get
@@ -50,7 +50,7 @@ namespace SLICE_System.Models
         // The raw time from the Azure SQL Database (UTC)
         public DateTime TransactionDate { get; set; }
 
-        // FIX: Automatically converts Azure UTC to Philippine Time (UTC+8)
+        // Automatically converts Azure UTC to Philippine Time (UTC+8)
         public DateTime LocalTransactionDate => TransactionDate.AddHours(8);
 
         public string TransactionStatus { get; set; }

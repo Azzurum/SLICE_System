@@ -23,25 +23,24 @@ namespace SLICE_System.Data
         {
             using (var connection = _dbService.GetConnection())
             {
-                // Calculates the maximum portions that can be made based on the limiting ingredient.
-                // explicitly fetches ImagePath so the UI can display the pictures.
+                // We removed the messy GROUP BY. 
+                // This runs a precise, isolated subquery for every individual menu item.
                 string sql = @"
                 SELECT 
                     m.ProductID, 
                     m.ProductName, 
                     m.BasePrice, 
                     m.ImagePath,
-                    'General' as Category,
-                    CAST(ISNULL(
-                        MIN(
-                            FLOOR(ISNULL(bi.CurrentQuantity, 0) / NULLIF(bom.RequiredQty, 0))
-                        ), 999
-                    ) AS INT) AS MaxCookable
+                    'General' AS Category,
+                    ISNULL((
+                        SELECT CAST(MIN(FLOOR(CAST(ISNULL(bi.CurrentQuantity, 0) AS FLOAT) / bom.RequiredQty)) AS INT)
+                        FROM BillOfMaterials bom
+                        LEFT JOIN BranchInventory bi ON bom.ItemID = bi.ItemID AND bi.BranchID = @BranchID
+                        WHERE bom.ProductID = m.ProductID AND bom.RequiredQty > 0
+                    ), 0) AS MaxCookable
                 FROM MenuItems m
-                LEFT JOIN BillOfMaterials bom ON m.ProductID = bom.ProductID
-                LEFT JOIN BranchInventory bi ON bom.ItemID = bi.ItemID AND bi.BranchID = @BranchID
                 WHERE m.IsAvailable = 1
-                GROUP BY m.ProductID, m.ProductName, m.BasePrice, m.ImagePath";
+                ORDER BY m.ProductName ASC;";
 
                 return connection.Query<MenuProduct>(sql, new { BranchID = branchId }).ToList();
             }
