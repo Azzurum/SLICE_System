@@ -25,6 +25,7 @@ namespace SLICE_System.Data
             using (var connection = _dbService.GetConnection())
             {
                 // STRICT ENTERPRISE RULE: The Central Warehouse view must ONLY show stock physically located at Headquarters (BranchID = 4).
+                // FIX: Added m.ImagePath to the SELECT and GROUP BY clauses so the UI can load the pictures!
                 string sql = @"
                 SELECT 
                     m.ItemID, 
@@ -33,12 +34,13 @@ namespace SLICE_System.Data
                     m.BulkUnit, 
                     m.BaseUnit, 
                     m.ConversionRatio,
+                    m.ImagePath, 
                     ISNULL(SUM(b.CurrentQuantity), 0) AS TotalStock
                 FROM MasterInventory m
                 LEFT JOIN BranchInventory b ON m.ItemID = b.ItemID AND b.BranchID = 4
                 WHERE (@Search = '' OR m.ItemName LIKE @Search OR m.Category LIKE @Search)
                 GROUP BY 
-                    m.ItemID, m.ItemName, m.Category, m.BulkUnit, m.BaseUnit, m.ConversionRatio
+                    m.ItemID, m.ItemName, m.Category, m.BulkUnit, m.BaseUnit, m.ConversionRatio, m.ImagePath
                 ORDER BY m.Category, m.ItemName";
 
                 return connection.Query<MasterInventory>(sql, new { Search = "%" + search + "%" }).AsList();
@@ -50,8 +52,8 @@ namespace SLICE_System.Data
             using (var connection = _dbService.GetConnection())
             {
                 string sql = @"
-                    INSERT INTO MasterInventory (ItemName, Category, BulkUnit, BaseUnit, ConversionRatio) 
-                    VALUES (@ItemName, @Category, @BulkUnit, @BaseUnit, @ConversionRatio)";
+                    INSERT INTO MasterInventory (ItemName, Category, BulkUnit, BaseUnit, ConversionRatio, ImagePath) 
+                    VALUES (@ItemName, @Category, @BulkUnit, @BaseUnit, @ConversionRatio, @ImagePath)";
 
                 connection.Execute(sql, item);
             }
@@ -132,6 +134,15 @@ namespace SLICE_System.Data
                     ORDER BY mi.ItemName";
 
                 return connection.Query<ReconItem>(sql, new { BranchID = branchId }).AsList();
+            }
+        }
+
+        public void UpdateLowStockThreshold(int stockId, decimal newThreshold)
+        {
+            using (var connection = _dbService.GetConnection())
+            {
+                string sql = "UPDATE BranchInventory SET LowStockThreshold = @Threshold WHERE StockID = @StockID";
+                connection.Execute(sql, new { Threshold = newThreshold, StockID = stockId });
             }
         }
 

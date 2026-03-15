@@ -1,4 +1,6 @@
-﻿namespace SLICE_System.Models
+﻿using System;
+
+namespace SLICE_System.Models
 {
     public class MenuProduct
     {
@@ -12,6 +14,19 @@
         public bool IsInStock => MaxCookable > 0;
 
         public string ImagePath { get; set; }
+
+        // FIX: Dynamically builds the exact location on ANY computer
+        public string FullImagePath
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(ImagePath)) return null;
+                return System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "Menu", ImagePath);
+            }
+        }
+
+        // Helper for the UI to hide/show the image container
+        public bool HasImage => !string.IsNullOrEmpty(ImagePath);
     }
 
     public class CartItem

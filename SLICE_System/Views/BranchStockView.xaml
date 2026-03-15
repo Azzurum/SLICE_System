@@ -50,9 +50,10 @@
                 </Grid>
 
                 <DataGrid x:Name="dgStock" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="False" 
-                          IsReadOnly="True" RowHeight="45" GridLinesVisibility="Horizontal" 
+                          IsReadOnly="False" RowHeight="45" GridLinesVisibility="Horizontal" 
                           HorizontalGridLinesBrush="#F0F0F0" VerticalGridLinesBrush="Transparent"
-                          Background="White" BorderThickness="0" HeadersVisibility="Column">
+                          Background="White" BorderThickness="0" HeadersVisibility="Column"
+                          CellEditEnding="dgStock_CellEditEnding">
 
                     <DataGrid.ColumnHeaderStyle>
                         <Style TargetType="DataGridColumnHeader">
@@ -83,7 +84,7 @@
                     </DataGrid.RowStyle>
 
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Item Name" Binding="{Binding ItemName}" Width="2*">
+                        <DataGridTextColumn Header="Item Name" Binding="{Binding ItemName}" Width="2*" IsReadOnly="True">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="VerticalAlignment" Value="Center"/>
@@ -93,7 +94,7 @@
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
 
-                        <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="1.5*">
+                        <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="1.5*" IsReadOnly="True">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="VerticalAlignment" Value="Center"/>
@@ -102,7 +103,7 @@
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
 
-                        <DataGridTextColumn Header="Available Qty" Binding="{Binding CurrentQuantity, StringFormat=N2}" Width="1.2*">
+                        <DataGridTextColumn Header="Available Qty" Binding="{Binding CurrentQuantity, StringFormat=N2}" Width="1.2*" IsReadOnly="True">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="VerticalAlignment" Value="Center"/>
@@ -113,7 +114,7 @@
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
 
-                        <DataGridTextColumn Header="Unit" Binding="{Binding BaseUnit}" Width="0.8*">
+                        <DataGridTextColumn Header="Unit" Binding="{Binding BaseUnit}" Width="0.8*" IsReadOnly="True">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="VerticalAlignment" Value="Center"/>
@@ -123,18 +124,20 @@
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
 
-                        <DataGridTextColumn Header="Min. Limit" Binding="{Binding LowStockThreshold, StringFormat=N0}" Width="1*">
+                        <DataGridTextColumn Header="Min. Limit" SortMemberPath="LowStockThreshold" Binding="{Binding LowStockThreshold}" Width="1*">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="VerticalAlignment" Value="Center"/>
                                     <Setter Property="HorizontalAlignment" Value="Right"/>
                                     <Setter Property="Margin" Value="0,0,20,0"/>
-                                    <Setter Property="Foreground" Value="#95A5A6"/>
+                                    <Setter Property="Foreground" Value="#2980B9"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="ToolTip" Value="Double-click to edit this threshold!"/>
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
 
-                        <DataGridTextColumn Header="Status" Binding="{Binding StockStatus}" Width="1.2*">
+                        <DataGridTextColumn Header="Status" Binding="{Binding StockStatus}" Width="1.2*" IsReadOnly="True">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="VerticalAlignment" Value="Center"/>

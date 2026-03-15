@@ -73,7 +73,7 @@
                                     </Style.Triggers>
                                 </Style>
                             </Border.Style>
-                            <Image Source="{Binding ImagePath}" Stretch="UniformToFill"/>
+                            <Image Source="{Binding FullImagePath, TargetNullValue='pack://application:,,,/Assets/Logo.png', FallbackValue='pack://application:,,,/Assets/Logo.png'}" Stretch="UniformToFill"/>
                         </Border>
                     </Grid>
 
@@ -116,13 +116,49 @@
                     <TextBlock Text="Request stock replenishments from Headquarters." FontSize="14" Foreground="{StaticResource LightText}"/>
                 </StackPanel>
 
-                <WrapPanel Grid.Row="1" Margin="10,0,0,20">
-                    <RadioButton Content="All" Checked="Category_Checked" IsChecked="True" Style="{StaticResource {x:Type ToggleButton}}" Margin="0,0,10,0" Padding="15,8" Background="White" BorderBrush="#EEE"/>
-                    <RadioButton Content="Dough &amp; Flour" Checked="Category_Checked" Style="{StaticResource {x:Type ToggleButton}}" Margin="0,0,10,0" Padding="15,8" Background="White" BorderBrush="#EEE"/>
-                    <RadioButton Content="Perishables" Checked="Category_Checked" Style="{StaticResource {x:Type ToggleButton}}" Margin="0,0,10,0" Padding="15,8" Background="White" BorderBrush="#EEE"/>
-                    <RadioButton Content="Packaging" Checked="Category_Checked" Style="{StaticResource {x:Type ToggleButton}}" Margin="0,0,10,0" Padding="15,8" Background="White" BorderBrush="#EEE"/>
-                    <RadioButton Content="Dry Goods" Checked="Category_Checked" Style="{StaticResource {x:Type ToggleButton}}" Margin="0,0,10,0" Padding="15,8" Background="White" BorderBrush="#EEE"/>
-                </WrapPanel>
+                <Grid Grid.Row="1" Margin="10,0,0,20">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="560"/>
+                    </Grid.ColumnDefinitions>
+
+                    <WrapPanel Grid.Column="0">
+                        <RadioButton Content="All" Checked="Category_Checked" IsChecked="True" Style="{StaticResource {x:Type ToggleButton}}" Margin="0,0,10,0" Padding="15,8" Background="White" BorderBrush="#EEE"/>
+                        <RadioButton Content="Dough &amp; Flour" Checked="Category_Checked" Style="{StaticResource {x:Type ToggleButton}}" Margin="0,0,10,0" Padding="15,8" Background="White" BorderBrush="#EEE"/>
+                        <RadioButton Content="Perishables" Checked="Category_Checked" Style="{StaticResource {x:Type ToggleButton}}" Margin="0,0,10,0" Padding="15,8" Background="White" BorderBrush="#EEE"/>
+                        <RadioButton Content="Packaging" Checked="Category_Checked" Style="{StaticResource {x:Type ToggleButton}}" Margin="0,0,10,0" Padding="15,8" Background="White" BorderBrush="#EEE"/>
+                        <RadioButton Content="Dry Goods" Checked="Category_Checked" Style="{StaticResource {x:Type ToggleButton}}" Margin="0,0,10,0" Padding="15,8" Background="White" BorderBrush="#EEE"/>
+                    </WrapPanel>
+
+                    <Border Grid.Column="1" Background="White" CornerRadius="8" Height="40" BorderBrush="#EAECEE" BorderThickness="1" VerticalAlignment="Top" Margin="0,0,90,0">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="8" Color="#BDC3C7" ShadowDepth="1" Opacity="0.2"/>
+                        </Border.Effect>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="40"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <fa:ImageAwesome Icon="Search" Height="13" Foreground="{StaticResource LightText}" HorizontalAlignment="Center"/>
+                            <TextBox x:Name="txtSearch" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" 
+                                     BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center" 
+                                     FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource DarkText}"/>
+                            <TextBlock Grid.Column="1" Text="Search items..." Foreground="#BDC3C7" FontWeight="Medium"
+                                       VerticalAlignment="Center" IsHitTestVisible="False" Margin="2,0,0,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Text, ElementName=txtSearch}" Value="">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
+                    </Border>
+                </Grid>
 
                 <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Hidden" PanningMode="VerticalOnly">
                     <StackPanel>

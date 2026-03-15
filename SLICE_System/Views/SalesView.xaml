@@ -75,7 +75,7 @@
                                     <Border Grid.Row="0" CornerRadius="16,16,0,0" Background="White" ClipToBounds="True" BorderBrush="#F0F3F4" BorderThickness="0,0,0,1">
                                         <Grid>
                                             <fa:ImageAwesome Icon="Cutlery" Foreground="#F5CBA7" Height="40" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                            <Image Source="{Binding ImagePath}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10">
+                                            <Image Source="{Binding FullImagePath, TargetNullValue='pack://application:,,,/Assets/Logo.png', FallbackValue='pack://application:,,,/Assets/Logo.png'}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10">
                                                 <Image.Style>
                                                     <Style TargetType="Image">
                                                         <Setter Property="Visibility" Value="Visible"/>

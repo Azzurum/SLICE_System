@@ -41,7 +41,7 @@
             get
             {
                 if (string.IsNullOrWhiteSpace(ImagePath)) return null;
-                return System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "Ingredients", ImagePath);
+                return System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "Inventory", ImagePath);
             }
         }
 

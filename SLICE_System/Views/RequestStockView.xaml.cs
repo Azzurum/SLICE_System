@@ -27,6 +27,21 @@ namespace SLICE_System.Views
         private InventoryRepository _invRepo = new InventoryRepository();
         private LogisticsRepository _logRepo = new LogisticsRepository();
 
+        // NEW: Search and Category tracking properties
+        private string _currentCategory = "All";
+        private string _searchText = "";
+
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                _searchText = value;
+                OnPropertyChanged(nameof(SearchText));
+                ApplyFilters(); // Dynamically filter as user types!
+            }
+        }
+
         public RequestStockView(User user)
         {
             InitializeComponent();
@@ -71,7 +86,7 @@ namespace SLICE_System.Views
                 if (item.IsUrgent) UrgentItems.Add(item);
             }
 
-            FilterByCategory("All");
+            ApplyFilters();
             OnPropertyChanged(nameof(HasUrgentItems));
         }
 
@@ -84,19 +99,29 @@ namespace SLICE_System.Views
             return "Dry Goods";
         }
 
+        // Updated to use the unified filter logic
         private void Category_Checked(object sender, RoutedEventArgs e)
         {
             if (sender is RadioButton rb && rb.Content != null)
-                FilterByCategory(rb.Content.ToString());
+            {
+                _currentCategory = rb.Content.ToString();
+                ApplyFilters();
+            }
         }
 
-        private void FilterByCategory(string category)
+        // NEW: Combined logic handles both Radio buttons AND Search box
+        private void ApplyFilters()
         {
             FilteredItems.Clear();
             foreach (var item in AllMarketItems)
             {
-                if (category == "All" || item.Category == category)
+                bool matchesCategory = _currentCategory == "All" || item.Category == _currentCategory;
+                bool matchesSearch = string.IsNullOrWhiteSpace(SearchText) || item.Name.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0;
+
+                if (matchesCategory && matchesSearch)
+                {
                     FilteredItems.Add(item);
+                }
             }
         }
 
@@ -231,8 +256,18 @@ namespace SLICE_System.Views
         public bool IsUrgent { get; set; }
 
         public FontAwesomeIcon Icon { get; set; }
+
         public string ImagePath { get; set; }
         public bool HasImage => !string.IsNullOrEmpty(ImagePath);
+
+        public string FullImagePath
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(ImagePath)) return null;
+                return System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "Inventory", ImagePath);
+            }
+        }
 
         private decimal _requestQty;
         public decimal RequestQty

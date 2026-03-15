@@ -24,6 +24,7 @@ namespace SLICE_System.Data
             using (var connection = _dbService.GetConnection())
             {
                 // Calculates the maximum portions that can be made based on the limiting ingredient.
+                // explicitly fetches ImagePath so the UI can display the pictures.
                 string sql = @"
                 SELECT 
                     m.ProductID, 
@@ -170,18 +171,19 @@ namespace SLICE_System.Data
                 }
             }
         }
+
         // Fetches only CASH sales for the logged-in user for today
         public decimal GetTodayExpectedCash(int userId)
         {
             using (var connection = _dbService.GetConnection())
             {
                 string sql = @"
-            SELECT ISNULL(SUM(QuantitySold * UnitPrice), 0) 
-            FROM SalesTransactions 
-            WHERE UserID = @UserID 
-            AND PaymentMethod = 'Cash' 
-            AND TransactionStatus = 'Completed'
-            AND CAST(TransactionDate AS DATE) = CAST(GETDATE() AS DATE)";
+                SELECT ISNULL(SUM(QuantitySold * UnitPrice), 0) 
+                FROM SalesTransactions 
+                WHERE UserID = @UserID 
+                AND PaymentMethod = 'Cash' 
+                AND TransactionStatus = 'Completed'
+                AND CAST(TransactionDate AS DATE) = CAST(GETDATE() AS DATE)";
 
                 return connection.ExecuteScalar<decimal>(sql, new { UserID = userId });
             }

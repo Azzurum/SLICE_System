@@ -246,21 +246,24 @@ namespace SLICE_System.ViewModels
 
             if (dlg.ShowDialog() == true)
             {
-                // 1. Point to the dynamic runtime directory (portable across computers)
-                string targetDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "Menu");
-                if (!Directory.Exists(targetDir)) Directory.CreateDirectory(targetDir);
-
-                // 2. Generate a unique filename so images don't overwrite each other
                 string fileName = Guid.NewGuid().ToString() + Path.GetExtension(dlg.FileName);
-                string targetPath = Path.Combine(targetDir, fileName);
 
-                // 3. Physically copy the image into the system's local sandbox
-                File.Copy(dlg.FileName, targetPath, true);
+                // --- SAVE 1: LIVE APP FOLDER ---
+                string liveDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "Menu");
+                if (!Directory.Exists(liveDir)) Directory.CreateDirectory(liveDir);
+                string livePath = Path.Combine(liveDir, fileName);
+                File.Copy(dlg.FileName, livePath, true);
 
-                // 4. Save ONLY the filename to the database model
+                // --- SAVE 2: SOURCE CODE FOLDER (For GitHub Tracker!) ---
+                string projectDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "Assets", "Images", "Menu");
+                string fullProjectDir = Path.GetFullPath(projectDir);
+                if (Directory.Exists(fullProjectDir))
+                {
+                    string projPath = Path.Combine(fullProjectDir, fileName);
+                    File.Copy(dlg.FileName, projPath, true);
+                }
+
                 SelectedMenuItem.ImagePath = fileName;
-
-                // Force UI to refresh to show new image
                 OnPropertyChanged(nameof(SelectedMenuItem));
             }
         }

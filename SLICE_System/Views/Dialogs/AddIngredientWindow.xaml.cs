@@ -16,8 +16,8 @@ namespace SLICE_System.Views.Dialogs
         private readonly DatabaseService _db = new DatabaseService();
         private MasterInventory _existingItem;
 
-        // NEW: Stores the path of the selected image
-        private string _uploadedImagePath;
+        // FIX: Store ONLY the filename, not the entire C:\ folder path!
+        private string _uploadedFileName;
 
         // 1. CONSTRUCTOR FOR NEW ITEM
         public AddIngredientWindow()
@@ -47,18 +47,26 @@ namespace SLICE_System.Views.Dialogs
 
             txtRatio.Text = itemToEdit.ConversionRatio.ToString();
 
-            // Load Existing Image if available
-            _uploadedImagePath = itemToEdit.ImagePath;
-            if (!string.IsNullOrEmpty(_uploadedImagePath) && File.Exists(_uploadedImagePath))
+            // FIX: Use the FullImagePath property from the model to load the preview
+            _uploadedFileName = itemToEdit.ImagePath;
+            string fullPath = itemToEdit.FullImagePath;
+
+            if (!string.IsNullOrEmpty(fullPath) && File.Exists(fullPath))
             {
-                imgIngredient.Source = new BitmapImage(new Uri(_uploadedImagePath));
+                // CacheOption.OnLoad prevents WPF from locking the file
+                BitmapImage bmp = new BitmapImage();
+                bmp.BeginInit();
+                bmp.UriSource = new Uri(fullPath);
+                bmp.CacheOption = BitmapCacheOption.OnLoad;
+                bmp.EndInit();
+                imgIngredient.Source = bmp;
             }
 
             // Update UI Header
             txtHeaderTitle.Text = "Edit Ingredient";
         }
 
-        // --- NEW: UPLOAD IMAGE LOGIC ---
+        // --- UPLOAD IMAGE LOGIC ---
         private void UploadIngredientImage_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog dlg = new OpenFileDialog
@@ -71,19 +79,33 @@ namespace SLICE_System.Views.Dialogs
             {
                 try
                 {
-                    // Create a local directory in the app folder to store images permanently
-                    string targetDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "IngredientImages");
-                    if (!Directory.Exists(targetDir)) Directory.CreateDirectory(targetDir);
-
-                    // Generate a unique filename so images don't overwrite each other
                     string fileName = Guid.NewGuid().ToString() + Path.GetExtension(dlg.FileName);
-                    string targetPath = Path.Combine(targetDir, fileName);
 
-                    File.Copy(dlg.FileName, targetPath);
-                    _uploadedImagePath = targetPath;
+                    // --- SAVE 1: LIVE APP FOLDER (So UI sees it immediately) ---
+                    string liveDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "Inventory");
+                    if (!Directory.Exists(liveDir)) Directory.CreateDirectory(liveDir);
+                    string livePath = Path.Combine(liveDir, fileName);
+                    File.Copy(dlg.FileName, livePath, true);
 
-                    // Preview the image in the dialog
-                    imgIngredient.Source = new BitmapImage(new Uri(targetPath));
+                    // --- SAVE 2: SOURCE CODE FOLDER (For GitHub Tracker!) ---
+                    // Goes up 3 folders from bin\Debug\net6.0-windows to reach the project root
+                    string projectDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "Assets", "Images", "Inventory");
+                    string fullProjectDir = Path.GetFullPath(projectDir);
+                    if (Directory.Exists(fullProjectDir))
+                    {
+                        string projPath = Path.Combine(fullProjectDir, fileName);
+                        File.Copy(dlg.FileName, projPath, true);
+                    }
+
+                    _uploadedFileName = fileName;
+
+                    // Preview the image in the dialog safely
+                    BitmapImage bmp = new BitmapImage();
+                    bmp.BeginInit();
+                    bmp.UriSource = new Uri(livePath);
+                    bmp.CacheOption = BitmapCacheOption.OnLoad;
+                    bmp.EndInit();
+                    imgIngredient.Source = bmp;
                 }
                 catch (Exception ex)
                 {
@@ -127,7 +149,7 @@ namespace SLICE_System.Views.Dialogs
                             Bulk = txtBulk.Text,
                             Base = baseUnit,
                             Ratio = ratio,
-                            Img = _uploadedImagePath // New property
+                            Img = _uploadedFileName // Saves just the filename
                         });
 
                         MessageBox.Show("New ingredient successfully added to the Warehouse.", "Success");
@@ -146,7 +168,7 @@ namespace SLICE_System.Views.Dialogs
                             Bulk = txtBulk.Text,
                             Base = baseUnit,
                             Ratio = ratio,
-                            Img = _uploadedImagePath, // New property
+                            Img = _uploadedFileName, // Saves just the filename
                             ID = _existingItem.ItemID
                         });
                     }

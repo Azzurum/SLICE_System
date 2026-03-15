@@ -56,6 +56,16 @@ namespace SLICE_System.ViewModels
         public string ImagePath { get; set; }
         public bool HasImage => !string.IsNullOrEmpty(ImagePath);
 
+        // FIX: Added FullImagePath so the Counter knows exactly where the picture is!
+        public string FullImagePath
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(ImagePath)) return null;
+                return System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "Menu", ImagePath);
+            }
+        }
+
         // Smart POS Inventory Depletion Properties
         public int MaxCookable { get; set; }
         public bool IsInStock => MaxCookable > 0;
