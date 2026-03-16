@@ -25,43 +25,58 @@ namespace SLICE_System.Services
 
         // Define which roles can access which modules
         private static readonly Dictionary<string, HashSet<Module>> _rolePermissions = new Dictionary<string, HashSet<Module>>(StringComparer.OrdinalIgnoreCase)
-        {
-            // SUPER ADMIN: Strategic & Config focus + Operational Auditing
-            { "Super-Admin", new HashSet<Module> {
-                Module.Dashboard,
-                Module.IncomingOrders,
-                Module.WasteTracker,
-                Module.MyInventory,
-                Module.ApproveRequests,
-                Module.MenuRegistry,
-                Module.GlobalInventory,
-                Module.UserAdmin,
-                Module.AuditLogs,
-                Module.Reconciliation
-            }},
+{
+        // OWNER: Sees absolutely everything.
+        { "Owner", new HashSet<Module> {
+            Module.Dashboard,
+            Module.IncomingOrders, // <-- Can now receive stock at HQ
+            Module.WasteTracker,
+            Module.MyInventory,
+            Module.ApproveRequests,
+            Module.MenuRegistry,
+            Module.GlobalInventory,
+            Module.UserAdmin,
+            Module.AuditLogs,
+            Module.Reconciliation,
+            Module.SalesPOS,
+            Module.RequestStock
+        }},
 
-            // MANAGER: Operational control for their branch
-            { "Manager", new HashSet<Module> {
-                Module.Dashboard,
-                Module.IncomingOrders,
-                Module.MyInventory,
-                Module.RequestStock,
-                Module.SalesPOS,
-                Module.ApproveRequests,
-                Module.WasteTracker,
-                Module.Reconciliation
-                // FIX: Removed MenuRegistry. Managers cannot alter global pricing.
-            }},
+        // SUPER ADMIN: Strategic & Config focus + Operational Auditing
+        { "Super-Admin", new HashSet<Module> {
+            Module.Dashboard,
+            Module.IncomingOrders, // <-- Can now receive stock at HQ
+            Module.WasteTracker,
+            Module.MyInventory,
+            Module.ApproveRequests,
+            Module.MenuRegistry,
+            Module.GlobalInventory,
+            Module.UserAdmin,
+            Module.AuditLogs,
+            Module.Reconciliation
+        }},
 
-            // CLERK: Execution only
-            { "Clerk", new HashSet<Module> {
-                Module.IncomingOrders,
-                Module.MyInventory,
-                Module.RequestStock,
-                Module.SalesPOS,
-                Module.WasteTracker
-            }}
-        };
+        // MANAGER: Operational control for their branch
+        { "Manager", new HashSet<Module> {
+            Module.Dashboard,
+            Module.IncomingOrders,
+            Module.MyInventory,
+            Module.RequestStock,
+            Module.SalesPOS,
+            Module.ApproveRequests,
+            Module.WasteTracker,
+            Module.Reconciliation
+        }},
+
+        // CLERK: Execution only
+        { "Clerk", new HashSet<Module> {
+            Module.IncomingOrders,
+            Module.MyInventory,
+            Module.RequestStock,
+            Module.SalesPOS,
+            Module.WasteTracker
+        }}
+    };
 
         // CHECKER FUNCTION
         public static bool CanAccess(string role, Module module)

@@ -25,7 +25,7 @@ namespace SLICE_System.Data
                 {
                     try
                     {
-                        // 1. Insert Header
+                        // 1. Insert Purchase Header (Financial Record)
                         string sqlHeader = @"
                             INSERT INTO Purchases (Supplier, TotalAmount, PurchasedBy, BranchID, PurchaseDate)
                             VALUES (@Supplier, @TotalAmount, @PurchasedBy, @BranchID, GETDATE());
@@ -33,48 +33,42 @@ namespace SLICE_System.Data
 
                         int newPurchaseId = conn.ExecuteScalar<int>(sqlHeader, header, trans);
 
-                        // 2. Insert Details & Update Inventory
-                        // We must fetch the conversion ratio to turn Bulk Units (Sacks) into Base Units (Grams)
+                        // 2. Create Logistics "In-Transit" Record (Delivery from Supplier -> HQ)
+                        // We use a dummy FromBranchID (e.g., 0 or NULL) to indicate an external supplier
+                        string sqlLogistics = @"
+                            INSERT INTO MeshLogistics (FromBranchID, ToBranchID, Status, SenderID, SentDate)
+                            VALUES (NULL, @BranchID, 'In-Transit', @PurchasedBy, GETDATE());
+                            SELECT SCOPE_IDENTITY();";
+
+                        int newTransferId = conn.ExecuteScalar<int>(sqlLogistics, new { BranchID = header.BranchID, PurchasedBy = header.PurchasedBy }, trans);
+
+                        // 3. Process Details (Convert to Base Units and attach to both Purchase and Logistics)
                         string sqlConversion = "SELECT ISNULL(ConversionRatio, 1) FROM MasterInventory WHERE ItemID = @ItemId";
 
-                        string sqlDetail = @"
+                        string sqlPurchaseDetail = @"
                             INSERT INTO PurchaseDetails (PurchaseID, ItemID, Quantity, UnitPrice)
                             VALUES (@Pid, @ItemId, @Qty, @Price)";
 
-                        string sqlUpdateStock = @"
-                            UPDATE BranchInventory 
-                            SET CurrentQuantity = CurrentQuantity + @Qty, LastUpdated = GETDATE()
-                            WHERE BranchID = @Bid AND ItemID = @ItemId";
-
-                        // Ensure stock record exists before updating
-                        string sqlEnsureStock = @"
-                            IF NOT EXISTS (SELECT 1 FROM BranchInventory WHERE BranchID = @Bid AND ItemID = @ItemId)
-                            BEGIN
-                                INSERT INTO BranchInventory (BranchID, ItemID, CurrentQuantity, LowStockThreshold)
-                                VALUES (@Bid, @ItemId, 0, 10) -- Default threshold
-                            END";
+                        string sqlWaybillDetail = @"
+                            INSERT INTO WaybillDetails (TransferID, ItemID, Quantity)
+                            VALUES (@TransferID, @ItemID, @Quantity)";
 
                         foreach (var item in details)
                         {
-                            // A. Fetch Conversion Ratio (e.g., 1 Sack = 25000 grams)
                             decimal ratio = conn.ExecuteScalar<decimal>(sqlConversion, new { ItemId = item.ItemID }, trans);
-                            if (ratio <= 0) ratio = 1; // Safety fallback to prevent divide-by-zero
+                            if (ratio <= 0) ratio = 1;
 
-                            // B. Perform Bulk-to-Base Conversion Math
-                            decimal baseQty = item.Quantity * ratio;           // e.g., 1 Sack * 25000 = 25000
-                            decimal baseUnitPrice = item.UnitPrice / ratio;    // e.g., ₱1000 / 25000 = ₱0.04 per gram
+                            decimal baseQty = item.Quantity * ratio;
+                            decimal baseUnitPrice = item.UnitPrice / ratio;
 
-                            // C. Ensure Record Exists
-                            conn.Execute(sqlEnsureStock, new { Bid = header.BranchID, ItemId = item.ItemID }, trans);
+                            // A. Save the Financial Purchase Detail
+                            conn.Execute(sqlPurchaseDetail, new { Pid = newPurchaseId, ItemId = item.ItemID, Qty = baseQty, Price = baseUnitPrice }, trans);
 
-                            // D. Insert Detail (Saved in Base Units to fix P&L Waste & Reconciliation Calculations)
-                            conn.Execute(sqlDetail, new { Pid = newPurchaseId, ItemId = item.ItemID, Qty = baseQty, Price = baseUnitPrice }, trans);
-
-                            // E. Add Stock (In Base Units)
-                            conn.Execute(sqlUpdateStock, new { Qty = baseQty, Bid = header.BranchID, ItemId = item.ItemID }, trans);
+                            // B. Save the Logistics Waybill Detail (This puts it in the Incoming Deliveries screen!)
+                            conn.Execute(sqlWaybillDetail, new { TransferID = newTransferId, ItemID = item.ItemID, Quantity = baseQty }, trans);
                         }
 
-                        // 3. LOG TO FINANCIAL LEDGER (The Critical P&L Step)
+                        // 4. LOG TO FINANCIAL LEDGER
                         string sqlLedger = @"
                             INSERT INTO FinancialLedger (TransactionDate, BranchID, Type, Category, Amount, Description, ReferenceID)
                             VALUES (GETDATE(), @BranchID, 'Expense', 'Ingredients', @Amount, @Desc, @RefID)";

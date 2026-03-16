@@ -153,14 +153,16 @@ namespace SLICE_System.Data
         {
             using (var connection = _dbService.GetConnection())
             {
+                // UPDATED: Using a LEFT JOIN so External Supplier shipments (where FromBranchID is NULL) 
+                // are not accidentally hidden from the incoming deliveries list.
                 string sql = @"
-                    SELECT m.*, 
-                           b.BranchName AS FromBranchName,
-                           ISNULL((SELECT SUM(Quantity) FROM WaybillDetails WHERE TransferID = m.TransferID), 0) AS TotalQuantity
-                    FROM MeshLogistics m
-                    INNER JOIN Branches b ON m.FromBranchID = b.BranchID
-                    WHERE m.ToBranchID = @BranchID AND m.Status = 'In-Transit'
-                    ORDER BY m.SentDate DESC";
+            SELECT m.*, 
+                   ISNULL(b.BranchName, 'External Supplier') AS FromBranchName,
+                   ISNULL((SELECT SUM(Quantity) FROM WaybillDetails WHERE TransferID = m.TransferID), 0) AS TotalQuantity
+            FROM MeshLogistics m
+            LEFT JOIN Branches b ON m.FromBranchID = b.BranchID
+            WHERE m.ToBranchID = @BranchID AND m.Status = 'In-Transit'
+            ORDER BY m.SentDate DESC";
 
                 return connection.Query<MeshLogistics>(sql, new { BranchID = myBranchId }).ToList();
             }

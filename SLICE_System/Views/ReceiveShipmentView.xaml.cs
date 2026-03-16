@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel; // Required for ObservableCollection
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -61,7 +61,6 @@ namespace SLICE_System.Views
             int boxCount = 0;
 
             // LOGIC: Target ~40 boxes for 50,000 units.
-            // 50,000 / 1250 = 40 boxes.
             if (totalUnits > 0 && totalUnits < 1000)
             {
                 boxCount = 2; // Minimum representation
@@ -81,11 +80,7 @@ namespace SLICE_System.Views
             {
                 boxes.Add(new PizzaBoxVM
                 {
-                    // Rotation: Random between -2 and 2 degrees
                     RotationAngle = rnd.Next(-2, 3),
-
-                    // Offset: Horizontal (-5 to 5) and Vertical Overlap (-10)
-                    // The -10 overlap allows 40 boxes to fit in the vertical space
                     MarginOffset = new Thickness(rnd.Next(-5, 5), 0, 0, -10)
                 });
             }
@@ -97,16 +92,27 @@ namespace SLICE_System.Views
         {
             if (sender is Button btn && btn.Tag is MeshLogistics shipment)
             {
-                try
+                // ADDED CONFIRMATION: Prevent accidental clicks
+                if (MessageBox.Show($"Confirm receipt of Transfer #{shipment.TransferID}?", "Receive Stock", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                 {
-                    LogisticsRepository repo = new LogisticsRepository();
-                    repo.ReceiveShipment(shipment.TransferID);
-                    await PlayStampAnimation();
-                    LoadShipments(); // Refresh list & Re-calculate stack size
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Error: " + ex.Message);
+                    try
+                    {
+                        LogisticsRepository repo = new LogisticsRepository();
+                        repo.ReceiveShipment(shipment.TransferID);
+
+                        // Wait for the stamp animation to finish...
+                        await PlayStampAnimation();
+
+                        // Then refresh the data and boxes
+                        LoadShipments();
+
+                        // Re-play the entrance animation for remaining shipments
+                        PlayEntranceAnimation();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Error: " + ex.Message);
+                    }
                 }
             }
         }
@@ -122,19 +128,28 @@ namespace SLICE_System.Views
 
         private async Task PlayStampAnimation()
         {
+            // 1. Clear any stuck animations from the previous click
+            StampScale.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+            StampScale.BeginAnimation(ScaleTransform.ScaleYProperty, null);
+
+            // 2. Make it visible
             Overlay_Stamp.Visibility = Visibility.Visible;
-            DoubleAnimation scaleAnim = new DoubleAnimation(1.0, TimeSpan.FromMilliseconds(200))
+
+            // 3. EXPLICITLY tell the animation to start at 3.0 and drop to 1.0
+            DoubleAnimation scaleAnim = new DoubleAnimation(3.0, 1.0, TimeSpan.FromMilliseconds(350))
             {
                 EasingFunction = new BounceEase { Bounces = 1, Bounciness = 2 }
             };
 
+            // 4. Play the animation
             StampScale.BeginAnimation(ScaleTransform.ScaleXProperty, scaleAnim);
             StampScale.BeginAnimation(ScaleTransform.ScaleYProperty, scaleAnim);
 
+            // 5. Wait for the user to see it
             await Task.Delay(1500);
 
+            // 6. Hide it
             Overlay_Stamp.Visibility = Visibility.Collapsed;
-            StampScale.ScaleX = 3; StampScale.ScaleY = 3;
         }
     }
 }

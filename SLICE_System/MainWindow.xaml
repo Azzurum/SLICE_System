@@ -93,14 +93,6 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style TargetType="Button" x:Key="CloseBtn" BasedOn="{StaticResource WinBtn}">
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#E74C3C"/>
-                    <Setter Property="Foreground" Value="White"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
     </Window.Resources>
 
     <Border Background="#F4F6F7">
@@ -309,7 +301,6 @@
                             </Button>
                             <StackPanel Orientation="Horizontal">
                                 <Button Content="—" Style="{StaticResource WinBtn}" Click="Minimize_Click"/>
-                                <Button Content="✕" Style="{StaticResource CloseBtn}" Click="Close_Click"/>
                             </StackPanel>
                         </StackPanel>
                     </Grid>

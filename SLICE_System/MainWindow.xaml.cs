@@ -26,9 +26,7 @@ namespace SLICE_System
             // 2. Apply Role-Based Security
             ApplyPermissions();
 
-            // 3. FIXED: Load Default View
-            // Using DispatcherPriority.Loaded ensures the UI is fully rendered 
-            // before the Dashboard tries to fetch data from the database.
+            // 3. Load Default View
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 if (AccessControlService.CanAccess(_currentUser.Role, AccessControlService.Module.Dashboard) || _currentUser.Role == "Logistics Admin")
@@ -59,11 +57,17 @@ namespace SLICE_System
 
         private void IdleTimer_Tick(object sender, EventArgs e)
         {
+            // 1. Stop the timer and unhook the listener
             _idleTimer.Stop();
             InputManager.Current.PreProcessInput -= OnUserActivity;
 
+            // 2. Instantly hide the Main Window so the user cannot interact with it anymore
+            this.Hide();
+
+            // 3. Show the warning message (the app pauses here, but the screen is already gone!)
             MessageBox.Show("For your security, your session has timed out due to inactivity.", "Session Expired", MessageBoxButton.OK, MessageBoxImage.Warning);
 
+            // 4. Show the login screen and permanently close the old session
             new Views.LoginView().Show();
             this.Close();
         }
@@ -124,10 +128,7 @@ namespace SLICE_System
         private void Nav_Incoming_Click(object sender, RoutedEventArgs e) => LoadView("Incoming Deliveries", new Views.ReceiveShipmentView(_currentUser));
         private void Nav_MyStock_Click(object sender, RoutedEventArgs e) => LoadView("My Branch Inventory", new Views.BranchStockView(_currentUser.BranchID ?? 0));
         private void Nav_RequestStock_Click(object sender, RoutedEventArgs e) => LoadView("Stock Requisition", new Views.RequestStockView(_currentUser));
-
-        // FIXED: Now passing _currentUser.Role so the POS knows you are a Manager and shows the right discounts!
         private void Nav_Sales_Click(object sender, RoutedEventArgs e) => LoadView("Point of Sale", new Views.SalesView { DataContext = new SalesViewModel(_currentUser.BranchID.GetValueOrDefault(), _currentUser.UserID, _currentUser.Role) });
-
         private void Nav_ApproveRequests_Click(object sender, RoutedEventArgs e) => LoadView("Manager Approvals", new Views.ManageRequestsView(_currentUser));
         private void Nav_Waste_Click(object sender, RoutedEventArgs e) => LoadView("Waste & Loss Tracker", new Views.WasteTrackerView(_currentUser));
         private void Nav_Recon_Click(object sender, RoutedEventArgs e) => LoadView("Stock Reconciliation", new Views.ReconciliationView(_currentUser.BranchID ?? 0, _currentUser.UserID));
@@ -147,7 +148,6 @@ namespace SLICE_System
         }
 
         private void Minimize_Click(object sender, RoutedEventArgs e) => this.WindowState = WindowState.Minimized;
-        private void Close_Click(object sender, RoutedEventArgs e) => Application.Current.Shutdown();
 
         // --- LOGOUT WITH Z-READING ---
         private void Logout_Click(object sender, RoutedEventArgs e)
