@@ -61,7 +61,7 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                <TextBlock Text="System Audit Logs" FontSize="28" FontWeight="Black" Foreground="{StaticResource TextDark}"/>
+                <TextBlock Text="Audit Logs" FontSize="28" FontWeight="Black" Foreground="{StaticResource TextDark}"/>
                 <TextBlock Text="Track, monitor, and trace every payment reference and user action." FontSize="14" Foreground="{StaticResource TextLight}"/>
             </StackPanel>
 

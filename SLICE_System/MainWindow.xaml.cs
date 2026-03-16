@@ -19,14 +19,14 @@ namespace SLICE_System
             InitializeComponent();
             _currentUser = user;
 
-            // 1. Setup User Profile
+            // 1. Initialize Header
             txtUserBadge.Text = _currentUser.FullName;
             txtUserRole.Text = _currentUser.Role;
 
-            // 2. Apply Role-Based Security
+            // 2. Configure Sidebar Visibility
             ApplyPermissions();
 
-            // 3. Load Default View
+            // 3. Load Startup View (Delayed to ensure content frame is fully rendered first)
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 if (AccessControlService.CanAccess(_currentUser.Role, AccessControlService.Module.Dashboard) || _currentUser.Role == "Logistics Admin")
@@ -35,19 +35,20 @@ namespace SLICE_System
                     Nav_MyStock_Click(null, null);
             }), System.Windows.Threading.DispatcherPriority.Loaded);
 
-            // 4. Setup Auto-Logout Timer (3 Minutes of inactivity)
+            // 4. Initialize Security Timeout (3 Mins)
             _idleTimer = new DispatcherTimer();
             _idleTimer.Interval = TimeSpan.FromMinutes(3);
             _idleTimer.Tick += IdleTimer_Tick;
             _idleTimer.Start();
 
-            // Listen to ALL mouse and keyboard events across the whole application
+            // 5. Attach global input hook to reset idle timer
             InputManager.Current.PreProcessInput += OnUserActivity;
         }
 
-        // --- AUTO-LOGOUT SECURITY LOGIC ---
+        // --- SESSION SECURITY ---
         private void OnUserActivity(object sender, PreProcessInputEventArgs e)
         {
+            // Reset timer on any mouse or keyboard event
             if (e.StagingItem.Input is MouseEventArgs || e.StagingItem.Input is KeyboardEventArgs)
             {
                 _idleTimer.Stop();
@@ -57,22 +58,21 @@ namespace SLICE_System
 
         private void IdleTimer_Tick(object sender, EventArgs e)
         {
-            // 1. Stop the timer and unhook the listener
+            // Halt monitoring
             _idleTimer.Stop();
             InputManager.Current.PreProcessInput -= OnUserActivity;
 
-            // 2. Instantly hide the Main Window so the user cannot interact with it anymore
+            // Hide the active UI immediately to prevent unauthorized interaction
             this.Hide();
 
-            // 3. Show the warning message (the app pauses here, but the screen is already gone!)
             MessageBox.Show("For your security, your session has timed out due to inactivity.", "Session Expired", MessageBoxButton.OK, MessageBoxImage.Warning);
 
-            // 4. Show the login screen and permanently close the old session
+            // Force hard logout
             new Views.LoginView().Show();
             this.Close();
         }
 
-        // --- BRANDING & HELP ---
+        // --- GLOBAL UI ACTIONS ---
         private void Nav_About_Click(object sender, RoutedEventArgs e)
         {
             Views.AboutView about = new Views.AboutView();
@@ -87,15 +87,21 @@ namespace SLICE_System
             manualWindow.Show();
         }
 
-        // --- ROLE-BASED ACCESS CONTROL ---
+        private void Minimize_Click(object sender, RoutedEventArgs e) => this.WindowState = WindowState.Minimized;
+
+        // --- ROLE EVALUATION ---
         private void ApplyPermissions()
         {
             string r = _currentUser.Role;
+
+            // Logistics Admin acts as a dynamic override for specific warehouse modules
             bool isLA = (r == "Logistics Admin");
 
+            // Evaluate Dashboard Group
             Toggle(Btn_Dashboard, AccessControlService.CanAccess(r, AccessControlService.Module.Dashboard) || isLA);
             Grp_Dash.Visibility = Btn_Dashboard.Visibility;
 
+            // Evaluate Operations Group
             Toggle(Btn_Incoming, AccessControlService.CanAccess(r, AccessControlService.Module.IncomingOrders) || isLA);
             Toggle(Btn_MyInventory, AccessControlService.CanAccess(r, AccessControlService.Module.MyInventory) && !isLA);
             Toggle(Btn_RequestStock, AccessControlService.CanAccess(r, AccessControlService.Module.RequestStock) && !isLA);
@@ -107,23 +113,25 @@ namespace SLICE_System
 
             Grp_Ops.Visibility = (anyOpsVisible()) ? Visibility.Visible : Visibility.Collapsed;
 
+            // Evaluate Management Group
             Toggle(Btn_Menu, AccessControlService.CanAccess(r, AccessControlService.Module.MenuRegistry) && !isLA);
             Toggle(Btn_Inventory, AccessControlService.CanAccess(r, AccessControlService.Module.GlobalInventory) || isLA);
             Toggle(Btn_Users, AccessControlService.CanAccess(r, AccessControlService.Module.UserAdmin) && !isLA);
             Toggle(Btn_Audit, AccessControlService.CanAccess(r, AccessControlService.Module.AuditLogs) && !isLA);
-            Toggle(Btn_Finance, r == "Super-Admin" || r == "Owner");
-            Toggle(Btn_ManageDiscounts, r == "Super-Admin" || r == "Owner");
-            Toggle(Btn_ReviewFeedback, r == "Super-Admin" || r == "Owner");
+            Toggle(Btn_Finance, r == "Super-Admin");
+            Toggle(Btn_ManageDiscounts, r == "Super-Admin");
+            Toggle(Btn_ReviewFeedback, r == "Super-Admin");
 
             Grp_Admin.Visibility = (anyAdminVisible()) ? Visibility.Visible : Visibility.Collapsed;
         }
 
+        // Helper functions to check if parent category headers should be visible
         private bool anyOpsVisible() => Btn_Incoming.Visibility == Visibility.Visible || Btn_MyInventory.Visibility == Visibility.Visible || Btn_RequestStock.Visibility == Visibility.Visible || Btn_Sales.Visibility == Visibility.Visible || Btn_Approve.Visibility == Visibility.Visible || Btn_Waste.Visibility == Visibility.Visible || Btn_Recon.Visibility == Visibility.Visible || Btn_SubmitFeedback.Visibility == Visibility.Visible;
         private bool anyAdminVisible() => Btn_Menu.Visibility == Visibility.Visible || Btn_Inventory.Visibility == Visibility.Visible || Btn_Users.Visibility == Visibility.Visible || Btn_Audit.Visibility == Visibility.Visible || Btn_Finance.Visibility == Visibility.Visible || Btn_ManageDiscounts.Visibility == Visibility.Visible || Btn_ReviewFeedback.Visibility == Visibility.Visible;
 
         private void Toggle(UIElement element, bool canAccess) => element.Visibility = canAccess ? Visibility.Visible : Visibility.Collapsed;
 
-        // --- NAVIGATION HANDLERS ---
+        // --- VIEW ROUTING ---
         public void Nav_Dashboard_Click(object sender, RoutedEventArgs e) => LoadView("Dashboard", new Views.DashboardView(_currentUser));
         private void Nav_Incoming_Click(object sender, RoutedEventArgs e) => LoadView("Incoming Deliveries", new Views.ReceiveShipmentView(_currentUser));
         private void Nav_MyStock_Click(object sender, RoutedEventArgs e) => LoadView("My Branch Inventory", new Views.BranchStockView(_currentUser.BranchID ?? 0));
@@ -135,7 +143,7 @@ namespace SLICE_System
         private void Nav_Menu_Click(object sender, RoutedEventArgs e) => LoadView("Menu Registry", new Views.MenuView());
         private void Nav_Inventory_Click(object sender, RoutedEventArgs e) => LoadView("Central Warehouse", new Views.InventoryView(_currentUser));
         private void Nav_Users_Click(object sender, RoutedEventArgs e) => LoadView("User Administration", new Views.UsersView());
-        private void Nav_Audit_Click(object sender, RoutedEventArgs e) => LoadView("System Audit Logs", new Views.AuditLogView());
+        private void Nav_Audit_Click(object sender, RoutedEventArgs e) => LoadView("Audit Logs", new Views.AuditLogView());
         private void Nav_Finance_Click(object sender, RoutedEventArgs e) => LoadView("Financial Performance", new Views.FinanceView { DataContext = new FinanceViewModel() });
         private void Nav_ManageDiscounts_Click(object sender, RoutedEventArgs e) => LoadView("Pricing & Promotions Rules", new Views.ManageDiscountsView());
         private void Nav_SubmitFeedback_Click(object sender, RoutedEventArgs e) => LoadView("Submit Feedback", new Views.SubmitSuggestionView { DataContext = new ViewModels.SubmitSuggestionViewModel(_currentUser.UserID) });
@@ -147,24 +155,25 @@ namespace SLICE_System
             MainContentArea.Child = view;
         }
 
-        private void Minimize_Click(object sender, RoutedEventArgs e) => this.WindowState = WindowState.Minimized;
-
-        // --- LOGOUT WITH Z-READING ---
+        // --- LOGOUT FLOW ---
         private void Logout_Click(object sender, RoutedEventArgs e)
         {
             if (MessageBox.Show("Are you sure you want to sign out?", "Logout", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
+                // Enforce Z-Reading execution for operational roles
                 if (AccessControlService.CanAccess(_currentUser.Role, AccessControlService.Module.SalesPOS))
                 {
                     var zReading = new Views.Dialogs.ZReadingWindow(_currentUser.UserID);
                     zReading.Owner = this;
 
+                    // Abort logout if Z-Reading is cancelled
                     if (zReading.ShowDialog() != true)
                     {
                         return;
                     }
                 }
 
+                // Cleanup session tracking
                 _idleTimer.Stop();
                 InputManager.Current.PreProcessInput -= OnUserActivity;
 

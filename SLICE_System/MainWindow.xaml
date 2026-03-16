@@ -241,7 +241,7 @@
                                         <fa:FontAwesome Icon="Users" FontSize="16" Foreground="White"/>
                                     </Button.Tag>
                                 </Button>
-                                <Button x:Name="Btn_Audit" Content="System Audit Logs" Style="{StaticResource MenuButtonStyle}" Click="Nav_Audit_Click">
+                                <Button x:Name="Btn_Audit" Content="Audit Logs" Style="{StaticResource MenuButtonStyle}" Click="Nav_Audit_Click">
                                     <Button.Tag>
                                         <fa:FontAwesome Icon="History" FontSize="16" Foreground="White"/>
                                     </Button.Tag>

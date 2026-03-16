@@ -61,7 +61,7 @@ namespace SLICE_System.Data
 
                         UNION ALL
 
-                        -- 4. NEW: DIRECT AUDIT LOGS (Z-Readings, etc.)
+                        -- 4. DIRECT AUDIT LOGS (Z-Readings, etc.)
                         SELECT 
                             a.Timestamp,
                             UPPER(a.ActionType) as ActivityType,
