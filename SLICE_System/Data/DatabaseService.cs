@@ -9,7 +9,7 @@ namespace SLICE_System.Data
         // 1. YOUR CONNECTION STRING
         // NOTE: Replace 'YOUR_USERNAME' and 'YOUR_PASSWORD' with your actual Azure credentials.
         private readonly string _connectionString =
-            "Server=tcp:sqlserver-slice-jp.database.windows.net,1433;" +
+            "Server=tcp:sqlserver-slice-jp-1.database.windows.net,1433;" +
             "Initial Catalog=sqldb-slice;" +
             "Persist Security Info=False;" +
             "User ID=slice_admin;" +      // <--- PUT USERNAME HERE

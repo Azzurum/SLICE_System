@@ -16,7 +16,7 @@ namespace SLICE_System.Views.Dialogs
         private readonly DatabaseService _db = new DatabaseService();
         private MasterInventory _existingItem;
 
-        // FIX: Store ONLY the filename, not the entire C:\ folder path!
+        // Store ONLY the filename, not the entire C:\ folder path!
         private string _uploadedFileName;
 
         // 1. CONSTRUCTOR FOR NEW ITEM
@@ -47,7 +47,7 @@ namespace SLICE_System.Views.Dialogs
 
             txtRatio.Text = itemToEdit.ConversionRatio.ToString();
 
-            // FIX: Use the FullImagePath property from the model to load the preview
+            // Use the FullImagePath property from the model to load the preview
             _uploadedFileName = itemToEdit.ImagePath;
             string fullPath = itemToEdit.FullImagePath;
 
@@ -82,14 +82,14 @@ namespace SLICE_System.Views.Dialogs
                     string fileName = Guid.NewGuid().ToString() + Path.GetExtension(dlg.FileName);
 
                     // --- SAVE 1: LIVE APP FOLDER (So UI sees it immediately) ---
-                    string liveDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "Inventory");
+                    string liveDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "Ingredients");
                     if (!Directory.Exists(liveDir)) Directory.CreateDirectory(liveDir);
                     string livePath = Path.Combine(liveDir, fileName);
                     File.Copy(dlg.FileName, livePath, true);
 
                     // --- SAVE 2: SOURCE CODE FOLDER (For GitHub Tracker!) ---
                     // Goes up 3 folders from bin\Debug\net6.0-windows to reach the project root
-                    string projectDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "Assets", "Images", "Inventory");
+                    string projectDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "Assets", "Images", "Ingredients");
                     string fullProjectDir = Path.GetFullPath(projectDir);
                     if (Directory.Exists(fullProjectDir))
                     {
