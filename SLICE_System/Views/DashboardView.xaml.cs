@@ -114,24 +114,20 @@ namespace SLICE_System.Views
             OnPropertyChanged(null); // Force UI refresh
         }
 
-        // NEW: Method to populate the red alert banner
+        // Method to populate the red alert banner
         private void LoadAlerts()
         {
-            // Safety check to ensure UI has loaded
-            if (_repo == null || _currentUser == null || AlertsList == null || AlertsPanel == null) return;
+            if (_repo == null || AlertsList == null || AlertsPanel == null) return;
 
-            var alerts = _repo.GetLowStockAlerts(_currentUser.BranchID ?? 1); // Defaults to branch 1 for Super Admin
+            // Get the currently selected branch from the dropdown
+            int? branchId = (int?)cmbBranches.SelectedValue;
+            if (branchId == 0) branchId = null; // 0 means "All Branches"
+
+            var alerts = _repo.GetLowStockAlerts(branchId);
 
             StockAlerts.Clear();
-            foreach (var alert in alerts)
-            {
-                StockAlerts.Add(alert);
-            }
+            foreach (var alert in alerts) StockAlerts.Add(alert);
 
-            // Bind the Alerts UI to this list
-            AlertsList.ItemsSource = StockAlerts;
-
-            // Hide the entire alert panel if there are no warnings!
             AlertsPanel.Visibility = StockAlerts.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 

@@ -163,6 +163,13 @@ namespace SLICE_System.Views
         private async void Submit_Click(object sender, RoutedEventArgs e)
         {
             if (CartItems.Count == 0) return;
+
+            // Grab the button once at the top so C# doesn't get confused
+            Button submitBtn = sender as Button;
+
+            // 1. Disable the button to prevent double-clicking and duplicate orders
+            if (submitBtn != null) submitBtn.IsEnabled = false;
+
             try
             {
                 MeshLogistics header = new MeshLogistics
@@ -179,7 +186,15 @@ namespace SLICE_System.Views
                 CartItems.Clear();
                 UpdateTotals();
             }
-            catch (Exception ex) { MessageBox.Show("Error: " + ex.Message); }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error: " + ex.Message);
+            }
+            finally
+            {
+                // 2. Re-enable the button when the animation and database work are completely finished
+                if (submitBtn != null) submitBtn.IsEnabled = true;
+            }
         }
 
         private async Task PlayTicketAnimation()
@@ -265,7 +280,8 @@ namespace SLICE_System.Views
             get
             {
                 if (string.IsNullOrWhiteSpace(ImagePath)) return null;
-                return System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "Inventory", ImagePath);
+                // FIXED: Changed "Inventory" to "Ingredients" so Request Stock can find the images
+                return System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "Ingredients", ImagePath);
             }
         }
 

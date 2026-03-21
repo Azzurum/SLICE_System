@@ -138,9 +138,18 @@ namespace SLICE_System.Views.Dialogs
 
                     if (_existingItem == null)
                     {
+                        // --- DUPLICATE CHECK LOGIC ---
+                        // Query the database to see if an item with this exact name already exists
+                        int count = conn.ExecuteScalar<int>("SELECT COUNT(*) FROM MasterInventory WHERE ItemName = @Name", new { Name = txtName.Text });
+                        if (count > 0)
+                        {
+                            MessageBox.Show("An ingredient with this exact name already exists in the warehouse! Please use a different name to avoid confusion.", "Duplicate Found", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            return; // Stop the save process
+                        }
+
                         // --- LOGIC: INSERT NEW ---
                         string sql = @"INSERT INTO MasterInventory (ItemName, Category, BulkUnit, BaseUnit, ConversionRatio, ImagePath) 
-                                       VALUES (@Name, @Cat, @Bulk, @Base, @Ratio, @Img)";
+                               VALUES (@Name, @Cat, @Bulk, @Base, @Ratio, @Img)";
 
                         conn.Execute(sql, new
                         {
@@ -158,8 +167,8 @@ namespace SLICE_System.Views.Dialogs
                     {
                         // --- LOGIC: UPDATE EXISTING ---
                         string sql = @"UPDATE MasterInventory 
-                                       SET ItemName = @Name, Category = @Cat, BulkUnit = @Bulk, BaseUnit = @Base, ConversionRatio = @Ratio, ImagePath = @Img 
-                                       WHERE ItemID = @ID";
+                                     SET ItemName = @Name, Category = @Cat, BulkUnit = @Bulk, BaseUnit = @Base, ConversionRatio = @Ratio, ImagePath = @Img 
+                                     WHERE ItemID = @ID";
 
                         conn.Execute(sql, new
                         {

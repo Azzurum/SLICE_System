@@ -124,17 +124,18 @@ namespace SLICE_System.Data
             }
         }
 
-        public List<string> GetLowStockAlerts(int branchId)
+        public List<string> GetLowStockAlerts(int? branchId)
         {
             using (var connection = _dbService.GetConnection())
             {
                 string sql = @"
-            SELECT mi.ItemName + ' (Only ' + CAST(bi.CurrentQuantity AS VARCHAR) + ' left! Threshold: ' + CAST(bi.LowStockThreshold AS VARCHAR) + ')'
-            FROM BranchInventory bi
-            JOIN MasterInventory mi ON bi.ItemID = mi.ItemID
-            WHERE bi.CurrentQuantity <= bi.LowStockThreshold 
-            AND bi.BranchID = @BranchId
-            ORDER BY bi.CurrentQuantity ASC";
+                SELECT b.BranchName + ': ' + mi.ItemName + ' (Only ' + CAST(bi.CurrentQuantity AS VARCHAR) + ' left!)'
+                FROM BranchInventory bi
+                JOIN MasterInventory mi ON bi.ItemID = mi.ItemID
+                JOIN Branches b ON bi.BranchID = b.BranchID
+                WHERE bi.CurrentQuantity <= bi.LowStockThreshold 
+                AND (@BranchId IS NULL OR bi.BranchID = @BranchId)
+                ORDER BY bi.CurrentQuantity ASC";
 
                 return connection.Query<string>(sql, new { BranchId = branchId }).AsList();
             }

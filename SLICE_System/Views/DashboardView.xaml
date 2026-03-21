@@ -36,15 +36,15 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel>
-                    <TextBlock Text="Command Center" FontSize="26" FontWeight="Black" Foreground="{StaticResource TextDark}"/>
+                    <TextBlock Text="Dashboard" FontSize="26" FontWeight="Black" Foreground="{StaticResource TextDark}"/>
                     <TextBlock Text="{Binding DashboardTitle}" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextLight}"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <ComboBox x:Name="cmbBranches" Width="150" Height="35" Margin="0,0,10,0" Padding="10,5" DisplayMemberPath="BranchName" SelectedValuePath="BranchID" SelectionChanged="cmbBranches_SelectionChanged" Background="White" BorderBrush="#EAECEE"/>
                     <ComboBox x:Name="cmbDateRange" Width="130" Height="35" Margin="0,0,10,0" Padding="10,5" SelectionChanged="cmbDateRange_SelectionChanged" Background="White" BorderBrush="#EAECEE">
-                        <ComboBoxItem Content="Today"/>
-                        <ComboBoxItem Content="This Month" IsSelected="True"/>
+                        <ComboBoxItem Content="Today" IsSelected="True"/>
+                        <ComboBoxItem Content="This Month"/>
                         <ComboBoxItem Content="This Quarter"/>
                         <ComboBoxItem Content="This Year"/>
                         <ComboBoxItem Content="Last 30 Days"/>

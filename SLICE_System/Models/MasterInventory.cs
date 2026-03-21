@@ -41,7 +41,8 @@
             get
             {
                 if (string.IsNullOrWhiteSpace(ImagePath)) return null;
-                return System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "Inventory", ImagePath);
+                // FIXED: Changed "Inventory" to "Ingredients" to match the actual folder structure
+                return System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "Ingredients", ImagePath);
             }
         }
 
