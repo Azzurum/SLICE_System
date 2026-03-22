@@ -99,8 +99,6 @@ namespace SLICE_System.ViewModels
             // Clean up the method string for the URL
             string methodUrlFriendly = SelectedMethod.Replace(" ", "").Replace("/", "").ToLower();
 
-            // NOTE: Replace YOUR-USERNAME with your actual GitHub username once your site is live!
-            // If you don't have it yet, you can leave it as checkout.slice-enterprise.com for testing.
             string baseUrl = "https://azzurum.github.io/slice-pay/";
 
             // Construct the live URL with the dynamic parameters
@@ -240,7 +238,6 @@ namespace SLICE_System.ViewModels
             {
                 IsSuccessResult = true;
 
-                // WE DO NOT GENERATE A NEW REFERENCE NUMBER HERE.
                 // It keeps the one that was already generated and sent to the QR code!
                 ResultMessage = "Payment Approved & Secured";
 

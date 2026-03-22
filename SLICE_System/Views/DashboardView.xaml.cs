@@ -33,7 +33,7 @@ namespace SLICE_System.Views
             set { _currentMetrics = value; OnPropertyChanged(nameof(Metrics)); }
         }
 
-        // NEW: Property for the red alert banner
+        // Property for the red alert banner
         public System.Collections.ObjectModel.ObservableCollection<string> StockAlerts { get; set; } = new System.Collections.ObjectModel.ObservableCollection<string>();
 
         public DashboardView(User currentUser)
@@ -110,7 +110,7 @@ namespace SLICE_System.Views
                 c++;
             }
 
-            LoadAlerts(); // NEW: Triggers the red banner population
+            LoadAlerts(); // Triggers the red banner population
             OnPropertyChanged(null); // Force UI refresh
         }
 

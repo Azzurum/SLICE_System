@@ -33,7 +33,7 @@ namespace SLICE_System.Views
             LoadUsers(txtSearch.Text);
         }
 
-        // --- NEW: EDIT USER ---
+        // EDIT USER ---
         private void EditUser_Click(object sender, RoutedEventArgs e)
         {
             var button = sender as Button;

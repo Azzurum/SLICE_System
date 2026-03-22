@@ -3,11 +3,11 @@ using SLICE_System.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO; // Required for Image Upload (File/Directory operations)
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using Microsoft.Win32; // Required for OpenFileDialog
+using Microsoft.Win32;
 
 namespace SLICE_System.ViewModels
 {
@@ -134,8 +134,6 @@ namespace SLICE_System.ViewModels
         {
             if (SelectedMenuItem == null) return;
 
-            // FIX: Instead of creating a new ObservableCollection (which breaks WPF XAML bindings),
-            // we ensure one exists, clear it, and add the items to it.
             if (SelectedMenuItem.Recipe == null)
             {
                 SelectedMenuItem.Recipe = new ObservableCollection<RecipeItemVM>();

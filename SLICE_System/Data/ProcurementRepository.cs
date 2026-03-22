@@ -34,7 +34,7 @@ namespace SLICE_System.Data
                         int newPurchaseId = conn.ExecuteScalar<int>(sqlHeader, header, trans);
 
                         // 2. Create Logistics "In-Transit" Record (Delivery from Supplier -> HQ)
-                        // We use a dummy FromBranchID (e.g., 0 or NULL) to indicate an external supplier
+                        // Used a dummy FromBranchID (e.g., 0 or NULL) to indicate an external supplier
                         string sqlLogistics = @"
                             INSERT INTO MeshLogistics (FromBranchID, ToBranchID, Status, SenderID, SentDate)
                             VALUES (NULL, @BranchID, 'In-Transit', @PurchasedBy, GETDATE());

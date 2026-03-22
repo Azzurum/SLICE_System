@@ -11,11 +11,9 @@ namespace SLICE_System.Models
         public string ValueType { get; set; }
         public decimal DiscountValue { get; set; }
 
-        // --- MISSING DB PROPERTIES ADDED ---
         public bool IsActive { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
-        // -----------------------------------
 
         public string RequiredRole { get; set; }
         public bool IsStackable { get; set; }

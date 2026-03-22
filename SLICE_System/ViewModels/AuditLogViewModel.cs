@@ -132,7 +132,7 @@ namespace SLICE_System.ViewModels
                 try
                 {
                     var csv = new StringBuilder();
-                    // NEW: Added Reference Column to the CSV Header
+                    // Added Reference Column to the CSV Header
                     csv.AppendLine("Timestamp,Action Type,Reference,User,Branch,Details");
 
                     foreach (var log in AuditLogs)
@@ -140,7 +140,7 @@ namespace SLICE_System.ViewModels
                         // Wrap description in quotes to prevent commas from breaking the CSV columns
                         string safeDescription = $"\"{log.Description?.Replace("\"", "\"\"")}\"";
 
-                        // NEW: Added log.ReferenceNumber to the row output
+                        // Added log.ReferenceNumber to the row output
                         csv.AppendLine($"{log.Timestamp:yyyy-MM-dd HH:mm:ss},{log.ActionType},{log.ReferenceNumber},{log.PerformedBy},{log.BranchName},{safeDescription}");
                     }
 

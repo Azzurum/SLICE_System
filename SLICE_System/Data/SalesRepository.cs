@@ -23,7 +23,6 @@ namespace SLICE_System.Data
         {
             using (var connection = _dbService.GetConnection())
             {
-                // We removed the messy GROUP BY. 
                 // This runs a precise, isolated subquery for every individual menu item.
                 string sql = @"
                 SELECT 
@@ -144,7 +143,6 @@ namespace SLICE_System.Data
                         }, transaction);
 
                         // --- STEP 6: WRITE DIRECTLY TO AUDIT LOG ---
-                        // This fixes the "SYSTEM_LOG" issue by capturing the Reference Number immediately.
                         string sqlAudit = @"
                             INSERT INTO AuditLogs (UserID, ActionType, AffectedTable, NewValue, Timestamp, ReferenceNumber)
                             VALUES (@UserID, 'Sale Completed', 'SalesTransactions', @Desc, GETDATE(), @RefNum)";

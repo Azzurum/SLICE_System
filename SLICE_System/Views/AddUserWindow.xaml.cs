@@ -104,7 +104,7 @@ namespace SLICE_System.Views
                 return;
             }
 
-            // --- NEW: Enterprise Password Complexity Check ---
+            // Enterprise Password Complexity Check
             // We only check complexity if it's a new user, OR if the admin is actively typing a new password for an existing user
             bool isPasswordChanged = _existingUser == null || txtPass.Text != _existingUser.PasswordHash;
 

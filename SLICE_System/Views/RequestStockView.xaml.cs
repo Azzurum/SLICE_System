@@ -109,7 +109,7 @@ namespace SLICE_System.Views
             }
         }
 
-        // NEW: Combined logic handles both Radio buttons AND Search box
+        // Combined logic handles both Radio buttons AND Search box
         private void ApplyFilters()
         {
             FilteredItems.Clear();

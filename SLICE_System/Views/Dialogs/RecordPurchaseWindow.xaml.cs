@@ -7,7 +7,7 @@ namespace SLICE_System.Views.Dialogs
 {
     public partial class RecordPurchaseWindow : Window
     {
-        // NEW: Accepts the list of highlighted items
+        // Accepts the list of highlighted items
         public RecordPurchaseWindow(List<MasterInventory> preSelectedItems = null)
         {
             InitializeComponent();

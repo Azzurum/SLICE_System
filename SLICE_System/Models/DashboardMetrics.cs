@@ -35,7 +35,6 @@ namespace SLICE_System.Models
     {
         public string BranchName { get; set; }
         public decimal TotalRevenue { get; set; }
-        // Optional: Add Expense here if you want to chart profit per branch later
         public decimal TotalExpense { get; set; }
     }
 

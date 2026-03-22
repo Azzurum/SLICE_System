@@ -36,7 +36,7 @@ namespace SLICE_System.ViewModels
 
         public ObservableCollection<FinancialLedger> RecentTransactions { get; set; }
 
-        // NEW: Backup Command
+        // Backup Command
         public ICommand BackupDatabaseCommand { get; }
 
         public FinanceViewModel()

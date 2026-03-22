@@ -157,7 +157,7 @@ namespace SLICE_System.Data
 
                         tx.Commit();
                     }
-                    // FIXED: Using standard Exception with message filtering to avoid CS1069 assembly errors
+                    // Using standard Exception with message filtering to avoid CS1069 assembly errors
                     catch (Exception ex) when (ex.Message.Contains("REFERENCE constraint") || ex.Message.Contains("FOREIGN KEY"))
                     {
                         tx.Rollback();

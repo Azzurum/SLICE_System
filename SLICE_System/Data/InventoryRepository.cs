@@ -24,8 +24,8 @@ namespace SLICE_System.Data
         {
             using (var connection = _dbService.GetConnection())
             {
-                // STRICT ENTERPRISE RULE: The Central Warehouse view must ONLY show stock physically located at Headquarters (BranchID = 4).
-                // FIX: Added m.ImagePath to the SELECT and GROUP BY clauses so the UI can load the pictures!
+                // The Central Warehouse view must ONLY show stock physically located at Headquarters (BranchID = 4).
+                // Added m.ImagePath to the SELECT and GROUP BY clauses so the UI can load the pictures!
                 string sql = @"
                 SELECT 
                     m.ItemID, 

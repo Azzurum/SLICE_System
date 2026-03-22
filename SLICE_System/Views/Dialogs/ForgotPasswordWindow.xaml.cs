@@ -73,7 +73,7 @@ namespace SLICE_System.Views.Dialogs
         {
             string newPass = txtNewPassword.Password;
 
-            // --- NEW: Enterprise Password Complexity Regex ---
+            // Enterprise Password Complexity Regex ---
             // Requires: Min 8 chars, 1 uppercase, 1 lowercase, 1 number
             var passwordRegex = new Regex(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$");
 

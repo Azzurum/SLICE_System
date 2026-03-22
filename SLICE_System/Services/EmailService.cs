@@ -6,7 +6,6 @@ namespace SLICE_System.Services
 {
     public class EmailService
     {
-        // IMPORTANT: Replace these with your actual system email and app password
         private readonly string _systemEmail = "slice.automated@gmail.com";
         private readonly string _appPassword = "sbwzycmywldszfof";
 
@@ -24,7 +23,7 @@ namespace SLICE_System.Services
                 // Get the current year dynamically for the footer copyright
                 string currentYear = DateTime.Now.Year.ToString();
 
-                // Professional, Custom HTML Email Template for S.L.I.C.E.
+                // Custom HTML Email Template for S.L.I.C.E.
                 string emailBody = $@"
                 <!DOCTYPE html>
                 <html>
@@ -96,7 +95,7 @@ namespace SLICE_System.Services
                     From = new MailAddress(_systemEmail, "S.L.I.C.E. System Security"),
                     Subject = $"Verification Code: {resetCode} - S.L.I.C.E. Account Recovery",
                     Body = emailBody,
-                    IsBodyHtml = true, // This tells Gmail to render our beautiful HTML
+                    IsBodyHtml = true, // This tells Gmail to render the HTML
                 };
 
                 mailMessage.To.Add(targetEmail);

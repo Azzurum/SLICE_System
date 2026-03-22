@@ -15,7 +15,7 @@ namespace SLICE_System.Data
         {
             using (var conn = _db.GetConnection())
             {
-                // UPDATED SQL: Added a 1-hour buffer (DATEADD) to StartDate.
+                // Added a 1-hour buffer (DATEADD) to StartDate.
                 // This ensures that if the Azure Server clock is slightly behind your local time, 
                 // a promo set to start "now" will still show up immediately.
                 string sql = @"

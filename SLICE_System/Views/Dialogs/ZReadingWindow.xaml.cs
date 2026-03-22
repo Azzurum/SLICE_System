@@ -17,7 +17,7 @@ namespace SLICE_System.Views.Dialogs
             InitializeComponent();
             _userId = userId;
 
-            // --- NEW: Wire up the input restrictions ---
+            // Wire up the input restrictions ---
             txtActualCash.PreviewTextInput += TxtActualCash_PreviewTextInput;
             txtActualCash.PreviewKeyDown += TxtActualCash_PreviewKeyDown;
 
@@ -29,7 +29,7 @@ namespace SLICE_System.Views.Dialogs
             txtExpectedCash.Text = $"₱{_expectedCash:N2}";
         }
 
-        // --- NEW: Blocks letters and multiple dots ---
+        // Blocks letters and multiple dots ---
         private void TxtActualCash_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             var textBox = sender as System.Windows.Controls.TextBox;
@@ -46,7 +46,7 @@ namespace SLICE_System.Views.Dialogs
             e.Handled = regex.IsMatch(e.Text); // If it's a letter or symbol, reject it
         }
 
-        // --- NEW: Blocks the spacebar ---
+        // Blocks the spacebar ---
         private void TxtActualCash_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Space)
@@ -91,7 +91,6 @@ namespace SLICE_System.Views.Dialogs
             this.Close();
         }
 
-        // I added this back in case you used the modern UI design we built earlier!
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
             this.DialogResult = false;

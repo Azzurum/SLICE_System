@@ -62,7 +62,7 @@ namespace SLICE_System.Views
                             // 2. Update the visual UI object
                             selectedItem.LowStockThreshold = newThreshold;
 
-                            // 3. FIX: Tell WPF to put this refresh task at the "Background" priority, 
+                            // 3. Tell WPF to put this refresh task at the "Background" priority, 
                             // meaning it will wait for the DataGrid to completely finish its edit transaction first!
                             Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                             {

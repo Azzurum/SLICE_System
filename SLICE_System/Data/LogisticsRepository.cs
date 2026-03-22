@@ -153,7 +153,7 @@ namespace SLICE_System.Data
         {
             using (var connection = _dbService.GetConnection())
             {
-                // UPDATED: Using a LEFT JOIN so External Supplier shipments (where FromBranchID is NULL) 
+                // Using a LEFT JOIN so External Supplier shipments (where FromBranchID is NULL) 
                 // are not accidentally hidden from the incoming deliveries list.
                 string sql = @"
             SELECT m.*, 

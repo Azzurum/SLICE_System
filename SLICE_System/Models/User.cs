@@ -21,7 +21,7 @@ namespace SLICE_System.Models
 
         // --- UI HELPERS (For XAML Binding) ---
 
-        // Generates "KA" from "Ken Arceno"
+        // Generates Initials
         public string Initials => string.IsNullOrEmpty(FullName) ? "?" : FullName.Substring(0, 1).ToUpper();
 
         // Badge Color Logic

@@ -35,7 +35,7 @@ namespace SLICE_System.Views.Dialogs
         {
             using (var db = new DatabaseService().GetConnection())
             {
-                // FIX: Column is "PasswordHash" and checks if the user IsActive = 1
+                // Column is "PasswordHash" and checks if the user IsActive = 1
                 string sql = @"
                     SELECT UserID FROM Users 
                     WHERE Username = @User 

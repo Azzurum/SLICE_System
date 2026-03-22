@@ -28,7 +28,7 @@ namespace SLICE_System.ViewModels
         public ICommand RemoveRowCommand { get; }
         public ICommand SaveCommand { get; }
 
-        // NEW: Constructor now accepts the pre-selected list
+        // Constructor now accepts the pre-selected list
         public PurchaseViewModel(List<MasterInventory> preSelectedItems = null)
         {
             _procurementRepo = new ProcurementRepository();

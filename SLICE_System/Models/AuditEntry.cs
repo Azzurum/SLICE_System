@@ -6,7 +6,7 @@ namespace SLICE_System.Models
     {
         public DateTime Timestamp { get; set; }
 
-        // FIX: Automatically converts Azure UTC to Philippine Time (UTC+8)
+        // Automatically converts Azure UTC to Philippine Time (UTC+8)
         public DateTime LocalTimestamp => Timestamp.AddHours(8);
 
         public string ActivityType { get; set; } // e.g., "SALE", "WASTE"
@@ -29,7 +29,7 @@ namespace SLICE_System.Models
                         return "#27AE60"; // Green
 
                     case "Z-READING":
-                        return "#8E44AD"; // Professional Purple
+                        return "#8E44AD"; // Purple
 
                     case "SECURITY":
                         return "#F39C12"; // Golden Orange (For Password Resets)
@@ -49,7 +49,6 @@ namespace SLICE_System.Models
         }
 
         // Helper to match the XAML binding "ActionType" if the XAML uses that name
-        // (This acts as an alias so you don't have to change your SQL)
         public string ActionType => ActivityType;
     }
 }

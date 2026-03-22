@@ -27,7 +27,7 @@ namespace SLICE_System.Services
         // NOTE: "Logistics Admin" is handled directly in MainWindow.xaml.cs as a dynamic override.
         private static readonly Dictionary<string, HashSet<Module>> _rolePermissions = new Dictionary<string, HashSet<Module>>(StringComparer.OrdinalIgnoreCase)
         {
-            // EXECUTIVE ROLES (Owner & Super-Admin)
+            // EXECUTIVE ROLES (Owner / Super-Admin)
             // Focused on big-picture data, configuration, and auditing.
             // Excludes floor operations (IncomingOrders, ApproveRequests) to maintain separation of duties.
 

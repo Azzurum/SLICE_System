@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Data;
-using Microsoft.Data.SqlClient; // The NuGet package we installed
+using Microsoft.Data.SqlClient;
 
 namespace SLICE_System.Data
 {
     public class DatabaseService
     {
-        // 1. YOUR CONNECTION STRING
-        // NOTE: Replace 'YOUR_USERNAME' and 'YOUR_PASSWORD' with your actual Azure credentials.
+        // 1. CONNECTION STRING
         private readonly string _connectionString =
             "Server=tcp:sqlserver-slice-jp-1.database.windows.net,1433;" +
             "Initial Catalog=sqldb-slice;" +
             "Persist Security Info=False;" +
-            "User ID=slice_admin;" +      // <--- PUT USERNAME HERE
-            "Password=SL1C3_Engine@2026;" +     // <--- PUT PASSWORD HERE
+            "User ID=slice_admin;" +
+            "Password=SL1C3_Engine@2026;" +
             "MultipleActiveResultSets=False;" +
             "Encrypt=True;" +
             "TrustServerCertificate=False;" +
@@ -32,8 +31,8 @@ namespace SLICE_System.Data
             {
                 using (var connection = GetConnection())
                 {
-                    connection.Open(); // Tries to knock on the door of the server
-                    return true; // If we get here, the door opened!
+                    connection.Open();
+                    return true;
                 }
             }
             catch (Exception ex)
