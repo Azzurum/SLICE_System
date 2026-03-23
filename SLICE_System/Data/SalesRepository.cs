@@ -113,7 +113,7 @@ namespace SLICE_System.Data
                                 INSERT INTO SalesTransactions 
                                 (BranchID, UserID, ProductID, QuantitySold, UnitPrice, TransactionDate, PaymentMethod, ReferenceNumber, TransactionStatus)
                                 VALUES 
-                                (@BranchID, @UserID, @ProductID, @Qty, @Price, GETDATE(), @PayMethod, @RefNum, 'Completed')";
+                                (@BranchID, @UserID, @ProductID, @Qty, @Price, GETDATE(), @PayMethod, @RefNum, 'TransactionStatus')";
 
                             connection.Execute(sqlRecord, new
                             {
@@ -124,7 +124,7 @@ namespace SLICE_System.Data
                                 Price = unitPrice,
                                 PayMethod = paymentMethod,
                                 RefNum = referenceNumber,
-                                Status = "Completed"
+                                TransactionStatus = "Completed"
                             }, transaction);
                         }
 

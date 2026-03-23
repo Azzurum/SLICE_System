@@ -235,9 +235,9 @@ namespace SLICE_System.ViewModels
                                 foreach (int targetBranchId in targetBranches)
                                 {
                                     string sqlHeader = @"
-                                        INSERT INTO MeshLogistics (FromBranchID, ToBranchID, Status, SenderID, SentDate)
-                                        VALUES (@HQ, @TargetBranchID, 'In-Transit', 1, GETDATE());
-                                        SELECT SCOPE_IDENTITY();";
+                                            INSERT INTO MeshLogistics (FromBranchID, ToBranchID, Status, SenderID, SentDate)
+                                            VALUES (@HQ, @TargetBranchID, 'In-Transit', 1, GETDATE());
+                                            SELECT CAST(SCOPE_IDENTITY() AS INT);";
 
                                     int transferId = conn.ExecuteScalar<int>(sqlHeader, new { HQ = HEADQUARTERS_BRANCH_ID, TargetBranchID = targetBranchId }, transaction);
 
