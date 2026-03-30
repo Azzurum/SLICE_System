@@ -27,9 +27,9 @@ namespace SLICE_System.Data
                     {
                         // 1. Insert Purchase Header (Financial Record)
                         string sqlHeader = @"
-                            INSERT INTO Purchases (Supplier, TotalAmount, PurchasedBy, BranchID, PurchaseDate)
-                            VALUES (@Supplier, @TotalAmount, @PurchasedBy, @BranchID, GETDATE());
-                            SELECT SCOPE_IDENTITY();";
+                                INSERT INTO Purchases (Supplier, TotalAmount, PurchasedBy, BranchID, PurchaseDate)
+                                VALUES (@Supplier, @TotalAmount, @PurchasedBy, @BranchID, GETDATE());
+                                SELECT CAST(SCOPE_IDENTITY() AS INT);";
 
                         int newPurchaseId = conn.ExecuteScalar<int>(sqlHeader, header, trans);
 
@@ -38,7 +38,7 @@ namespace SLICE_System.Data
                         string sqlLogistics = @"
                             INSERT INTO MeshLogistics (FromBranchID, ToBranchID, Status, SenderID, SentDate)
                             VALUES (NULL, @BranchID, 'In-Transit', @PurchasedBy, GETDATE());
-                            SELECT SCOPE_IDENTITY();";
+                            SELECT CAST(SCOPE_IDENTITY() AS INT);";
 
                         int newTransferId = conn.ExecuteScalar<int>(sqlLogistics, new { BranchID = header.BranchID, PurchasedBy = header.PurchasedBy }, trans);
 
