@@ -234,12 +234,22 @@ namespace SLICE_System.ViewModels
                                 // STEP 2: Create separate logistics records for each selected branch
                                 foreach (int targetBranchId in targetBranches)
                                 {
+                                    // [FIX APPLIED HERE]: Swapped hardcoded '1' for dynamic parameter @SenderID
+                                    // Also added CAST to SCOPE_IDENTITY to prevent Dapper casting errors
                                     string sqlHeader = @"
-                                        INSERT INTO MeshLogistics (FromBranchID, ToBranchID, Status, SenderID, SentDate)
-                                        VALUES (@HQ, @TargetBranchID, 'In-Transit', 1, GETDATE());
-                                        SELECT SCOPE_IDENTITY();";
+                                            INSERT INTO MeshLogistics (FromBranchID, ToBranchID, Status, SenderID, SentDate)
+                                            VALUES (@HQ, @TargetBranchID, 'In-Transit', @SenderID, GETDATE());
+                                            SELECT CAST(SCOPE_IDENTITY() AS INT);";
 
-                                    int transferId = conn.ExecuteScalar<int>(sqlHeader, new { HQ = HEADQUARTERS_BRANCH_ID, TargetBranchID = targetBranchId }, transaction);
+                                    // Grab logged in user. (If your app stores it differently, change App.CurrentUser.UserID to match your state variable)
+                                    int currentUserId = App.CurrentUser?.UserID ?? 1;
+
+                                    int transferId = conn.ExecuteScalar<int>(sqlHeader, new
+                                    {
+                                        HQ = HEADQUARTERS_BRANCH_ID,
+                                        TargetBranchID = targetBranchId,
+                                        SenderID = currentUserId
+                                    }, transaction);
 
                                     foreach (var item in itemsToSend)
                                     {

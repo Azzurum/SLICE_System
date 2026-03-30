@@ -251,6 +251,11 @@
                                         <fa:FontAwesome Icon="Comments" FontSize="16" Foreground="White"/>
                                     </Button.Tag>
                                 </Button>
+                                <Button x:Name="Btn_Settings" Content="System Settings" Style="{StaticResource MenuButtonStyle}" Click="Nav_Settings_Click">
+                                    <Button.Tag>
+                                        <fa:FontAwesome Icon="Cogs" FontSize="16" Foreground="White"/>
+                                    </Button.Tag>
+                                </Button>
                             </StackPanel>
                         </StackPanel>
                     </ScrollViewer>

@@ -39,6 +39,8 @@ namespace SLICE_System.Views
 
                 if (user != null)
                 {
+                    App.CurrentUser = user;
+
                     MainWindow dashboard = new MainWindow(user);
                     dashboard.Show();
                     this.Close();

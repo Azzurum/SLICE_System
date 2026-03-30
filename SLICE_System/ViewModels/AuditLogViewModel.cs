@@ -17,7 +17,11 @@ namespace SLICE_System.ViewModels
     {
         private readonly AuditRepository _repo;
         private string _searchText;
-        private DateTime? _selectedDate;
+
+        // NEW: Date Range variables
+        private DateTime? _startDate;
+        private DateTime? _endDate;
+
         private CancellationTokenSource _searchCancellationTokenSource;
 
         public ObservableCollection<AuditEntry> AuditLogs { get; set; }
@@ -35,12 +39,24 @@ namespace SLICE_System.ViewModels
             }
         }
 
-        public DateTime? SelectedDate
+        public DateTime? StartDate
         {
-            get => _selectedDate;
+            get => _startDate;
             set
             {
-                if (SetProperty(ref _selectedDate, value))
+                if (SetProperty(ref _startDate, value))
+                {
+                    LoadLogsAsync();
+                }
+            }
+        }
+
+        public DateTime? EndDate
+        {
+            get => _endDate;
+            set
+            {
+                if (SetProperty(ref _endDate, value))
                 {
                     LoadLogsAsync();
                 }
@@ -58,7 +74,9 @@ namespace SLICE_System.ViewModels
 
             RefreshCommand = new RelayCommand(LoadLogsAsync);
             ExportCommand = new RelayCommand(ExportLogsToCSV, () => AuditLogs.Any());
-            ClearDateCommand = new RelayCommand(() => SelectedDate = null);
+
+            // Clear both dates instantly
+            ClearDateCommand = new RelayCommand(() => { StartDate = null; EndDate = null; });
 
             LoadLogsAsync();
         }
@@ -87,17 +105,24 @@ namespace SLICE_System.ViewModels
             try
             {
                 string currentSearch = SearchText ?? string.Empty;
-                DateTime? filterDate = SelectedDate;
+                DateTime? startFilter = StartDate;
+                DateTime? endFilter = EndDate;
 
                 // Offload to background thread to keep UI perfectly smooth
                 var logs = await Task.Run(() =>
                 {
                     var rawLogs = _repo.GetSystemHistory(currentSearch);
 
-                    // Apply Date Filter in memory if a date is selected
-                    if (filterDate.HasValue)
+                    // --- APPLIES DATE RANGE FILTERING ---
+                    // If StartDate is set, hide anything before that date
+                    if (startFilter.HasValue)
                     {
-                        rawLogs = rawLogs.Where(l => l.Timestamp.Date == filterDate.Value.Date).ToList();
+                        rawLogs = rawLogs.Where(l => l.Timestamp.Date >= startFilter.Value.Date).ToList();
+                    }
+                    // If EndDate is set, hide anything after that date
+                    if (endFilter.HasValue)
+                    {
+                        rawLogs = rawLogs.Where(l => l.Timestamp.Date <= endFilter.Value.Date).ToList();
                     }
 
                     // Limit to top 200 to prevent RAM overflow on massive databases

@@ -48,7 +48,8 @@ namespace SLICE_System.Data
         // =========================================================
         // 2. COMPLETE SALE (Entire Cart + Audit/Payment Integration)
         // =========================================================
-        public bool CompleteSale(int branchId, int userId, List<CartItem> cart, string paymentMethod, string referenceNumber, out string errorMessage)
+        // [FIX APPLIED]: Added 'decimal finalDiscountedTotal' so the dashboard gets the true discounted revenue
+        public bool CompleteSale(int branchId, int userId, List<CartItem> cart, string paymentMethod, string referenceNumber, decimal finalDiscountedTotal, out string errorMessage)
         {
             errorMessage = string.Empty;
 
@@ -61,8 +62,6 @@ namespace SLICE_System.Data
                 {
                     try
                     {
-                        decimal totalCartRevenue = 0;
-
                         // Loop through every item in the shopping cart
                         foreach (var item in cart)
                         {
@@ -73,8 +72,6 @@ namespace SLICE_System.Data
                             if (product == null) throw new Exception($"Product '{item.ProductName}' not found or invalid.");
 
                             decimal unitPrice = product.BasePrice;
-                            decimal itemTotalRevenue = unitPrice * item.Qty;
-                            totalCartRevenue += itemTotalRevenue;
 
                             // --- STEP 2: CALCULATE INGREDIENTS (Bill of Materials) ---
                             string sqlGetRecipe = "SELECT ProductID, ItemID as IngredientID, RequiredQty FROM BillOfMaterials WHERE ProductID = @ProductID";
@@ -108,7 +105,7 @@ namespace SLICE_System.Data
                                 }
                             }
 
-                            // --- STEP 4: RECORD THE SALE (Updated for Audit Traceability) ---
+                            // --- STEP 4: RECORD THE SALE (Item Level) ---
                             string sqlRecord = @"
                                 INSERT INTO SalesTransactions 
                                 (BranchID, UserID, ProductID, QuantitySold, UnitPrice, TransactionDate, PaymentMethod, ReferenceNumber, TransactionStatus)
@@ -121,14 +118,14 @@ namespace SLICE_System.Data
                                 UserID = userId,
                                 ProductID = item.ProductID,
                                 Qty = item.Qty,
-                                Price = unitPrice,
+                                Price = unitPrice, // Save standard item price here for item-level data
                                 PayMethod = paymentMethod,
-                                RefNum = referenceNumber,
-                                Status = "Completed"
+                                RefNum = referenceNumber
                             }, transaction);
                         }
 
                         // --- STEP 5: FINANCIAL LEDGER (Centralized Income Tracking) ---
+                        // [FIX APPLIED]: Write the actual discounted total to the ledger so the Dashboard sees it
                         string sqlLedger = @"
                             INSERT INTO FinancialLedger (TransactionDate, BranchID, Type, Category, Amount, Description, PaymentMethod, ReferenceNumber)
                             VALUES (GETDATE(), @BranchID, 'Income', 'Sales', @Amount, @Desc, @PayMethod, @RefNum)";
@@ -136,13 +133,14 @@ namespace SLICE_System.Data
                         connection.Execute(sqlLedger, new
                         {
                             BranchID = branchId,
-                            Amount = totalCartRevenue,
+                            Amount = finalDiscountedTotal, // <--- Using the true final total
                             Desc = $"POS Sale ({cart.Count} items)",
                             PayMethod = paymentMethod,
                             RefNum = referenceNumber
                         }, transaction);
 
                         // --- STEP 6: WRITE DIRECTLY TO AUDIT LOG ---
+                        // [FIX APPLIED]: Mention the final discounted total in the audit log for clarity
                         string sqlAudit = @"
                             INSERT INTO AuditLogs (UserID, ActionType, AffectedTable, NewValue, Timestamp, ReferenceNumber)
                             VALUES (@UserID, 'Sale Completed', 'SalesTransactions', @Desc, GETDATE(), @RefNum)";
@@ -150,7 +148,7 @@ namespace SLICE_System.Data
                         connection.Execute(sqlAudit, new
                         {
                             UserID = userId,
-                            Desc = $"Processed sale for {cart.Count} items. Gateway: {paymentMethod.ToUpper()} - Total: ₱{totalCartRevenue:N2}",
+                            Desc = $"Processed sale for {cart.Count} items. Gateway: {paymentMethod.ToUpper()} - Final Total: ₱{finalDiscountedTotal:N2}",
                             RefNum = referenceNumber
                         }, transaction);
 
@@ -174,6 +172,8 @@ namespace SLICE_System.Data
         {
             using (var connection = _dbService.GetConnection())
             {
+                // NOTE: This still sums based on base unit price. If you want Z-Reading to reflect discounted cash, 
+                // you may need to adjust this to read from FinancialLedger instead of SalesTransactions in the future.
                 string sql = @"
                 SELECT ISNULL(SUM(QuantitySold * UnitPrice), 0) 
                 FROM SalesTransactions 

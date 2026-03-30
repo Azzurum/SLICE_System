@@ -66,13 +66,20 @@
             </StackPanel>
 
             <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+
                 <Border Background="White" CornerRadius="8" Height="40" Padding="10,0" Margin="0,0,10,5">
                     <Border.Effect>
                         <DropShadowEffect BlurRadius="10" Color="#BDC3C7" ShadowDepth="1" Opacity="0.2"/>
                     </Border.Effect>
                     <StackPanel Orientation="Horizontal">
                         <fa:ImageAwesome Icon="Calendar" Height="14" Foreground="{StaticResource TextLight}" Margin="0,0,10,0"/>
-                        <DatePicker SelectedDate="{Binding SelectedDate}" Width="110" BorderThickness="0" Background="Transparent" Foreground="{StaticResource TextDark}" VerticalContentAlignment="Center"/>
+
+                        <DatePicker SelectedDate="{Binding StartDate}" Width="110" BorderThickness="0" Background="Transparent" Foreground="{StaticResource TextDark}" VerticalContentAlignment="Center" ToolTip="From Date"/>
+
+                        <TextBlock Text="to" Foreground="{StaticResource TextLight}" VerticalAlignment="Center" Margin="5,0"/>
+
+                        <DatePicker SelectedDate="{Binding EndDate}" Width="110" BorderThickness="0" Background="Transparent" Foreground="{StaticResource TextDark}" VerticalContentAlignment="Center" ToolTip="To Date"/>
+
                         <Button Command="{Binding ClearDateCommand}" Background="Transparent" BorderThickness="0" Cursor="Hand" Margin="5,0,0,0" ToolTip="Clear Date Filter">
                             <fa:ImageAwesome Icon="Close" Height="10" Foreground="#E74C3C"/>
                         </Button>

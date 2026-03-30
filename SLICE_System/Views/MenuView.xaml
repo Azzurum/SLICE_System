@@ -300,18 +300,6 @@
                     </Border>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <Button Command="{Binding DeleteMenuCommand}" Background="#E74C3C" Foreground="White" 
-                                FontWeight="Bold" FontSize="15" Height="50" Cursor="Hand" Width="160" Margin="0,0,15,0">
-                            <Button.Resources>
-                                <Style TargetType="Border">
-                                    <Setter Property="CornerRadius" Value="8"/>
-                                </Style>
-                            </Button.Resources>
-                            <StackPanel Orientation="Horizontal">
-                                <fa:ImageAwesome Icon="Trash" Height="16" Foreground="White" Margin="0,0,10,0"/>
-                                <TextBlock Text="DELETE ITEM"/>
-                            </StackPanel>
-                        </Button>
 
                         <Button Command="{Binding SaveMenuCommand}" Background="{StaticResource BrandGreen}" Foreground="White" 
                                 FontWeight="Bold" FontSize="15" Height="50" Cursor="Hand" Width="200">

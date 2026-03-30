@@ -148,6 +148,7 @@ namespace SLICE_System
         private void Nav_ManageDiscounts_Click(object sender, RoutedEventArgs e) => LoadView("Pricing & Promotions Rules", new Views.ManageDiscountsView());
         private void Nav_SubmitFeedback_Click(object sender, RoutedEventArgs e) => LoadView("Submit Feedback", new Views.SubmitSuggestionView { DataContext = new ViewModels.SubmitSuggestionViewModel(_currentUser.UserID) });
         private void Nav_ReviewFeedback_Click(object sender, RoutedEventArgs e) => LoadView("Review Suggestions", new Views.ReviewSuggestionsView { DataContext = new ViewModels.ReviewSuggestionsViewModel() });
+        private void Nav_Settings_Click(object sender, RoutedEventArgs e) => LoadView("System Settings", new Views.SettingsView());
 
         private void LoadView(string title, UIElement view)
         {

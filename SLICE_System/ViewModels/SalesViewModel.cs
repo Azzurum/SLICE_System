@@ -423,6 +423,9 @@ namespace SLICE_System.ViewModels
                 var currentDiscount = ActiveDiscount;
                 var currentDiscountAmount = DiscountAmount;
 
+                // [FIX APPLIED]: Capture the GrandTotal before entering the background task
+                decimal finalDiscountedTotal = GrandTotal;
+
                 // Map CartItemVM to raw CartItem model
                 var cartSnapshot = CartItems.Select(c => new CartItem
                 {
@@ -437,7 +440,8 @@ namespace SLICE_System.ViewModels
                     try
                     {
                         // 3. Process entire cart as unified transaction
-                        success = _repo.CompleteSale(_branchId, _userId, cartSnapshot, payMethod, refNum, out errorMessage);
+                        // [FIX APPLIED]: Passing the finalDiscountedTotal to the updated CompleteSale method
+                        success = _repo.CompleteSale(_branchId, _userId, cartSnapshot, payMethod, refNum, finalDiscountedTotal, out errorMessage);
 
                         // Fetch Branch Details and User Name for receipt
                         using (var db = new DatabaseService().GetConnection())

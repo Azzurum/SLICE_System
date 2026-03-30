@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using SLICE_System.Data;
+using SLICE_System.Models; // Ensure Models are imported for BranchInventoryItem
 
 namespace SLICE_System.Views
 {
@@ -9,6 +12,9 @@ namespace SLICE_System.Views
     {
         private int _branchId;
         private InventoryRepository _repo;
+
+        // ADDED: Store the full original list so we can filter locally without hitting the DB over and over
+        private List<BranchInventoryItem> _allStock;
 
         public BranchStockView(int branchId)
         {
@@ -22,15 +28,43 @@ namespace SLICE_System.Views
         {
             try
             {
-                // Fetch the live inventory list for this branch
+                // Fetch the live inventory list for this branch and save it to the master list
                 var stockList = _repo.GetStockForBranch(_branchId);
+                _allStock = stockList.Cast<BranchInventoryItem>().ToList();
 
-                // Bind it to the DataGrid
-                dgStock.ItemsSource = stockList;
+                // Apply any existing search text to the new data
+                FilterStock();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error loading inventory: {ex.Message}", "System Error");
+            }
+        }
+
+        // --- ADDED SEARCH LOGIC ---
+        private void txtSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            FilterStock();
+        }
+
+        private void FilterStock()
+        {
+            if (_allStock == null) return;
+
+            string searchText = txtSearch.Text.Trim().ToLower();
+
+            if (string.IsNullOrEmpty(searchText))
+            {
+                // Reset to full list
+                dgStock.ItemsSource = _allStock;
+            }
+            else
+            {
+                // Filter locally by ItemName or Category
+                dgStock.ItemsSource = _allStock.Where(i =>
+                    (i.ItemName != null && i.ItemName.ToLower().Contains(searchText)) ||
+                    (i.Category != null && i.Category.ToLower().Contains(searchText))
+                ).ToList();
             }
         }
 
