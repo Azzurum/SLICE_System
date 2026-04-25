@@ -20,8 +20,17 @@ namespace SLICE_System.Data
         {
             using (var connection = _dbService.GetConnection())
             {
-                string sql = "SELECT * FROM Users WHERE Username = @Username AND PasswordHash = @Password AND IsActive = 1";
-                return connection.QuerySingleOrDefault<User>(sql, new { Username = username, Password = password });
+                // ONLY look up by Username and Active status. Do not check the password in SQL.
+                string sql = "SELECT * FROM Users WHERE Username = @Username AND IsActive = 1";
+                User user = connection.QuerySingleOrDefault<User>(sql, new { Username = username });
+
+                // If the user exists, verify the entered password against the stored hash
+                if (user != null && BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
+                {
+                    return user; // Password is correct
+                }
+
+                return null; // Username doesn't exist or Password was wrong
             }
         }
 
@@ -131,12 +140,14 @@ namespace SLICE_System.Data
 
         public void UpdatePassword(string email, string newPassword)
         {
+            // Hash the new password before storing it
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newPassword);
+
             using (var connection = _dbService.GetConnection())
             {
-                // Clears the reset code after successful password change for security
                 string sql = "UPDATE Users SET PasswordHash = @Password, ResetCode = NULL, ResetCodeExpiry = NULL WHERE Email = @Email";
-                connection.Execute(sql, new { Password = newPassword, Email = email });
+                connection.Execute(sql, new { Password = hashedPassword, Email = email });
             }
-        }
+        }   
     }
 }

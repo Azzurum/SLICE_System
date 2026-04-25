@@ -381,7 +381,7 @@
 
         <Grid x:Name="AnimationOverlay" Visibility="{Binding IsCooking, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Border Background="#D9FFFFFF"/>
-            <views:CookingAnimationView/>
+            <views:CookingAnimationView Loaded="CookingAnimationView_Loaded"/>
         </Grid>
     </Grid>
 </UserControl>

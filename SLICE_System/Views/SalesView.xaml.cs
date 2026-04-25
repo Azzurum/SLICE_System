@@ -22,5 +22,10 @@ namespace SLICE_System.Views
             // e.Handled = true tells the application to ignore the keystroke entirely.
             e.Handled = regex.IsMatch(e.Text);
         }
+
+        private void CookingAnimationView_Loaded(object sender, System.Windows.RoutedEventArgs e)
+        {
+
+        }
     }
 }

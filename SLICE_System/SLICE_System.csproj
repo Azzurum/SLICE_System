@@ -9,19 +9,152 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<None Remove="Assets\Images\Ingredients\0610bde6-372a-4216-9d8a-0c9c7b4f56cd.png" />
+		<None Remove="Assets\Images\Ingredients\0f40f227-c543-43e5-b55d-9863e2e6a3be.jpg" />
+		<None Remove="Assets\Images\Ingredients\133caf52-0ee4-4018-911e-b605791bd07d.jpg" />
+		<None Remove="Assets\Images\Ingredients\19b2d87c-fac9-4856-ad90-e1cf5b765cf3.jpg" />
+		<None Remove="Assets\Images\Ingredients\19c4fc32-07bc-45a8-b4f9-1856b0991be0.png" />
+		<None Remove="Assets\Images\Ingredients\1b3fc4ba-2885-4bf7-ab2d-c7adedacd7e6.jpg" />
+		<None Remove="Assets\Images\Ingredients\321944ce-d863-49f7-89d7-e96c6ca33c85.jpg" />
+		<None Remove="Assets\Images\Ingredients\3237e25c-0fa3-41b6-bc45-841d74671783.jpg" />
+		<None Remove="Assets\Images\Ingredients\4793e22e-3530-4997-b9c7-747a9055fed1.jpg" />
+		<None Remove="Assets\Images\Ingredients\4d1a3cfa-3000-4269-aba3-ca32a84fdeff.jpg" />
+		<None Remove="Assets\Images\Ingredients\4ff60f9a-38ba-435b-9c49-818f996eb042.jpg" />
+		<None Remove="Assets\Images\Ingredients\5e726178-2abf-40aa-a762-121b3865143f.png" />
+		<None Remove="Assets\Images\Ingredients\7363109c-5658-4c69-9cc8-14a4edf5785e.png" />
+		<None Remove="Assets\Images\Ingredients\76815381-0acf-4cd5-85d5-3db2eef0d996.jpg" />
+		<None Remove="Assets\Images\Ingredients\7ff46c7a-db76-4826-adf7-693f1e11c58e.jpg" />
+		<None Remove="Assets\Images\Ingredients\8650ffd9-3bc8-4773-b725-3ccfdaa0216f.jpg" />
+		<None Remove="Assets\Images\Ingredients\8b464e62-9303-4737-9bf1-6ad59606065c.jpg" />
+		<None Remove="Assets\Images\Ingredients\96246d45-713b-48ab-911e-1b235516670f.jpg" />
+		<None Remove="Assets\Images\Ingredients\9c722132-6025-43d5-95f9-a6274a6c3566.jpg" />
+		<None Remove="Assets\Images\Ingredients\a400aec9-0d03-49f2-b272-74709f2fde30.webp" />
+		<None Remove="Assets\Images\Ingredients\a47de11b-0003-4fb5-825f-14e136c9c7ad.png" />
+		<None Remove="Assets\Images\Ingredients\abf34d1e-2d33-4de4-b18e-15b1f6e77a9d.png" />
+		<None Remove="Assets\Images\Ingredients\b8f3852e-57f5-4f89-be0c-a8724d6bf13f.jpg" />
+		<None Remove="Assets\Images\Ingredients\b903070e-764a-4ea2-8d68-499f724056f5.jpg" />
+		<None Remove="Assets\Images\Ingredients\be86a1c6-e04a-465f-8011-841985a9a900.jpg" />
+		<None Remove="Assets\Images\Ingredients\ccb8eca6-2c33-41fd-96b3-3023abc49ae6.jpg" />
+		<None Remove="Assets\Images\Ingredients\ce598305-decb-46f1-a4ba-fc2e4787671b.png" />
+		<None Remove="Assets\Images\Ingredients\d91ca27c-2ba5-4c00-bfde-a8edc2813166.jpg" />
+		<None Remove="Assets\Images\Ingredients\dced56db-6396-4a5f-a79e-8c355a614233.png" />
+		<None Remove="Assets\Images\Ingredients\df989e6f-0421-439f-b256-eb51a68e7dbe.png" />
+		<None Remove="Assets\Images\Ingredients\dfed4fa3-9755-4d92-bc17-44da30983e36.jpg" />
+		<None Remove="Assets\Images\Ingredients\e87765e1-fc44-4a1d-aba1-1dbfa98c1ce5.png" />
+		<None Remove="Assets\Images\Ingredients\e9306a3d-e8b4-4786-b6e4-fe02fec2b406.jpg" />
+		<None Remove="Assets\Images\Ingredients\e96f4f4a-b894-4423-9387-ee6ad8cb54da.jpg" />
+		<None Remove="Assets\Images\Ingredients\f04d9125-2453-4b07-bba6-3688fc3c9a19.jpg" />
+		<None Remove="Assets\Images\Ingredients\f0b21236-962e-4aec-8303-b7b6ee87d9a0.png" />
+		<None Remove="Assets\Images\Ingredients\f976214e-c64f-4c4e-993a-1958bd2c8a3e.jpeg" />
+		<None Remove="Assets\Images\Ingredients\fd98849d-2e78-4555-b5ea-08d248f48d60.jpg" />
+		<None Remove="Assets\Images\Menu\03d09b0b-0291-405c-ad95-b6f9181f5485.jpg" />
+		<None Remove="Assets\Images\Menu\0984ab02-0c3f-4dff-b116-e4596191752f.jpg" />
+		<None Remove="Assets\Images\Menu\1986f709-a37c-4b26-b460-b2913e5732d9.jpg" />
+		<None Remove="Assets\Images\Menu\1d38be69-8ad2-48da-85f1-66e08256b3a7.jpg" />
+		<None Remove="Assets\Images\Menu\2c42a290-41ed-4644-ae0a-8da8e61a71f8.jpg" />
+		<None Remove="Assets\Images\Menu\4cbe632d-9e2a-46cc-bcbb-baa8ef64a74a.jpg" />
+		<None Remove="Assets\Images\Menu\50e85cc8-acb8-48c8-8820-f04d1b61cc2a.jpg" />
+		<None Remove="Assets\Images\Menu\5122b691-6202-4d7a-bf8a-6fd819f2c95d.jpg" />
+		<None Remove="Assets\Images\Menu\5ef7a11d-882a-47e2-b3fa-9f6723a96b04.webp" />
+		<None Remove="Assets\Images\Menu\6234e907-61b2-45c3-bb3b-6b6a5c4c39ee.jpg" />
+		<None Remove="Assets\Images\Menu\6682bc18-abd4-4681-b45e-d9d58377fb19.jpg" />
+		<None Remove="Assets\Images\Menu\69e667a3-7787-4af5-b08d-3864a136cdbc.jpg" />
+		<None Remove="Assets\Images\Menu\70d52d2a-41a6-4533-8944-64c530ff0074.jpg" />
+		<None Remove="Assets\Images\Menu\86d3ff07-4536-4772-ab0c-7dc4e87cb82b.jpg" />
+		<None Remove="Assets\Images\Menu\a742612a-4dd0-4bdc-9772-0d05fedf0f4a.jpg" />
+		<None Remove="Assets\Images\Menu\b2cfec92-e89d-4f75-b057-14f9685fbed9.jpg" />
+		<None Remove="Assets\Images\Menu\b472eca5-82c8-434b-b471-35308cc032ff.jpg" />
+		<None Remove="Assets\Images\Menu\ba334648-4307-48dc-bf94-d4ac2de3ca4c.jpg" />
+		<None Remove="Assets\Images\Menu\c4b23dc3-f477-4744-85f8-82dabd42a7e5.jpg" />
+		<None Remove="Assets\Images\Menu\c8ae4cc1-dbfa-4462-9bb5-b60b09ced67f.jpg" />
+		<None Remove="Assets\Images\Menu\d7f612f4-262e-4932-869f-2fe0fe490710.jpg" />
+		<None Remove="Assets\Images\Menu\db6ab68c-87f2-4927-a394-25bb9a6b8819.png" />
+		<None Remove="Assets\Images\Menu\e433ee56-e3da-4dc7-a43f-a856305cfdb2.jpg" />
+		<None Remove="Assets\Images\Menu\e90ae2e2-3ef1-424f-aaff-eb29521f7be7.png" />
+		<None Remove="Assets\Images\Menu\edf1e15b-e673-4441-883d-a6bf28c76c0b.webp" />
+		<None Remove="Assets\Images\Menu\f4437221-f9d5-48c6-b824-15795c210625.png" />
+		<None Remove="Assets\Images\Menu\fe8a7c2d-eccf-427b-a094-9314c51b8815.jpg" />
 		<None Remove="Assets\Logo.png" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+	  <Content Include="Assets\Images\Ingredients\0610bde6-372a-4216-9d8a-0c9c7b4f56cd.png" />
+	  <Content Include="Assets\Images\Ingredients\0f40f227-c543-43e5-b55d-9863e2e6a3be.jpg" />
+	  <Content Include="Assets\Images\Ingredients\133caf52-0ee4-4018-911e-b605791bd07d.jpg" />
+	  <Content Include="Assets\Images\Ingredients\19b2d87c-fac9-4856-ad90-e1cf5b765cf3.jpg" />
+	  <Content Include="Assets\Images\Ingredients\19c4fc32-07bc-45a8-b4f9-1856b0991be0.png" />
+	  <Content Include="Assets\Images\Ingredients\1b3fc4ba-2885-4bf7-ab2d-c7adedacd7e6.jpg" />
+	  <Content Include="Assets\Images\Ingredients\321944ce-d863-49f7-89d7-e96c6ca33c85.jpg" />
+	  <Content Include="Assets\Images\Ingredients\3237e25c-0fa3-41b6-bc45-841d74671783.jpg" />
+	  <Content Include="Assets\Images\Ingredients\4793e22e-3530-4997-b9c7-747a9055fed1.jpg" />
+	  <Content Include="Assets\Images\Ingredients\4d1a3cfa-3000-4269-aba3-ca32a84fdeff.jpg" />
+	  <Content Include="Assets\Images\Ingredients\4ff60f9a-38ba-435b-9c49-818f996eb042.jpg" />
+	  <Content Include="Assets\Images\Ingredients\5e726178-2abf-40aa-a762-121b3865143f.png" />
+	  <Content Include="Assets\Images\Ingredients\7363109c-5658-4c69-9cc8-14a4edf5785e.png" />
+	  <Content Include="Assets\Images\Ingredients\76815381-0acf-4cd5-85d5-3db2eef0d996.jpg" />
+	  <Content Include="Assets\Images\Ingredients\7ff46c7a-db76-4826-adf7-693f1e11c58e.jpg" />
+	  <Content Include="Assets\Images\Ingredients\8650ffd9-3bc8-4773-b725-3ccfdaa0216f.jpg" />
+	  <Content Include="Assets\Images\Ingredients\8b464e62-9303-4737-9bf1-6ad59606065c.jpg" />
+	  <Content Include="Assets\Images\Ingredients\96246d45-713b-48ab-911e-1b235516670f.jpg" />
+	  <Content Include="Assets\Images\Ingredients\9c722132-6025-43d5-95f9-a6274a6c3566.jpg" />
+	  <Content Include="Assets\Images\Ingredients\a400aec9-0d03-49f2-b272-74709f2fde30.webp" />
+	  <Content Include="Assets\Images\Ingredients\a47de11b-0003-4fb5-825f-14e136c9c7ad.png" />
+	  <Content Include="Assets\Images\Ingredients\abf34d1e-2d33-4de4-b18e-15b1f6e77a9d.png" />
+	  <Content Include="Assets\Images\Ingredients\b8f3852e-57f5-4f89-be0c-a8724d6bf13f.jpg" />
+	  <Content Include="Assets\Images\Ingredients\b903070e-764a-4ea2-8d68-499f724056f5.jpg" />
+	  <Content Include="Assets\Images\Ingredients\be86a1c6-e04a-465f-8011-841985a9a900.jpg" />
+	  <Content Include="Assets\Images\Ingredients\ccb8eca6-2c33-41fd-96b3-3023abc49ae6.jpg" />
+	  <Content Include="Assets\Images\Ingredients\ce598305-decb-46f1-a4ba-fc2e4787671b.png" />
+	  <Content Include="Assets\Images\Ingredients\d91ca27c-2ba5-4c00-bfde-a8edc2813166.jpg" />
+	  <Content Include="Assets\Images\Ingredients\dced56db-6396-4a5f-a79e-8c355a614233.png" />
+	  <Content Include="Assets\Images\Ingredients\df989e6f-0421-439f-b256-eb51a68e7dbe.png" />
+	  <Content Include="Assets\Images\Ingredients\dfed4fa3-9755-4d92-bc17-44da30983e36.jpg" />
+	  <Content Include="Assets\Images\Ingredients\e87765e1-fc44-4a1d-aba1-1dbfa98c1ce5.png" />
+	  <Content Include="Assets\Images\Ingredients\e9306a3d-e8b4-4786-b6e4-fe02fec2b406.jpg" />
+	  <Content Include="Assets\Images\Ingredients\e96f4f4a-b894-4423-9387-ee6ad8cb54da.jpg" />
+	  <Content Include="Assets\Images\Ingredients\f04d9125-2453-4b07-bba6-3688fc3c9a19.jpg" />
+	  <Content Include="Assets\Images\Ingredients\f0b21236-962e-4aec-8303-b7b6ee87d9a0.png" />
+	  <Content Include="Assets\Images\Ingredients\f976214e-c64f-4c4e-993a-1958bd2c8a3e.jpeg" />
+	  <Content Include="Assets\Images\Menu\03d09b0b-0291-405c-ad95-b6f9181f5485.jpg" />
+	  <Content Include="Assets\Images\Menu\0984ab02-0c3f-4dff-b116-e4596191752f.jpg" />
+	  <Content Include="Assets\Images\Menu\1986f709-a37c-4b26-b460-b2913e5732d9.jpg" />
+	  <Content Include="Assets\Images\Menu\1d38be69-8ad2-48da-85f1-66e08256b3a7.jpg" />
+	  <Content Include="Assets\Images\Menu\2c42a290-41ed-4644-ae0a-8da8e61a71f8.jpg" />
+	  <Content Include="Assets\Images\Menu\4cbe632d-9e2a-46cc-bcbb-baa8ef64a74a.jpg" />
+	  <Content Include="Assets\Images\Menu\50e85cc8-acb8-48c8-8820-f04d1b61cc2a.jpg" />
+	  <Content Include="Assets\Images\Menu\5122b691-6202-4d7a-bf8a-6fd819f2c95d.jpg" />
+	  <Content Include="Assets\Images\Menu\5ef7a11d-882a-47e2-b3fa-9f6723a96b04.webp" />
+	  <Content Include="Assets\Images\Menu\6234e907-61b2-45c3-bb3b-6b6a5c4c39ee.jpg" />
+	  <Content Include="Assets\Images\Menu\6682bc18-abd4-4681-b45e-d9d58377fb19.jpg" />
+	  <Content Include="Assets\Images\Menu\69e667a3-7787-4af5-b08d-3864a136cdbc.jpg" />
+	  <Content Include="Assets\Images\Menu\70d52d2a-41a6-4533-8944-64c530ff0074.jpg" />
+	  <Content Include="Assets\Images\Menu\86d3ff07-4536-4772-ab0c-7dc4e87cb82b.jpg" />
+	  <Content Include="Assets\Images\Menu\a742612a-4dd0-4bdc-9772-0d05fedf0f4a.jpg" />
+	  <Content Include="Assets\Images\Menu\b2cfec92-e89d-4f75-b057-14f9685fbed9.jpg" />
+	  <Content Include="Assets\Images\Menu\b472eca5-82c8-434b-b471-35308cc032ff.jpg" />
+	  <Content Include="Assets\Images\Menu\ba334648-4307-48dc-bf94-d4ac2de3ca4c.jpg" />
+	  <Content Include="Assets\Images\Menu\c4b23dc3-f477-4744-85f8-82dabd42a7e5.jpg" />
+	  <Content Include="Assets\Images\Menu\c8ae4cc1-dbfa-4462-9bb5-b60b09ced67f.jpg" />
+	  <Content Include="Assets\Images\Menu\d7f612f4-262e-4932-869f-2fe0fe490710.jpg" />
+	  <Content Include="Assets\Images\Menu\db6ab68c-87f2-4927-a394-25bb9a6b8819.png" />
+	  <Content Include="Assets\Images\Menu\e433ee56-e3da-4dc7-a43f-a856305cfdb2.jpg" />
+	  <Content Include="Assets\Images\Menu\e90ae2e2-3ef1-424f-aaff-eb29521f7be7.png" />
+	  <Content Include="Assets\Images\Menu\edf1e15b-e673-4441-883d-a6bf28c76c0b.webp" />
+	  <Content Include="Assets\Images\Menu\f4437221-f9d5-48c6-b824-15795c210625.png" />
+	  <Content Include="Assets\Images\Menu\fe8a7c2d-eccf-427b-a094-9314c51b8815.jpg" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
 		<PackageReference Include="Dapper" Version="2.1.72" />
 		<PackageReference Include="FontAwesome.WPF" Version="4.7.0.9" />
 		<PackageReference Include="LiveCharts.Wpf" Version="0.9.7" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.1" />
 		<PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.142" />
-		<PackageReference Include="QRCoder" Version="1.7.0" />
+		<PackageReference Include="QRCoder" Version="1.8.0" />
 		<PackageReference Include="SharpVectors" Version="1.8.5" />
-		<PackageReference Include="WPF-UI" Version="4.2.0" />
+		<PackageReference Include="WPF-UI" Version="4.2.1" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -29,8 +162,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="Assets\Images\Menu\" />
-		<Folder Include="Assets\Images\Ingredients\" />
 		<None Update="Assets\Images\**\*.*">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>

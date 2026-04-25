@@ -131,15 +131,20 @@ namespace SLICE_System.Views
                 string selectedRole = (cmbRole.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Clerk";
                 int? selectedBranch = (int?)cmbBranch.SelectedValue;
 
+                // Inside Save_Click, replace the user creation/update block with this:
+
                 if (_existingUser == null)
                 {
                     // --- INSERT NEW USER ---
                     User newUser = new User
                     {
                         FullName = txtName.Text.Trim(),
-                        Email = txtEmail.Text.Trim(), // Include Email
+                        Email = txtEmail.Text.Trim(),
                         Username = txtUser.Text.Trim(),
-                        PasswordHash = txtPass.Text,
+
+                        // HASH THE PASSWORD BEFORE SAVING
+                        PasswordHash = BCrypt.Net.BCrypt.HashPassword(txtPass.Text),
+
                         Role = selectedRole,
                         BranchID = selectedBranch,
                         IsActive = true
@@ -151,11 +156,17 @@ namespace SLICE_System.Views
                 {
                     // --- UPDATE EXISTING USER ---
                     _existingUser.FullName = txtName.Text.Trim();
-                    _existingUser.Email = txtEmail.Text.Trim(); // Include Email
+                    _existingUser.Email = txtEmail.Text.Trim();
                     _existingUser.Username = txtUser.Text.Trim();
-                    _existingUser.PasswordHash = txtPass.Text;
                     _existingUser.Role = selectedRole;
                     _existingUser.BranchID = selectedBranch;
+
+                    // ONLY hash the password if the administrator actually typed a new one.
+                    // If they left it alone, txtPass.Text contains the old hash, and we don't want to double-hash it.
+                    if (isPasswordChanged)
+                    {
+                        _existingUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(txtPass.Text);
+                    }
 
                     repo.UpdateUser(_existingUser);
                     MessageBox.Show("User account updated successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
