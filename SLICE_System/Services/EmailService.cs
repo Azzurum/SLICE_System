@@ -1,13 +1,22 @@
 ﻿using System;
 using System.Net;
 using System.Net.Mail;
+using System.Configuration; // Required to read from App.config
 
 namespace SLICE_System.Services
 {
     public class EmailService
     {
-        private readonly string _systemEmail = "slice.automated@gmail.com";
-        private readonly string _appPassword = "sbwzycmywldszfof";
+        private readonly string _systemEmail;
+        private readonly string _appPassword;
+
+        public EmailService()
+        {
+            // Reach into App.config to grab the email and password securely!
+            // Make sure the keys "SystemEmail" and "EmailAppPassword" exist in your App.config <appSettings>
+            _systemEmail = ConfigurationManager.AppSettings["SystemEmail"];
+            _appPassword = ConfigurationManager.AppSettings["EmailAppPassword"];
+        }
 
         public bool SendPasswordResetEmail(string targetEmail, string resetCode)
         {
@@ -103,8 +112,10 @@ namespace SLICE_System.Services
                 smtpClient.Send(mailMessage);
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                // Added this debug line so if it fails again, you can see the exact reason in your Output window
+                System.Diagnostics.Debug.WriteLine("Email Send Error: " + ex.Message);
                 return false;
             }
         }
